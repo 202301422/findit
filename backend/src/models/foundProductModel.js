@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import ProductCatagory from "../enums/ProductCatagory/"
 
 const foundProductSchema = new mongoose.Schema(
 {
@@ -9,7 +10,7 @@ const foundProductSchema = new mongoose.Schema(
     category: {
         type: String,
         required: true,
-        enum: ["electronic", "wearable/fashion", "stationary"]
+        enum: ProductCatagory
     },
     image: {
         type: String,
@@ -38,6 +39,6 @@ const foundProductSchema = new mongoose.Schema(
 }
 );
 
-const FoundProduct = mongoose.model("FoundProduct", foundProductSchema);
+const foundProduct = mongoose.model("foundProduct", foundProductSchema);
 
-export default FoundProduct;
+export default foundProduct;
