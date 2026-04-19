@@ -63,11 +63,16 @@ const sellProductSchema = new mongoose.Schema({
     productURL : {
         type : String,
     },
+    quentity : {
+        type : Number,
+        required : true,
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
-    }
+    },
+    
 },{timestamps : true}) 
 
 const sellProduct = mongoose.model("sellProduct",sellProductSchema);

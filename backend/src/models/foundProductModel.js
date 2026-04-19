@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import ProductCatagory from "../enums/ProductCatagory/"
+import ProductCatagory from "../enums/FoundProductCatagory"
 
 const foundProductSchema = new mongoose.Schema(
 {
