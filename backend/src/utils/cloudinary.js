@@ -1,5 +1,14 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+
+console.log("ENV CHECK:", {
+    cloud: process.env.CLOUDINARY_CLOUD_NAME,
+    key: process.env.CLOUDINARY_API_KEY ? "OK" : "MISSING",
+    secret: process.env.CLOUDINARY_API_SECRET ? "OK" : "MISSING"
+});
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -11,11 +20,13 @@ const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
 
+        console.log("Uploading file:", localFilePath);
+
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto"
         });
 
-        console.log("Cloudinary upload response:", response.url);
+        console.log("Upload Success:", response.secure_url);
 
         if (fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
@@ -24,7 +35,8 @@ const uploadOnCloudinary = async (localFilePath) => {
         return response;
 
     } catch (error) {
-        console.error("Error uploading to Cloudinary:", error);
+        console.log("Cloudinary Error Message:", error.message);
+        console.log("Cloudinary Error Name:", error.name);
 
         if (localFilePath && fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
@@ -35,16 +47,15 @@ const uploadOnCloudinary = async (localFilePath) => {
 };
 
 export const deleteFromCloudinary = async (publicId) => {
-    if (!publicId) return;
+    try {
+        if (!publicId) return;
 
-    await cloudinary.uploader.destroy(publicId);
-};
+        const result = await cloudinary.uploader.destroy(publicId);
+        console.log("Deleted from Cloudinary:", result);
 
-const getPublicIdFromUrl = (url) => {
-    const parts = url.split("/");
-    const file = parts.pop().split(".")[0];
-    const folder = parts.slice(parts.indexOf("upload") + 1).join("/");
-    return `${folder}/${file}`;
+    } catch (error) {
+        console.log("Delete Error:", error.message);
+    }
 };
 
 export { uploadOnCloudinary };
