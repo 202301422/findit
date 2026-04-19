@@ -12,13 +12,12 @@ const foundProductSchema = new mongoose.Schema(
         required: true,
         enum: ProductCatagory
     },
-    image: {
+    imageUrl: {
         type: String,
         required: true
     },
     description: {
         type: String,
-        required: true
     },
     venue: {
         type: String,
