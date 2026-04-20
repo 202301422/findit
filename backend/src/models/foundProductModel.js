@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import ProductCatagory from "../enums/FoundProductCatagory"
+import ProductCategory from "../enums/FoundProductCatagory.js";
 
 const foundProductSchema = new mongoose.Schema(
 {
@@ -10,7 +10,7 @@ const foundProductSchema = new mongoose.Schema(
     category: {
         type: String,
         required: true,
-        enum: ProductCatagory
+        enum: ProductCategory
     },
     imageUrl: {
         type: String,

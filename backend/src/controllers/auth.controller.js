@@ -110,7 +110,11 @@ export const login = asyncHandler(async (req, res) => {
 
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
+  }
+
+  const user = await User.findOne({ email }).select("+password");
 
   if (!user) throw new ApiError(400, "User does not exist");
 
@@ -139,11 +143,13 @@ export const login = asyncHandler(async (req, res) => {
   user.refreshToken = refreshToken;
   await user.save();
 
-  res.json(new ApiResponse(200, {
-    accessToken,
-    refreshToken,
-    user
-  }, "Login successful"));
+  return res.json(
+    new ApiResponse(200, {
+      accessToken,
+      refreshToken,
+      user
+    }, "Login successful")
+  );
 });
 
 export const refreshAccessToken = asyncHandler(async (req, res) => {

@@ -1,4 +1,4 @@
-export const Product_catagory = [
+const ProductCategory = [
     "Electronics",
     "Wearables",
     "Accessories",
@@ -11,3 +11,5 @@ export const Product_catagory = [
     "Keys",
     "Others"
 ];
+
+export default ProductCategory;

@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./src/config/db.js";
 
 import authRoutes from "./src/routes/authRoutes.js";
+import foundProductRoutes from "./src/routes/foundRoutes.js";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/found-products", foundProductRoutes); 
 
 app.get("/", (req, res) => {
     res.send("FindIt API Running");
