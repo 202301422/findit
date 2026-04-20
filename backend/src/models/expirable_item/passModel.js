@@ -21,10 +21,17 @@ const passSchema = new mongoose.Schema(
     price: {
         type: Number,
         required: true,
+        min: 0,
     },
     dateTime: {
         type: Date,
-        required: true
+        required: true,
+        validate: {
+            validator: function(value){
+                return value > new Date();
+            },
+            message: "date must be upcoming"
+        }
     },
     venue: {
         area: {
@@ -43,6 +50,7 @@ const passSchema = new mongoose.Schema(
     quantity:{
         type: Number,
         required: true,
+        min: 1,
     },
     isNegotiable : {
         type : Boolean,
@@ -50,6 +58,7 @@ const passSchema = new mongoose.Schema(
     },
     ageRestriction: {
         type: Number,
+        min: 0,
     },
     user:{
         type: mongoose.Schema.Types.ObjectId,
