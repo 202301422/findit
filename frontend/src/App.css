@@ -1,0 +1,68 @@
+:root{
+  --accent:#ff9b5c;
+  --accent-2:#ff7f3f;
+  --bg:#fff8f6;
+  --muted:#f7e6e0;
+}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Arial,sans-serif}
+
+.site-root{display:flex;min-height:100vh;width:100%;background:var(--bg)}
+
+.sidebar{background:var(--accent);color:#111;display:flex;flex-direction:column;padding:1rem 0;gap:1rem;align-items:flex-start}
+.sidebar.collapsed{width:72px}
+.sidebar.expanded{width:260px}
+.sidebar{transition:width 220ms ease}
+.sb-btn{background:transparent;border:none;color:#111;font-size:1.4rem;padding:8px 14px;margin-left:6px}
+.nav-list{display:flex;flex-direction:column;gap:8px;width:100%}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:transparent;border:0;color:#111;text-align:left;margin:0 8px;white-space:nowrap}
+.nav-item .nav-icon{font-size:1.2rem}
+.nav-item .label{display:none;font-weight:600}
+.nav-item.active{background:rgba(0,0,0,0.06);color:#111}
+.help{margin-top:auto}
+.sidebar.expanded .label{display:inline}
+.sidebar.collapsed .label{display:none}
+.sidebar.collapsed .help{justify-content:center}
+.sidebar.expanded .help{justify-content:flex-start}
+.main{flex:1;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:1rem;padding:1rem 2rem;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff}
+.brand{font-weight:900;font-size:1.6rem;color:#111}
+.search-row{flex:1;display:flex;align-items:center;gap:1rem}
+.search{background:#fff;padding:0.6rem 1rem;border-radius:28px;display:flex;align-items:center;flex:1}
+.search{background:#fff;padding:0.6rem 1rem;border-radius:28px;display:flex;align-items:center;flex:1;box-shadow:0 4px 10px rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.06)}
+.search input{border:0;outline:0;font-size:1rem;flex:1;background:transparent;color:#222}
+.search input::placeholder{color:#8b8b8b}
+.magnifier{margin-right:0.5rem}
+.filters{display:flex;gap:0.5rem;margin-left:1rem}
+.dropdown{position:relative}
+.pill{background:rgba(255,255,255,0.95);border:0;color:var(--accent-2);padding:0.5rem 0.8rem;border-radius:20px}
+.menu{position:absolute;top:calc(100% + 8px);left:0;background:#fff;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.08);min-width:160px;padding:6px 0;z-index:30}
+.menu li{list-style:none;padding:8px 12px;cursor:pointer;color:#333}
+.menu li:hover{background:rgba(0,0,0,0.04)}
+.top-actions{display:flex;align-items:center;gap:0.75rem}
+.add{background:#fff;color:var(--accent);border-radius:18px;border:0;padding:0.4rem 0.8rem;display:flex;align-items:center;gap:8px}
+.add-icon{font-size:1.2rem}
+.notif{position:relative;display:flex;align-items:center}
+.notif-btn{background:rgba(255,255,255,0.95);border:0;padding:6px;border-radius:10px;cursor:pointer;font-size:1.05rem}
+.badge{position:absolute;top:-6px;right:-6px;background:#ff3b30;color:#fff;border-radius:999px;padding:2px 6px;font-size:0.7rem;font-weight:700}
+.avatar{width:40px;height:40px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;padding:4px;cursor:pointer}
+.avatar svg{display:block}
+.avatar:focus{outline:2px solid rgba(0,0,0,0.07)}
+
+.content{padding:2rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.6rem}
+.product-card{background:#fff;border-radius:18px;padding:0.6rem;border:6px solid rgba(255,255,255,0.7);box-shadow:0 3px 0 rgba(0,0,0,0.03);cursor:pointer;border:none;text-align:left}
+.product-card{appearance:none}
+.product-card:hover{transform:translateY(-4px);box-shadow:0 10px 20px rgba(0,0,0,0.06)}
+.product-card:focus{outline:3px solid rgba(255,127,63,0.2);outline-offset:2px}
+.product-card .image{height:120px;background:linear-gradient(180deg,#fff8f0,#ffe6d6);border-radius:14px;margin-bottom:0.6rem}
+.meta{display:flex;justify-content:space-between;align-items:center;padding:0 0.4rem}
+.title{color:#333;font-weight:600}
+.price{color:var(--accent-2);font-weight:700}
+
+@media (max-width:720px){
+  .sidebar{display:none}
+  .search-row{flex-direction:column;align-items:stretch;gap:0.6rem}
+  .topbar{padding:0.8rem}
+}

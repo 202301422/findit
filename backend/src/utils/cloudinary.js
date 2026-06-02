@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -10,6 +11,11 @@ console.log("ENV CHECK:", {
     secret: process.env.CLOUDINARY_API_SECRET ? "OK" : "MISSING"
 });
 
+=======
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
+
+>>>>>>> uploading
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -20,13 +26,20 @@ const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
 
+<<<<<<< HEAD
         console.log("Uploading file:", localFilePath);
 
+=======
+>>>>>>> uploading
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto"
         });
 
+<<<<<<< HEAD
         console.log("Upload Success:", response.secure_url);
+=======
+        console.log("Cloudinary upload response:", response.url);
+>>>>>>> uploading
 
         if (fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
@@ -35,8 +48,12 @@ const uploadOnCloudinary = async (localFilePath) => {
         return response;
 
     } catch (error) {
+<<<<<<< HEAD
         console.log("Cloudinary Error Message:", error.message);
         console.log("Cloudinary Error Name:", error.name);
+=======
+        console.error("Error uploading to Cloudinary:", error);
+>>>>>>> uploading
 
         if (localFilePath && fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
@@ -47,6 +64,7 @@ const uploadOnCloudinary = async (localFilePath) => {
 };
 
 export const deleteFromCloudinary = async (publicId) => {
+<<<<<<< HEAD
     try {
         if (!publicId) return;
 
@@ -59,3 +77,18 @@ export const deleteFromCloudinary = async (publicId) => {
 };
 
 export { uploadOnCloudinary };
+=======
+    if (!publicId) return;
+
+    await cloudinary.uploader.destroy(publicId);
+};
+
+const getPublicIdFromUrl = (url) => {
+    const parts = url.split("/");
+    const file = parts.pop().split(".")[0];
+    const folder = parts.slice(parts.indexOf("upload") + 1).join("/");
+    return `${folder}/${file}`;
+};
+
+export { uploadOnCloudinary };
+>>>>>>> uploading
