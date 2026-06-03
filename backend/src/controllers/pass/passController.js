@@ -114,7 +114,7 @@ export const getPassById = async (req,res) =>{
 
 export const getAllPasses = async (req,res)=>{
     try {
-        const passes = await pass.find();
+        const passes = await pass.find().sort({ createdAt: -1 }).populate("user", "name email");
         res.status(200).json({
             message: "Passes fetched successfully",
             passes

@@ -7,6 +7,7 @@ import connectDB from "./src/config/db.js";
 
 import authRoutes from "./src/routes/authRoutes.js";
 import foundProductRoutes from "./src/routes/foundRoutes.js";
+import passRoutes from "./src/routes/passRoutes.js";
 
 const app = express();
 
@@ -16,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/found-products", foundProductRoutes); 
-
+app.use("/api/passes", passRoutes);
 app.get("/", (req, res) => {
     res.send("FindIt API Running");
 });
