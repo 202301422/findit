@@ -1,0 +1,22 @@
+:root{
+  --accent:#ff9b5c;
+  --accent-2:#ff7f3f;
+  --bg:#fff8f6;
+  --muted:#f7e6e0;
+}
+
+*{
+  box-sizing:border-box
+}
+
+body{
+  margin:0;
+  font-family:Inter,system-ui,Arial,sans-serif
+}
+
+.site-root{
+  display:flex;
+  min-height:100vh;
+  width:100%;
+  background:var(--bg)
+}

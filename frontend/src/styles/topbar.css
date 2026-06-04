@@ -1,0 +1,165 @@
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  padding:1rem 2rem;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  color:#fff
+}
+
+.brand{
+  font-weight:900;
+  font-size:1.6rem;
+  color:#111
+}
+
+.search-row{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:1rem
+}
+
+.search{
+  background:#fff;
+  padding:0.6rem 1rem;
+  border-radius:28px;
+  display:flex;
+  align-items:center;
+  flex:1;
+  box-shadow:0 4px 10px rgba(0,0,0,0.04);
+  border:1px solid rgba(0,0,0,0.06)
+}
+
+.search input{
+  border:0;
+  outline:0;
+  font-size:1rem;
+  flex:1;
+  background:transparent;
+  color:#222
+}
+
+.search input::placeholder{
+  color:#8b8b8b
+}
+
+.magnifier{
+  margin-right:0.5rem
+}
+
+.filters{
+  display:flex;
+  gap:0.5rem;
+  margin-left:1rem
+}
+
+.dropdown{
+  position:relative
+}
+
+.pill{
+  background:rgba(255,255,255,0.95);
+  border:0;
+  color:var(--accent-2);
+  padding:0.5rem 0.8rem;
+  border-radius:20px
+}
+
+.menu{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+  min-width:160px;
+  padding:6px 0;
+  z-index:30
+}
+
+.menu li{
+  list-style:none;
+  padding:8px 12px;
+  cursor:pointer;
+  color:#333
+}
+
+.menu li:hover{
+  background:rgba(0,0,0,0.04)
+}
+
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:0.75rem
+}
+
+.add{
+  background:#fff;
+  color:var(--accent);
+  border-radius:18px;
+  border:0;
+  padding:0.4rem 0.8rem;
+  display:flex;
+  align-items:center;
+  gap:8px
+}
+
+.add-icon{
+  font-size:1.2rem
+}
+
+.notif{
+  position:relative;
+  display:flex;
+  align-items:center
+}
+
+.notif-btn{
+  background:rgba(255,255,255,0.95);
+  border:0;
+  padding:6px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:1.05rem
+}
+
+.badge{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  background:#ff3b30;
+  color:#fff;
+  border-radius:999px;
+  padding:2px 6px;
+  font-size:0.7rem;
+  font-weight:700
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#fff;
+  border:2px solid rgba(0,0,0,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px;
+  cursor:pointer
+}
+
+.avatar svg{
+  display:block
+}
+
+.avatar:focus{
+  outline:2px solid rgba(0,0,0,0.07)
+}
