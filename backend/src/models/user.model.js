@@ -15,12 +15,17 @@ const userSchema = new mongoose.Schema({
 
   phone: {
     type: String,
-    required: true
+    default: ""
   },
 
+  authProvider: {
+    type: String,
+    enum: ["local", "google"],
+    default: "local"
+  },
+  
   password: {
     type: String,
-    required: true,
     select: false
   },
 

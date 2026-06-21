@@ -1,21 +1,99 @@
+import { GoogleAuthProvider, signInWithPopup, type User } from "firebase/auth"
+import { auth } from "../../firebase"
 import { useState, type FormEvent } from 'react'
+import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
+
+const dauEmailRegex = /^[^@]+@dau\.ac\.in$/
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [errorkey, setErrorKey] = useState(0)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const navigate = useNavigate()
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    alert(`Signing in as ${email || 'user@example.com'}`)
+  async function exchangeGoogleUser(firebaseUser: User) {
+    const email = firebaseUser.email ?? ''
+
+    if (!dauEmailRegex.test(email)) {
+      const message = 'Only DAU email addresses are allowed'
+      setError(message)
+      setErrorKey((prevKey) => prevKey + 1)
+      toast.error(message)
+      await auth.signOut()
+      return
+    }
+
+    const idToken = await firebaseUser.getIdToken(true)
+
+    const response = await fetch('http://localhost:5000/api/auth/google', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ idToken })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Google sign-in failed')
+    }
+
+    localStorage.setItem('token', data.data.accessToken)
+    localStorage.setItem('refreshToken', data.data.refreshToken)
+    toast.success('Logged in successfully!')
     navigate('/home')
   }
 
-  function handleGoogleSignIn() {
-    alert('Continue with Google clicked')
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed')
+        setErrorKey((prevKey) => prevKey + 1)
+        return
+      }
+
+      localStorage.setItem('token', data.data.accessToken)
+      localStorage.setItem('refreshToken', data.data.refreshToken)
+      toast.success('Logged in successfully!')
+      navigate('/home')
+    } catch (error) {
+      console.error('Error during login:', error)
+      toast.error('An error occurred during login. Please try again later.')
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    try {
+      setGoogleLoading(true)
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      await exchangeGoogleUser(result.user)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Google sign-in failed'
+      console.error('Google sign-in failed:', error)
+      setError(message)
+      setErrorKey((prevKey) => prevKey + 1)
+      toast.error(message)
+    } finally {
+      setGoogleLoading(false)
+    }
   }
 
   function handleForgotPassword() {
@@ -50,9 +128,10 @@ export default function Login() {
             type="button"
             className="social-btn google"
             onClick={handleGoogleSignIn}
+            disabled={googleLoading}
           >
             <GoogleIcon />
-            <span>Google</span>
+            <span>{googleLoading ? 'Signing in...' : 'Google'}</span>
           </button>
         </div>
 
@@ -108,6 +187,14 @@ export default function Login() {
           >
             Forgot password?
           </button>
+
+          {
+            error && (
+              <div key={errorkey} className="error-message">
+                {error}
+              </div>
+            )
+          }
 
           <button type="submit" className="primary-btn">
             Sign In

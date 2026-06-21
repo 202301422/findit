@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { firebaseAuth } from "../config/firebaseAdmin.js";
 
 const emailRegex = /^[0-9]{9}@dau\.ac\.in$/;
 
@@ -47,6 +48,7 @@ export const signup = asyncHandler(async (req, res) => {
     phone,
     password: hashedPassword,
     otp,
+    authProvider: "local",
     otpExpiry: Date.now() + 5 * 60 * 1000,
     verificationExpiresAt: Date.now() + verificationGracePeriodMs
   });
@@ -118,6 +120,10 @@ export const login = asyncHandler(async (req, res) => {
 
   if (!user) throw new ApiError(400, "User does not exist");
 
+  if (user.authProvider !== "local") {
+    throw new ApiError(400, `Please login using ${user.authProvider}`);
+  }
+
   if (!user.isVerified) {
     throw new ApiError(400, "Verify email first");
   }
@@ -149,6 +155,68 @@ export const login = asyncHandler(async (req, res) => {
       refreshToken,
       user
     }, "Login successful")
+  );
+});
+
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    throw new ApiError(400, "Firebase ID token is required");
+  }
+
+  const decodedToken = await firebaseAuth.verifyIdToken(idToken);
+  const { email, name } = decodedToken;
+
+  const googleEmailRegex = /^[^@]+@dau\.ac\.in$/;
+
+  if (!googleEmailRegex.test(email)) {
+    throw new ApiError(400, "Only DAU email addresses are allowed");
+  }
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = await User.create({
+      name: name || email.split("@")[0],
+      email,
+      phone: "",
+      authProvider: "google",
+      isVerified: true
+    });
+  } else if (!user.isVerified) {
+    user.isVerified = true;
+    if (!user.name && name) {
+      user.name = name;
+    }
+
+    await user.save();
+  } 
+  
+  const accessToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  return res.json(
+    new ApiResponse(200,
+      {
+        accessToken,
+        refreshToken,
+        user
+      },
+      "Login successful"
+    )
   );
 });
 
