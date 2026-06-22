@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import '../../styles/variables.css'
 import '../../styles/sidebar.css'
@@ -13,26 +14,31 @@ export default function Home() {
   const [selected, setSelected] = useState('Buy & Sell')
   const [catsOpen, setCatsOpen] = useState(false)
   const [priceOpen, setPriceOpen] = useState(false)
+  const navigate = useNavigate()
 
   function handleNav(section: string) {
     setSelected(section)
-    console.log('navigate to', section)
+    // TODO: navigate to section-specific route when implemented
   }
 
   function handleAddItem() {
-    alert('Add item clicked')
+    // TODO: navigate to add-item page when implemented
+    navigate('/add-item')
   }
 
   function handleNotif() {
-    alert('Notifications clicked')
+    // TODO: navigate to notifications page when implemented
+    navigate('/notifications')
   }
 
   function handleProfile() {
-    alert('Profile clicked')
+    // TODO: navigate to profile page when implemented
+    navigate('/profile')
   }
 
   function handleHelp() {
-    alert('Help / FAQs')
+    // TODO: navigate to help/FAQ page when implemented
+    navigate('/help')
   }
 
   return (
@@ -62,7 +68,7 @@ export default function Home() {
               <button
                 key={i}
                 className="product-card"
-                onClick={() => openProduct(i)}
+                onClick={() => navigate(`/product/${i + 1}`)}
                 aria-label={`Open product ${i + 1}`}
               >
                 <div className="image" />
@@ -77,8 +83,4 @@ export default function Home() {
       </div>
     </div>
   )
-}
-
-function openProduct(index: number) {
-  alert(`Open product ${index + 1}`)
 }

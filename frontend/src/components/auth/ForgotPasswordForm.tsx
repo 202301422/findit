@@ -1,0 +1,77 @@
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+
+interface ForgotPasswordFormProps {
+  onForgotPassword?: (data: { email: string }) => void
+}
+
+export default function ForgotPasswordForm({ onForgotPassword }: ForgotPasswordFormProps) {
+  const [email, setEmail] = useState('')
+  const navigate = useNavigate()
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (onForgotPassword) {
+      onForgotPassword({ email })
+    }
+    navigate('/reset-sent')
+  }
+
+  return (
+    <>
+      <div className="brand-mark" aria-hidden="true">
+        <MailIcon />
+      </div>
+
+      <h1>Forgot Password?</h1>
+      <p className="subtitle">
+        Enter your email and we&apos;ll send you a reset link.
+      </p>
+
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label>
+          Email Address
+          <div className="field-shell">
+            <MailFieldIcon />
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
+        </label>
+
+        <button type="submit" className="primary-btn">
+          Send Reset Link
+        </button>
+
+        <p className="footer-copy">
+          <Link to="/signin" className="text-link inline">
+            ← Back to Sign In
+          </Link>
+        </p>
+      </form>
+    </>
+  )
+}
+
+/* ── Icons ── */
+
+function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" style={{ stroke: '#ff7a2f', strokeWidth: 1.8, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+      <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2 8 5 8-5" />
+    </svg>
+  )
+}
+
+function MailFieldIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2 8 5 8-5" />
+    </svg>
+  )
+}

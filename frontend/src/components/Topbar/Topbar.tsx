@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 type TopbarProps = {
   catsOpen: boolean
   priceOpen: boolean
@@ -17,6 +19,19 @@ export default function Topbar({
   handleNotif,
   handleProfile,
 }: TopbarProps) {
+  const [selectedCategory, setSelectedCategory] = useState('Any Categories')
+  const [selectedPrice, setSelectedPrice] = useState('Any Price')
+
+  function handleCategorySelect(category: string) {
+    setSelectedCategory(category)
+    setCatsOpen(false)
+  }
+
+  function handlePriceSelect(price: string) {
+    setSelectedPrice(price)
+    setPriceOpen(false)
+  }
+
   return (
     <header className="topbar">
           <div className="brand">Findit</div>
@@ -27,22 +42,22 @@ export default function Topbar({
             </div>
             <div className="filters">
               <div className="dropdown">
-                <button className="pill" onClick={() => setCatsOpen((s) => !s)} aria-expanded={catsOpen}>Any Categories ▾</button>
+                <button className="pill" onClick={() => setCatsOpen((s) => !s)} aria-expanded={catsOpen}>{selectedCategory} ▾</button>
                 {catsOpen && (
                   <ul className="menu">
-                    <li onClick={() => { setCatsOpen(false); alert('Category: Electronics') }}>Electronics</li>
-                    <li onClick={() => { setCatsOpen(false); alert('Category: Fashion') }}>Fashion</li>
-                    <li onClick={() => { setCatsOpen(false); alert('Category: Books') }}>Books</li>
+                    <li onClick={() => handleCategorySelect('Electronics')}>Electronics</li>
+                    <li onClick={() => handleCategorySelect('Fashion')}>Fashion</li>
+                    <li onClick={() => handleCategorySelect('Books')}>Books</li>
                   </ul>
                 )}
               </div>
               <div className="dropdown">
-                <button className="pill" onClick={() => setPriceOpen((s) => !s)} aria-expanded={priceOpen}>Any Price ▾</button>
+                <button className="pill" onClick={() => setPriceOpen((s) => !s)} aria-expanded={priceOpen}>{selectedPrice} ▾</button>
                 {priceOpen && (
                   <ul className="menu">
-                    <li onClick={() => { setPriceOpen(false); alert('Price: Any') }}>Any</li>
-                    <li onClick={() => { setPriceOpen(false); alert('Price: 0-50') }}>0 - 50</li>
-                    <li onClick={() => { setPriceOpen(false); alert('Price: 50-200') }}>50 - 200</li>
+                    <li onClick={() => handlePriceSelect('Any')}>Any</li>
+                    <li onClick={() => handlePriceSelect('0 - 50')}>0 - 50</li>
+                    <li onClick={() => handlePriceSelect('50 - 200')}>50 - 200</li>
                   </ul>
                 )}
               </div>

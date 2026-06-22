@@ -1,4 +1,4 @@
-import pass from "../models/expirable_item/passModel.js";
+import Pass from "../../models/expirable_item/passModel.js";
 
 export const addPass = async (req,res) => {
     try {

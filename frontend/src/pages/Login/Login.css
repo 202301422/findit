@@ -285,6 +285,121 @@ h1 {
   justify-self: auto;
 }
 
+/* ── Sign-Up dual social buttons ── */
+
+.social-row--duo {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ── Field error message ── */
+
+.field-error {
+  display: block;
+  margin-top: 4px;
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ── Terms copy ── */
+
+.terms-copy {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Back link ── */
+
+.back-link {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.back-link:hover {
+  color: var(--text);
+}
+
+/* ── OTP input row ── */
+
+.otp-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.otp-input {
+  width: 52px;
+  height: 60px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: #fafbfd;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.otp-input:focus {
+  border-color: rgba(255, 122, 47, 0.52);
+  box-shadow: 0 0 0 4px rgba(255, 122, 47, 0.12);
+}
+
+/* ── Info box ── */
+
+.info-box {
+  position: relative;
+  z-index: 1;
+  background: var(--accent-soft);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 6px;
+}
+
+.info-box p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #92572a;
+  line-height: 1.5;
+}
+
+/* ── Countdown text ── */
+
+.countdown-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ── Disabled text-link ── */
+
+.text-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Primary button disabled state ── */
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 @media (max-width: 640px) {
   .auth-page {
     padding: 16px;
@@ -308,5 +423,19 @@ h1 {
 
   .divider p {
     font-size: 0.88rem;
+  }
+
+  .social-row--duo {
+    grid-template-columns: 1fr;
+  }
+
+  .otp-input {
+    width: 44px;
+    height: 52px;
+    font-size: 1.2rem;
+  }
+
+  .otp-row {
+    gap: 6px;
   }
 }
