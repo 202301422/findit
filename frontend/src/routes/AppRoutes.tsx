@@ -2,20 +2,22 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 
 import Login from '../pages/Login/Login'
 import Home from '../pages/Home/Home'
+import AuthRoute from '../components/AuthRoute'
+import ProtectedRoute from '../components/ProtectedRoute'
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Auth routes */}
-      <Route path="/" element={<Login />} />
-      <Route path="/signin" element={<Login />} />
-      <Route path="/signup" element={<Login />} />
-      <Route path="/forgot-password" element={<Login />} />
-      <Route path="/verify-email" element={<Login />} />
-      <Route path="/reset-sent" element={<Login />} />
+      <Route path="/" element={<AuthRoute><Login /></AuthRoute>} />
+      <Route path="/signin" element={<AuthRoute><Login /></AuthRoute>} />
+      <Route path="/signup" element={<AuthRoute><Login /></AuthRoute>} />
+      <Route path="/forgot-password" element={<AuthRoute><Login /></AuthRoute>} />
+      <Route path="/verify-email" element={<AuthRoute><Login /></AuthRoute>} />
+      <Route path="/reset-sent" element={<AuthRoute><Login /></AuthRoute>} />
 
       {/* App routes */}
-      <Route path="/home" element={<Home />} />
+      <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

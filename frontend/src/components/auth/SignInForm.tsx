@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface SignInFormProps {
   onSignIn?: (data: { email: string; password: string }) => void
@@ -9,14 +11,40 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const navigate = useNavigate()
+  const { login, googleLogin } = useAuth()
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (onSignIn) {
       onSignIn({ email, password })
     }
-    navigate('/home')
+    
+    setLoading(true)
+    try {
+      await login({ email, password })
+      toast.success('Successfully logged in!')
+      navigate('/home')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to login')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setGoogleLoading(true)
+    try {
+      await googleLogin()
+      toast.success('Successfully logged in with Google!')
+      navigate('/home')
+    } catch (error: any) {
+      toast.error(error.message || 'Google login failed')
+    } finally {
+      setGoogleLoading(false)
+    }
   }
 
   return (
@@ -37,9 +65,11 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
         <button
           type="button"
           className="social-btn google"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading || loading}
         >
           <GoogleIcon />
-          <span>Google</span>
+          <span>{googleLoading ? 'Loading...' : 'Google'}</span>
         </button>
       </div>
 
@@ -61,6 +91,7 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
               required
+              disabled={loading || googleLoading}
             />
           </div>
         </label>
@@ -76,6 +107,7 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               required
+              disabled={loading || googleLoading}
             />
             <button
               type="button"
@@ -92,8 +124,8 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
           Forgot password?
         </Link>
 
-        <button type="submit" className="primary-btn">
-          Sign In
+        <button type="submit" className="primary-btn" disabled={loading || googleLoading}>
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
 
         <p className="footer-copy">

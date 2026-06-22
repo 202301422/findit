@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 
 import '../../styles/variables.css'
 import '../../styles/sidebar.css'
@@ -15,6 +16,7 @@ export default function Home() {
   const [catsOpen, setCatsOpen] = useState(false)
   const [priceOpen, setPriceOpen] = useState(false)
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
   function handleNav(section: string) {
     setSelected(section)
@@ -41,6 +43,11 @@ export default function Home() {
     navigate('/help')
   }
 
+  async function handleLogout() {
+    await logout()
+    navigate('/signin')
+  }
+
   return (
     <div className="site-root">
       <Sidebar
@@ -49,6 +56,7 @@ export default function Home() {
         selected={selected}
         handleNav={handleNav}
         handleHelp={handleHelp}
+        handleLogout={handleLogout}
       />
 
       <div className="main">

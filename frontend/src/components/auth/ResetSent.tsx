@@ -1,27 +1,84 @@
-import { Link } from 'react-router-dom'
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function ResetSent() {
+  const [otp, setOtp] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { resetPassword } = useAuth()
+  
+  const email = location.state?.email
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    
+    if (!email) {
+      toast.error('Email not found. Please try requesting a reset again.')
+      navigate('/forgot-password')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await resetPassword({ email, otp, newPassword })
+      toast.success('Password successfully reset! Please login.')
+      navigate('/signin')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reset password')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
       <div className="brand-mark" aria-hidden="true">
         <MailCheckIcon />
       </div>
 
-      <h1>Check your email</h1>
+      <h1>Reset Password</h1>
       <p className="subtitle">
-        We&apos;ve sent a password reset link to your email.
+        We&apos;ve sent a password reset code to {email || 'your email'}.
       </p>
 
-      <div className="auth-form" style={{ gap: 12 }}>
-        <a
-          href="https://mail.google.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="primary-btn"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
-        >
-          Open Gmail
-        </a>
+      <form className="auth-form" onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
+        <label>
+          Reset Code
+          <div className="field-shell">
+            <input
+              type="text"
+              placeholder="Enter 6-character code"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+              required
+              disabled={loading}
+              maxLength={6}
+            />
+          </div>
+        </label>
+        
+        <label>
+          New Password
+          <div className="field-shell">
+            <input
+              type="password"
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              disabled={loading}
+              minLength={8}
+            />
+          </div>
+        </label>
+
+        <button type="submit" className="primary-btn" disabled={loading} style={{ marginTop: '1rem' }}>
+          {loading ? 'Resetting...' : 'Reset Password'}
+        </button>
 
         <Link
           to="/signin"
@@ -35,11 +92,12 @@ export default function ResetSent() {
             color: 'var(--accent)',
             border: '1.5px solid var(--line)',
             boxShadow: 'none',
+            marginTop: '0.5rem'
           }}
         >
           Back to Sign In
         </Link>
-      </div>
+      </form>
     </>
   )
 }

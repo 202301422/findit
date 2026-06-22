@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface SignUpFormProps {
   onSignUp?: (data: {
@@ -19,15 +21,18 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const navigate = useNavigate()
+  const { signup, googleLogin } = useAuth()
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {}
 
     if (!fullName.trim()) newErrors.fullName = 'Name is required'
     if (!email.trim()) newErrors.email = 'Email is required'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      newErrors.email = 'Invalid email address'
+    else if (!/^[0-9]{9}@dau\.ac\.in$/.test(email))
+      newErrors.email = 'Must be a valid DAU student email (e.g. 123456789@dau.ac.in)'
     if (!phone.trim()) newErrors.phone = 'Phone number is required'
     else if (!/^\+?[0-9]{7,15}$/.test(phone.replace(/\s/g, '')))
       newErrors.phone = 'Invalid phone number'
@@ -44,13 +49,36 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
     return Object.keys(newErrors).length === 0
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!validate()) return
     if (onSignUp) {
       onSignUp({ fullName, email, phone, password })
     }
-    navigate('/verify-email')
+    
+    setLoading(true)
+    try {
+      await signup({ name: fullName, email, phone, password })
+      toast.success('OTP sent to your email!')
+      navigate('/verify-email', { state: { email } })
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign up')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setGoogleLoading(true)
+    try {
+      await googleLogin()
+      toast.success('Successfully logged in with Google!')
+      navigate('/home')
+    } catch (error: any) {
+      toast.error(error.message || 'Google login failed')
+    } finally {
+      setGoogleLoading(false)
+    }
   }
 
   return (
@@ -68,9 +96,14 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
       <p className="subtitle">Join Findit and start buying &amp; selling</p>
 
       <div className="social-row social-row--duo">
-        <button type="button" className="social-btn google">
+        <button 
+          type="button" 
+          className="social-btn google"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading || loading}
+        >
           <GoogleIcon />
-          <span>Google</span>
+          <span>{googleLoading ? 'Loading...' : 'Google'}</span>
         </button>
         <button type="button" className="social-btn facebook">
           <FacebookIcon />
@@ -97,6 +130,7 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
               onChange={(e) => setFullName(e.target.value)}
               autoComplete="name"
               required
+              disabled={loading || googleLoading}
             />
           </div>
           {errors.fullName && <span className="field-error">{errors.fullName}</span>}
@@ -109,11 +143,12 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
             <MailIcon />
             <input
               type="email"
-              placeholder="you@example.com"
+              placeholder="you@dau.ac.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               required
+              disabled={loading || googleLoading}
             />
           </div>
           {errors.email && <span className="field-error">{errors.email}</span>}
@@ -131,6 +166,7 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="tel"
               required
+              disabled={loading || googleLoading}
             />
           </div>
           {errors.phone && <span className="field-error">{errors.phone}</span>}
@@ -148,6 +184,7 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               required
+              disabled={loading || googleLoading}
             />
             <button
               type="button"
@@ -173,6 +210,7 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
               required
+              disabled={loading || googleLoading}
             />
             <button
               type="button"
@@ -201,8 +239,8 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
           .
         </p>
 
-        <button type="submit" className="primary-btn">
-          Create Account
+        <button type="submit" className="primary-btn" disabled={loading || googleLoading}>
+          {loading ? 'Creating Account...' : 'Create Account'}
         </button>
 
         <p className="footer-copy">

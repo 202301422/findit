@@ -4,6 +4,7 @@ type SidebarProps = {
   selected: string
   handleNav: (section: string) => void
   handleHelp: () => void
+  handleLogout: () => void
 }
 
 export default function Sidebar({
@@ -12,6 +13,7 @@ export default function Sidebar({
   selected,
   handleNav,
   handleHelp,
+  handleLogout,
 }: SidebarProps) {
   return (
     <aside className={`sidebar ${open ? 'expanded' : 'collapsed'}`}>
@@ -34,10 +36,16 @@ export default function Sidebar({
             <span className="label">Event Passes</span>
           </button>
         </nav>
-        <button className="nav-item help" onClick={handleHelp}>
-           <span className="nav-icon" >❓</span>
-           <span className="label">Help / FAQs</span>
-        </button>
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <button className="nav-item help" onClick={handleHelp}>
+             <span className="nav-icon" >❓</span>
+             <span className="label">Help / FAQs</span>
+          </button>
+          <button className="nav-item help" onClick={handleLogout} style={{ color: 'var(--alert)', marginTop: '0.5rem' }}>
+             <span className="nav-icon" >🚪</span>
+             <span className="label">Log Out</span>
+          </button>
+        </div>
       </aside>
   )
 }

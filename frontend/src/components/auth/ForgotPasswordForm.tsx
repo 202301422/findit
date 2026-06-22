@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface ForgotPasswordFormProps {
   onForgotPassword?: (data: { email: string }) => void
@@ -7,14 +9,26 @@ interface ForgotPasswordFormProps {
 
 export default function ForgotPasswordForm({ onForgotPassword }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { forgotPassword } = useAuth()
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (onForgotPassword) {
       onForgotPassword({ email })
     }
-    navigate('/reset-sent')
+    
+    setLoading(true)
+    try {
+      await forgotPassword({ email })
+      toast.success('Password reset email sent!')
+      navigate('/reset-sent', { state: { email } })
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset email')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -40,12 +54,13 @@ export default function ForgotPasswordForm({ onForgotPassword }: ForgotPasswordF
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               required
+              disabled={loading}
             />
           </div>
         </label>
 
-        <button type="submit" className="primary-btn">
-          Send Reset Link
+        <button type="submit" className="primary-btn" disabled={loading}>
+          {loading ? 'Sending...' : 'Send Reset Link'}
         </button>
 
         <p className="footer-copy">
