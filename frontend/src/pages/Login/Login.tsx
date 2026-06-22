@@ -1,11 +1,10 @@
 import { useLocation } from 'react-router-dom'
-import './Login.css'
-
 import SignInForm from '../../components/auth/SignInForm'
 import SignUpForm from '../../components/auth/SignUpForm'
 import ForgotPasswordForm from '../../components/auth/ForgotPasswordForm'
 import VerifyEmailForm from '../../components/auth/VerifyEmailForm'
 import ResetSent from '../../components/auth/ResetSent'
+import './Login.css'
 
 export default function Login() {
   const location = useLocation()
