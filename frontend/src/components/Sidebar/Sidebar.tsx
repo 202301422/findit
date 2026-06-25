@@ -41,11 +41,23 @@ export default function Sidebar({
              <span className="nav-icon" >❓</span>
              <span className="label">Help / FAQs</span>
           </button>
-          <button className="nav-item help" onClick={handleLogout} style={{ color: 'var(--alert)', marginTop: '0.5rem' }}>
-             <span className="nav-icon" >🚪</span>
+          <button className="nav-item help nav-item--logout" onClick={handleLogout}>
+             <span className="nav-icon" aria-hidden="true">
+               <LogoutIcon />
+             </span>
              <span className="label">Log Out</span>
           </button>
         </div>
       </aside>
+  )
+}
+
+function LogoutIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 17l5-5-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
   )
 }

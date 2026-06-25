@@ -2,9 +2,7 @@ import { useState } from 'react'
 
 type TopbarProps = {
   catsOpen: boolean
-  priceOpen: boolean
   setCatsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  setPriceOpen: React.Dispatch<React.SetStateAction<boolean>>
   handleAddItem: () => void
   handleNotif: () => void
   handleProfile: () => void
@@ -12,24 +10,26 @@ type TopbarProps = {
 
 export default function Topbar({
   catsOpen,
-  priceOpen,
   setCatsOpen,
-  setPriceOpen,
   handleAddItem,
   handleNotif,
   handleProfile,
 }: TopbarProps) {
   const [selectedCategory, setSelectedCategory] = useState('Any Categories')
-  const [selectedPrice, setSelectedPrice] = useState('Any Price')
+  const [maxPrice, setMaxPrice] = useState(0)
 
   function handleCategorySelect(category: string) {
     setSelectedCategory(category)
     setCatsOpen(false)
   }
 
-  function handlePriceSelect(price: string) {
-    setSelectedPrice(price)
-    setPriceOpen(false)
+  function handleMaxPriceChange(value: number) {
+    setMaxPrice(value)
+  }
+
+  function formatMaxPriceLabel(value: number) {
+    if (value === 0) return 'Any'
+    return `≤ $${value}`
   }
 
   return (
@@ -41,8 +41,8 @@ export default function Topbar({
               <input placeholder="Search Products . . ." />
             </div>
             <div className="filters">
-              <div className="dropdown">
-                <button className="pill" onClick={() => setCatsOpen((s) => !s)} aria-expanded={catsOpen}>{selectedCategory} ▾</button>
+              <div className="dropdown dropdown--category">
+                <button className="pill pill--fixed" onClick={() => setCatsOpen((s) => !s)} aria-expanded={catsOpen}>{selectedCategory} ▾</button>
                 {catsOpen && (
                   <ul className="menu">
                     <li onClick={() => handleCategorySelect('Electronics')}>Electronics</li>
@@ -51,15 +51,22 @@ export default function Topbar({
                   </ul>
                 )}
               </div>
-              <div className="dropdown">
-                <button className="pill" onClick={() => setPriceOpen((s) => !s)} aria-expanded={priceOpen}>{selectedPrice} ▾</button>
-                {priceOpen && (
-                  <ul className="menu">
-                    <li onClick={() => handlePriceSelect('Any')}>Any</li>
-                    <li onClick={() => handlePriceSelect('0 - 50')}>0 - 50</li>
-                    <li onClick={() => handlePriceSelect('50 - 200')}>50 - 200</li>
-                  </ul>
-                )}
+              <div className="price-shell" aria-label="Maximum price filter">
+                <input
+                  className="price-slider"
+                  type="range"
+                  min="0"
+                  max="500"
+                  step="25"
+                  value={maxPrice}
+                  onChange={(event) => handleMaxPriceChange(Number(event.target.value))}
+                  aria-label="Maximum price"
+                  aria-valuemin={0}
+                  aria-valuemax={500}
+                  aria-valuenow={maxPrice}
+                  aria-valuetext={formatMaxPriceLabel(maxPrice)}
+                />
+                <strong className="price-shell__value">{formatMaxPriceLabel(maxPrice)}</strong>
               </div>
             </div>
           </div>

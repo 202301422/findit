@@ -20,6 +20,22 @@ const passwordResetOtpExpiryMs = Number.isFinite(passwordResetOtpExpiryMinutes) 
   ? passwordResetOtpExpiryMinutes * 60 * 1000
   : 15 * 60 * 1000;
 
+const passwordPolicyChecks = [
+  { test: (value) => value.length >= 8, message: "Password must be at least 8 characters long" },
+  { test: (value) => /[A-Z]/.test(value), message: "Password must include at least one uppercase letter" },
+  { test: (value) => /[a-z]/.test(value), message: "Password must include at least one lowercase letter" },
+  { test: (value) => /[0-9]/.test(value), message: "Password must include at least one number" },
+  { test: (value) => /[^A-Za-z0-9]/.test(value), message: "Password must include at least one special character" }
+];
+
+const validatePasswordPolicy = (password) => {
+  const failedRule = passwordPolicyChecks.find((rule) => !rule.test(password));
+
+  if (failedRule) {
+    throw new ApiError(400, failedRule.message);
+  }
+};
+
 export const signup = asyncHandler(async (req, res) => {
 
   const { name, email, phone, password } = req.body;
@@ -120,7 +136,7 @@ export const login = asyncHandler(async (req, res) => {
 
   if (!user) throw new ApiError(400, "User does not exist");
 
-  if (user.authProvider !== "local") {
+  if (!user.password) {
     throw new ApiError(400, `Please login using ${user.authProvider}`);
   }
 
@@ -155,6 +171,18 @@ export const login = asyncHandler(async (req, res) => {
       refreshToken,
       user
     }, "Login successful")
+  );
+});
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id).select("_id name email phone isVerified authProvider");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.json(
+    new ApiResponse(200, { user }, "Current user fetched")
   );
 });
 
@@ -293,6 +321,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
   if (user.resetPasswordOtp !== otp || user.resetPasswordOtpExpiry < Date.now()) {
     throw new ApiError(400, "Invalid or expired reset OTP");
   }
+
+  validatePasswordPolicy(newPassword);
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 

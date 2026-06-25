@@ -51,7 +51,27 @@
 }
 
 .nav-item .nav-icon{
-  font-size:1.2rem
+  font-size:1.2rem;
+  width:1.2rem;
+  height:1.2rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0
+}
+
+.nav-item .nav-icon svg{
+  width:1.2rem;
+  height:1.2rem;
+  display:block
+}
+
+.nav-item--logout{
+  color:var(--alert)
+}
+
+.nav-item--logout .label{
+  color:var(--alert)
 }
 
 .nav-item .label{

@@ -26,6 +26,16 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
   const navigate = useNavigate()
   const { signup, googleLogin } = useAuth()
 
+  const passwordRequirements = [
+    { label: 'At least 8 characters', test: (value: string) => value.length >= 8 },
+    { label: 'One uppercase letter', test: (value: string) => /[A-Z]/.test(value) },
+    { label: 'One lowercase letter', test: (value: string) => /[a-z]/.test(value) },
+    { label: 'One number', test: (value: string) => /[0-9]/.test(value) },
+    { label: 'One special character', test: (value: string) => /[^A-Za-z0-9]/.test(value) },
+  ]
+
+  const unmetPasswordRequirements = passwordRequirements.filter((rule) => !rule.test(password))
+
   function validate(): boolean {
     const newErrors: Record<string, string> = {}
 
@@ -36,12 +46,9 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
     if (!phone.trim()) newErrors.phone = 'Phone number is required'
     else if (!/^\+?[0-9]{7,15}$/.test(phone.replace(/\s/g, '')))
       newErrors.phone = 'Invalid phone number'
-    if (password.length < 8) newErrors.password = 'At least 8 characters'
-    else if (!/[A-Z]/.test(password)) newErrors.password = 'Needs uppercase letter'
-    else if (!/[a-z]/.test(password)) newErrors.password = 'Needs lowercase letter'
-    else if (!/[0-9]/.test(password)) newErrors.password = 'Needs a number'
-    else if (!/[^A-Za-z0-9]/.test(password))
-      newErrors.password = 'Needs a special character'
+    if (unmetPasswordRequirements.length > 0) {
+      newErrors.password = 'Password does not meet all requirements'
+    }
     if (confirmPassword !== password)
       newErrors.confirmPassword = 'Passwords must match'
 
@@ -95,7 +102,7 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
       <h1>Create Account</h1>
       <p className="subtitle">Join Findit and start buying &amp; selling</p>
 
-      <div className="social-row social-row--duo">
+      <div className="social-row">
         <button 
           type="button" 
           className="social-btn google"
@@ -104,10 +111,6 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
         >
           <GoogleIcon />
           <span>{googleLoading ? 'Loading...' : 'Google'}</span>
-        </button>
-        <button type="button" className="social-btn facebook">
-          <FacebookIcon />
-          <span>Facebook</span>
         </button>
       </div>
 
@@ -195,6 +198,39 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
               <EyeIcon open={showPassword} />
             </button>
           </div>
+          <ul
+            aria-label="Password requirements"
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: '0.6rem 0 0',
+              display: 'grid',
+              gap: '0.35rem',
+              fontSize: '0.92rem',
+              color: 'var(--muted, #6b7280)'
+            }}
+          >
+            {passwordRequirements.map((rule) => {
+              const isMet = rule.test(password)
+
+              return (
+                <li
+                  key={rule.label}
+                  style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{ color: isMet ? 'var(--success, #16a34a)' : 'var(--muted, #6b7280)' }}
+                  >
+                    {isMet ? '✓' : '•'}
+                  </span>
+                  <span style={{ color: isMet ? 'var(--text, #111827)' : 'inherit' }}>
+                    {rule.label}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
           {errors.password && <span className="field-error">{errors.password}</span>}
         </label>
 
@@ -263,17 +299,6 @@ function GoogleIcon() {
       <path fill="#34A853" d="M6.6 14.1l-.7.5-2.4 1.8C5 19.4 8.2 21 12 21c2.6 0 4.8-.9 6.4-2.4l-3.3-2.5c-.9.6-2 .9-3.1.9-2.3 0-4.3-1.6-5-3.9z" />
       <path fill="#FBBC05" d="M3.5 7.7A9 9 0 0 0 3 12c0 .8.1 1.5.3 2.2l3.1-2.4c-.1-.5-.2-1.1-.2-1.7s.1-1.2.2-1.7L3.5 7.7z" />
       <path fill="#4285F4" d="M12 4.8c1.5 0 2.8.5 3.8 1.4l2.8-2.8A9.8 9.8 0 0 0 12 1C8.2 1 5 2.6 3.5 5.7l3.1 2.4C7.7 6.2 9.7 4.8 12 4.8z" />
-    </svg>
-  )
-}
-
-function FacebookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="#1877F2"
-        d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.026 4.388 11.022 10.125 11.927v-8.437H7.078v-3.49h3.047V9.41c0-3.026 1.791-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.97H15.83c-1.491 0-1.955.93-1.955 1.885v2.264h3.328l-.532 3.49h-2.796v8.437C19.612 23.095 24 18.1 24 12.073z"
-      />
     </svg>
   )
 }

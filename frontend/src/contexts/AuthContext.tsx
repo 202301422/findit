@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import axios from 'axios';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth as firebaseAuth } from '../firebase';
 import api from '../utils/api';
@@ -32,23 +33,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const clearSession = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+  };
+
   useEffect(() => {
-    // Initialize auth state from localStorage
-    const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('accessToken');
-    
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
-      } catch (e) {
-        console.error("Failed to parse stored user", e);
-        localStorage.removeItem('user');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+
+    const validateSession = async () => {
+      if (!storedToken) {
+        clearSession();
+        setIsLoading(false);
+        return;
       }
-    }
-    setIsLoading(false);
+
+      try {
+        const response = await axios.get(`${api.defaults.baseURL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${storedToken}`
+          }
+        });
+
+        if (response.data.success) {
+          const currentUser = response.data.data.user as User;
+          setUser(currentUser);
+          setIsAuthenticated(true);
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          return;
+        }
+
+        clearSession();
+      } catch (error) {
+        clearSession();
+        if (axios.isAxiosError(error)) {
+          console.error('Session validation failed', error.response?.data || error.message);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void validateSession();
   }, []);
 
   const handleLoginSuccess = (userData: User, accessToken: string, refreshToken: string) => {
@@ -85,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({
+        prompt: 'select_account',
         hd: 'dau.ac.in', // Hint for dau.ac.in domains
       });
       
@@ -111,11 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error("Logout error", e);
     } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('user');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      clearSession();
     }
   };
 

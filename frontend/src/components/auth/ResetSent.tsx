@@ -7,11 +7,32 @@ export default function ResetSent() {
   const [otp, setOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const navigate = useNavigate()
   const location = useLocation()
   const { resetPassword } = useAuth()
   
   const email = location.state?.email
+
+  const passwordRequirements = [
+    { label: 'At least 8 characters', test: (value: string) => value.length >= 8 },
+    { label: 'One uppercase letter', test: (value: string) => /[A-Z]/.test(value) },
+    { label: 'One lowercase letter', test: (value: string) => /[a-z]/.test(value) },
+    { label: 'One number', test: (value: string) => /[0-9]/.test(value) },
+    { label: 'One special character', test: (value: string) => /[^A-Za-z0-9]/.test(value) },
+  ]
+
+  const unmetPasswordRequirements = passwordRequirements.filter((rule) => !rule.test(newPassword))
+
+  function validatePassword(): boolean {
+    if (unmetPasswordRequirements.length > 0) {
+      setErrors({ password: 'Password does not meet all requirements' })
+      return false
+    }
+
+    setErrors({})
+    return true
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -19,6 +40,10 @@ export default function ResetSent() {
     if (!email) {
       toast.error('Email not found. Please try requesting a reset again.')
       navigate('/forgot-password')
+      return
+    }
+
+    if (!validatePassword()) {
       return
     }
 
@@ -71,9 +96,42 @@ export default function ResetSent() {
               onChange={(e) => setNewPassword(e.target.value)}
               required
               disabled={loading}
-              minLength={8}
             />
           </div>
+          <ul
+            aria-label="Password requirements"
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: '0.6rem 0 0',
+              display: 'grid',
+              gap: '0.35rem',
+              fontSize: '0.92rem',
+              color: 'var(--muted, #6b7280)'
+            }}
+          >
+            {passwordRequirements.map((rule) => {
+              const isMet = rule.test(newPassword)
+
+              return (
+                <li
+                  key={rule.label}
+                  style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{ color: isMet ? 'var(--success, #16a34a)' : 'var(--muted, #6b7280)' }}
+                  >
+                    {isMet ? '✓' : '•'}
+                  </span>
+                  <span style={{ color: isMet ? 'var(--text, #111827)' : 'inherit' }}>
+                    {rule.label}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          {errors.password && <span className="field-error">{errors.password}</span>}
         </label>
 
         <button type="submit" className="primary-btn" disabled={loading} style={{ marginTop: '1rem' }}>

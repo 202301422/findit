@@ -20,19 +20,23 @@
 }
 
 .search-row{
+  --filters-width:348px;
   flex:1;
-  display:flex;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) var(--filters-width);
   align-items:center;
-  gap:1rem
+  gap:1rem;
+  min-width:0
 }
 
 .search{
+  min-width:0;
+  width:100%;
   background:#fff;
   padding:0.6rem 1rem;
   border-radius:28px;
   display:flex;
   align-items:center;
-  flex:1;
   box-shadow:0 4px 10px rgba(0,0,0,0.04);
   border:1px solid rgba(0,0,0,0.06)
 }
@@ -56,8 +60,14 @@
 
 .filters{
   display:flex;
-  gap:0.5rem;
-  margin-left:1rem
+  gap:0.75rem;
+  margin-left:0;
+  align-items:center;
+  width:var(--filters-width);
+  min-width:var(--filters-width);
+  max-width:var(--filters-width);
+  flex:0 0 var(--filters-width);
+  white-space:nowrap
 }
 
 .dropdown{
@@ -69,7 +79,63 @@
   border:0;
   color:var(--accent-2);
   padding:0.5rem 0.8rem;
-  border-radius:20px
+  border-radius:20px;
+  cursor:pointer
+}
+
+.pill--fixed{
+  width:168px;
+  min-width:168px;
+  max-width:168px;
+  box-sizing:border-box;
+  text-align:left;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap
+}
+
+.dropdown--category{
+  width:168px;
+  min-width:168px;
+  max-width:168px;
+  flex:0 0 168px
+}
+
+.price-shell{
+  width:168px;
+  min-width:168px;
+  max-width:168px;
+  flex:0 0 168px;
+  box-sizing:border-box;
+  background:rgba(255,255,255,0.95);
+  color:var(--accent-2);
+  border-radius:20px;
+  padding:0.5rem 0.8rem;
+  display:flex;
+  align-items:center;
+  gap:0.4rem;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05)
+}
+
+.price-shell__value{
+  flex:0 0 2.85rem;
+  min-width:2.85rem;
+  max-width:2.85rem;
+  font-size:0.72rem;
+  font-weight:700;
+  text-align:right;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap
+}
+
+.price-slider{
+  flex:1;
+  min-width:0;
+  height:4px;
+  margin:0;
+  accent-color:var(--accent);
+  cursor:pointer
 }
 
 .menu{
@@ -162,4 +228,43 @@
 
 .avatar:focus{
   outline:2px solid rgba(0,0,0,0.07)
+}
+
+@media (max-width:720px){
+  .sidebar{
+    display:none
+  }
+
+  .topbar{
+    padding:0.8rem
+  }
+
+  .search-row{
+    grid-template-columns:1fr;
+    gap:0.6rem
+  }
+
+  .filters{
+    --filters-width:100%;
+    width:100%;
+    min-width:0;
+    max-width:none;
+    flex:1 1 100%;
+    flex-wrap:wrap
+  }
+
+  .dropdown--category,
+  .pill--fixed,
+  .price-shell{
+    width:100%;
+    min-width:0;
+    max-width:none;
+    flex:1 1 100%
+  }
+
+  .price-shell__value{
+    flex:0 0 auto;
+    min-width:0;
+    max-width:none
+  }
 }

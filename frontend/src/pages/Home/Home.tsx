@@ -14,7 +14,6 @@ export default function Home() {
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState('Buy & Sell')
   const [catsOpen, setCatsOpen] = useState(false)
-  const [priceOpen, setPriceOpen] = useState(false)
   const navigate = useNavigate()
   const { logout } = useAuth()
 
@@ -62,9 +61,7 @@ export default function Home() {
       <div className="main">
         <Topbar
           catsOpen={catsOpen}
-          priceOpen={priceOpen}
           setCatsOpen={setCatsOpen}
-          setPriceOpen={setPriceOpen}
           handleAddItem={handleAddItem}
           handleNotif={handleNotif}
           handleProfile={handleProfile}
