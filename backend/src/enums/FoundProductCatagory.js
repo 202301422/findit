@@ -2,14 +2,14 @@ const ProductCategory = [
     "Electronics",
     "Wearables",
     "Accessories",
-    "Books and Documents",
+    "Books & Documents",
     "Grooming",
     "Money",
     "ID Cards",
     "Stationary",
     "Sports & Fitness",
     "Keys",
-    "Others"
+    "Other"
 ];
 
 export default ProductCategory;

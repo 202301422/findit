@@ -6,5 +6,5 @@ export const ResellProductCatagory = [
     "Books",
     "Hostel Essentials",
     "Sports & Fitness",
-    "Others"
+    "Other"
 ];

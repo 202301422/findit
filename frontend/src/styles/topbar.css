@@ -84,9 +84,9 @@
 }
 
 .pill--fixed{
-  width:168px;
-  min-width:168px;
-  max-width:168px;
+  width:156px;
+  min-width:156px;
+  max-width:156px;
   box-sizing:border-box;
   text-align:left;
   overflow:hidden;
@@ -95,22 +95,22 @@
 }
 
 .dropdown--category{
-  width:168px;
-  min-width:168px;
-  max-width:168px;
-  flex:0 0 168px
+  width:156px;
+  min-width:156px;
+  max-width:156px;
+  flex:0 0 156px
 }
 
 .price-shell{
-  width:168px;
-  min-width:168px;
-  max-width:168px;
-  flex:0 0 168px;
+  width:156px;
+  min-width:156px;
+  max-width:156px;
+  flex:0 0 156px;
   box-sizing:border-box;
   background:rgba(255,255,255,0.95);
   color:var(--accent-2);
   border-radius:20px;
-  padding:0.5rem 0.8rem;
+  padding:0.45rem 0.7rem;
   display:flex;
   align-items:center;
   gap:0.4rem;
@@ -118,9 +118,9 @@
 }
 
 .price-shell__value{
-  flex:0 0 2.85rem;
-  min-width:2.85rem;
-  max-width:2.85rem;
+  flex:0 0 2.6rem;
+  min-width:2.6rem;
+  max-width:2.6rem;
   font-size:0.72rem;
   font-weight:700;
   text-align:right;
