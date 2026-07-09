@@ -106,3 +106,118 @@ export const createSellProduct = asyncHandler(async (req, res) => {
         throw error;
     }
 });
+
+export const getAllSellProducts = asyncHandler(async (req, res) => {
+
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit) || 10); // max 50 per page
+  const skip = (page - 1) * limit;
+
+
+  const filter = {};
+
+  // Search by name or description
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    filter.$or = [
+      { name: searchRegex },
+      { description: searchRegex }
+    ];
+  }
+
+  // category match
+  if (req.query.category) {
+    const categories = req.query.category.split(',');
+    filter.category = { $in: categories };
+  }
+
+  // Price range 
+  if (req.query.minPrice || req.query.maxPrice) {
+    filter.sellingPrice = {};
+    if (req.query.minPrice) filter.sellingPrice.$gte = Number(req.query.minPrice);
+    if (req.query.maxPrice) filter.sellingPrice.$lte = Number(req.query.maxPrice);
+  }
+
+  // Warranty filter
+  if (req.query.hasWarranty !== undefined) {
+    filter.hasWarranty = req.query.hasWarranty === 'true';
+  }
+
+  // Negotiable filter
+  if (req.query.isNegotiable !== undefined) {
+    filter.isNegotiable = req.query.isNegotiable === 'true';
+  }
+
+  let sortOption = { createdAt: -1 }; 
+  if (req.query.sortBy) {
+    switch (req.query.sortBy) {
+      case 'price_asc':
+        sortOption = { sellingPrice: 1 };
+        break;
+      case 'price_desc':
+        sortOption = { sellingPrice: -1 };
+        break;
+      case 'oldest':
+        sortOption = { createdAt: 1 };
+        break;
+      case 'most_used':
+        sortOption = { 'usageTime.years': -1, 'usageTime.months': -1 };
+        break;
+      default:
+        sortOption = { createdAt: -1 };
+    }
+  }
+
+  const [products, total] = await Promise.all([
+    sellProduct
+      .find(filter)
+      .populate('user', 'name email phoneNumber profileImage') 
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .lean(), 
+    sellProduct.countDocuments(filter)
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        products,
+        pagination: {
+          currentPage: page,
+          itemsPerPage: limit,
+          totalItems: total,
+          totalPages,
+          hasNextPage,
+          hasPrevPage,
+        },
+        filters: req.query, 
+      },
+      "Products fetched successfully"
+    )
+  );
+});
+
+export const getSellProductDetail = asyncHandler(async (req,res)=>{
+    const {sellProductId} = req.params;
+    const sellProduct = await SellProduct.findById(sellProductId);
+    if(!seelproduct){
+        return res.status(404).json(new ApiResponse(
+            404,
+            "Sell product not found"
+        ));
+    }
+    return res.status(200).json(new ApiRespose(
+        200,
+        sellProduct,
+        "Product fetched successfully"
+    ));
+});
+
+
+
