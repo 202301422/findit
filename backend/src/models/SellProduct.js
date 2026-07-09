@@ -1,5 +1,6 @@
 import mongoose from "mongoose"
-import FoundCatagory from "../enum/FoundProductCatagory"
+import { ResellProductCatagory } from "../enums/ResellProductCatagory.js"
+
 const sellProductSchema = new mongoose.Schema({
     name : {
         type : String,
@@ -9,9 +10,13 @@ const sellProductSchema = new mongoose.Schema({
         type : String,
         required : true,
     },
+    imagePublicId : {
+        type : String,
+        required : true,
+    },
     category : {
         type : String,
-        enum : FoundCatagory,
+        enum : ResellProductCatagory,
         required : true,
     },
     description : {
@@ -63,7 +68,7 @@ const sellProductSchema = new mongoose.Schema({
     productURL : {
         type : String,
     },
-    quentity : {
+    quantity : {
         type : Number,
         required : true,
     },

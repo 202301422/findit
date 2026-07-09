@@ -1,6 +1,8 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 
+import api from '../../utils/api'
 import '../../styles/variables.css'
 import './AddItem.css'
 
@@ -12,6 +14,8 @@ type Photo = { id: string; file: File; preview: string }
 type WizardForm = {
   name: string
   category: string
+  description: string
+  productUrl: string
   eventDateTime: string
   venueArea: string
   venueCity: string
@@ -26,6 +30,9 @@ type WizardForm = {
   arrivalTime: string
   locationFound: string
   dateTimeFound: string
+  usageYears: string
+  usageMonths: string
+  usageDays: string
   warrantyDuration: string
   warrantyUnit: string
 }
@@ -33,6 +40,8 @@ type WizardForm = {
 const emptyForm: WizardForm = {
   name: '',
   category: '',
+  description: '',
+  productUrl: '',
   eventDateTime: '',
   venueArea: '',
   venueCity: '',
@@ -47,6 +56,9 @@ const emptyForm: WizardForm = {
   arrivalTime: '',
   locationFound: '',
   dateTimeFound: '',
+  usageYears: '',
+  usageMonths: '',
+  usageDays: '',
   warrantyDuration: '',
   warrantyUnit: '',
 }
@@ -70,6 +82,17 @@ function isFutureDateTime(value: string) {
   return new Date(value).getTime() > Date.now()
 }
 
+function isArrivalAfterDeparture(departureTime: string, arrivalTime: string) {
+  if (!filled(departureTime) || !filled(arrivalTime)) return true
+
+  const departure = new Date(departureTime).getTime()
+  const arrival = new Date(arrivalTime).getTime()
+
+  if (Number.isNaN(departure) || Number.isNaN(arrival)) return false
+
+  return arrival > departure
+}
+
 export default function AddItem() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
@@ -84,9 +107,174 @@ export default function AddItem() {
   const [form, setForm] = useState<WizardForm>(emptyForm)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function setFormField<K extends keyof WizardForm>(key: K, value: WizardForm[K]) {
     setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  function getPrimaryPhoto() {
+    return photos[0]
+  }
+
+  function buildSubmitFormData(payload: Record<string, string>) {
+    const photo = getPrimaryPhoto()
+
+    if (!photo) {
+      throw new Error('At least one photo is required')
+    }
+
+    const formData = new FormData()
+    Object.entries(payload).forEach(([key, value]) => {
+      formData.append(key, value)
+    })
+    formData.append('image', photo.file)
+
+    return formData
+  }
+
+  async function submitFoundListing() {
+    const payload = buildSubmitFormData({
+      name: form.name.trim(),
+      category: form.category,
+      description: form.description.trim(),
+      venue: form.locationFound.trim(),
+      dateTime: form.dateTimeFound,
+    })
+
+    await api.post('/found-products', payload)
+  }
+
+  async function submitPassListing() {
+    const payload = buildSubmitFormData({
+      name: form.name.trim(),
+      category: form.category,
+      description: form.description.trim(),
+      price,
+      quantity,
+      isNegotiable: String(isNegotiable),
+      dateTime: form.eventDateTime,
+      venue: JSON.stringify({
+        area: form.venueArea.trim(),
+        city: form.venueCity.trim(),
+        state: form.venueState.trim(),
+      }),
+    })
+
+    await api.post('/passes', payload)
+  }
+
+  async function submitTicketListing() {
+    await api.post('/tickets', {
+      ticketType,
+      description: form.description.trim(),
+      price,
+      quantity,
+      isNegotiable: String(isNegotiable),
+      origin: JSON.stringify({
+        area: form.originArea.trim(),
+        city: form.originCity.trim(),
+        state: form.originState.trim(),
+      }),
+      destination: JSON.stringify({
+        area: form.destArea.trim(),
+        city: form.destCity.trim(),
+        state: form.destState.trim(),
+      }),
+      departureTime: form.departureTime,
+      arrivalTime: form.arrivalTime,
+    })
+  }
+
+  async function submitOtherListing() {
+    const payload = buildSubmitFormData({
+      name: form.name.trim(),
+      category: form.category,
+      description: form.description.trim(),
+      sellingPrice: price,
+      purchasePrice: originalPrice,
+      productURL: form.productUrl.trim(),
+      quantity,
+      isNegotiable: String(isNegotiable),
+      hasWarranty: String(hasWarranty),
+      warrantyValue: form.warrantyDuration,
+      warrantyUnit: form.warrantyUnit,
+      usageTime: JSON.stringify({
+        years: form.usageYears,
+        months: form.usageMonths,
+        days: form.usageDays,
+      }),
+    })
+
+    await api.post('/sell-products', payload)
+  }
+
+  async function handleSubmitListing() {
+    if (isSubmitting) return
+
+    setSubmitAttempted(true)
+
+    if (!isFinalStepValid) {
+      return
+    }
+
+    if (listingType === 'found') {
+      try {
+        setIsSubmitting(true)
+        await submitFoundListing()
+        toast.success('Found item submitted successfully')
+        navigate('/home')
+      } catch (error) {
+        toast.error((error as { message?: string })?.message || 'Failed to submit found item')
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    if (productType === 'pass') {
+      try {
+        setIsSubmitting(true)
+        await submitPassListing()
+        toast.success('Pass published successfully')
+        navigate('/home')
+      } catch (error) {
+        toast.error((error as { message?: string })?.message || 'Failed to publish pass')
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    if (productType === 'ticket') {
+      try {
+        setIsSubmitting(true)
+        await submitTicketListing()
+        toast.success('Ticket published successfully')
+        navigate('/home')
+      } catch (error) {
+        toast.error((error as { message?: string })?.message || 'Failed to publish ticket')
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    if (productType === 'other') {
+      try {
+        setIsSubmitting(true)
+        await submitOtherListing()
+        toast.success('Item published successfully')
+        navigate('/home')
+      } catch (error) {
+        toast.error((error as { message?: string })?.message || 'Failed to publish item')
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    toast.error('This listing type is not connected to the backend yet.')
   }
 
   const pricingValid = positivePrice(price) && positiveQuantity(quantity) && isNegotiable !== null
@@ -125,6 +313,8 @@ export default function AddItem() {
         && filled(form.destState)
         && filled(form.departureTime)
         && filled(form.arrivalTime)
+        && isFutureDateTime(form.departureTime)
+        && isArrivalAfterDeparture(form.departureTime, form.arrivalTime)
         && pricingValid
       )
     }
@@ -179,9 +369,7 @@ export default function AddItem() {
 
   function handleContinue() {
     if (isFinalStep) {
-      setSubmitAttempted(true)
-      if (!isFinalStepValid) return
-      navigate('/home')
+      void handleSubmitListing()
       return
     }
 
@@ -278,7 +466,9 @@ export default function AddItem() {
               />
               <TextAreaField
                 label="Description"
+                onChange={(value) => setFormField('description', value)}
                 placeholder="Describe the item — color, brand, markings, condition when found..."
+                value={form.description}
               />
             </div>
           </section>
@@ -370,7 +560,12 @@ export default function AddItem() {
                 placeholder="Select category"
                 value={form.category}
               />
-              <TextAreaField label="Description" placeholder="Describe the pass — seat details, perks, restrictions..." />
+              <TextAreaField
+                label="Description"
+                onChange={(value) => setFormField('description', value)}
+                placeholder="Describe the pass — seat details, perks, restrictions..."
+                value={form.description}
+              />
               <PhotoDrop
                 error={submitAttempted && photos.length === 0}
                 helper="PNG, JPG, WEBP · up to 8 images"
@@ -428,11 +623,11 @@ export default function AddItem() {
             onQuantityChange={setQuantity}
             price={price}
             priceError={submitAttempted && !positivePrice(price)}
-            priceLabel="Price per Pass"
+            priceLabel="Price per Pass (₹)"
             quantity={quantity}
             quantityError={submitAttempted && !positiveQuantity(quantity)}
             quantityLabel="Quantity"
-            totalLabel={`Total for ${quantity || '0'} passes`}
+            totalLabel={`Total for ${quantity || '0'} passes (₹)`}
             totalValue={pricingTotal}
           />
         </>
@@ -517,7 +712,7 @@ export default function AddItem() {
               </div>
               <div className="two-col">
                 <Field
-                  error={submitAttempted && !filled(form.departureTime)}
+                  error={submitAttempted && (!filled(form.departureTime) || !isFutureDateTime(form.departureTime))}
                   icon="🕒"
                   label="Departure Time"
                   onChange={(value) => setFormField('departureTime', value)}
@@ -526,7 +721,7 @@ export default function AddItem() {
                   value={form.departureTime}
                 />
                 <Field
-                  error={submitAttempted && !filled(form.arrivalTime)}
+                  error={submitAttempted && filled(form.departureTime) && filled(form.arrivalTime) && !isArrivalAfterDeparture(form.departureTime, form.arrivalTime)}
                   icon="🕒"
                   label="Arrival Time"
                   onChange={(value) => setFormField('arrivalTime', value)}
@@ -535,7 +730,18 @@ export default function AddItem() {
                   value={form.arrivalTime}
                 />
               </div>
-              <TextAreaField label="Description" placeholder="Seat class, booking reference, special notes..." />
+              {submitAttempted && filled(form.departureTime) && !isFutureDateTime(form.departureTime) ? (
+                <div className="notice notice--warn">Departure time must be in the future.</div>
+              ) : null}
+              {submitAttempted && filled(form.departureTime) && filled(form.arrivalTime) && !isArrivalAfterDeparture(form.departureTime, form.arrivalTime) ? (
+                <div className="notice notice--warn">Arrival time must be after departure time.</div>
+              ) : null}
+              <TextAreaField
+                label="Description"
+                onChange={(value) => setFormField('description', value)}
+                placeholder="Seat class, booking reference, special notes..."
+                value={form.description}
+              />
             </div>
           </section>
 
@@ -547,11 +753,11 @@ export default function AddItem() {
             onQuantityChange={setQuantity}
             price={price}
             priceError={submitAttempted && !positivePrice(price)}
-            priceLabel="Price per Ticket"
+            priceLabel="Price per Ticket (₹)"
             quantity={quantity}
             quantityError={submitAttempted && !positiveQuantity(quantity)}
             quantityLabel="Quantity"
-            totalLabel={`Total for ${quantity || '0'} tickets`}
+            totalLabel={`Total for ${quantity || '0'} tickets (₹)`}
             totalValue={pricingTotal}
           />
         </>
@@ -578,8 +784,21 @@ export default function AddItem() {
               placeholder="Select category"
               value={form.category}
             />
-            <TextAreaField label="Description" placeholder="Condition, specs, reason for selling..." maxLength={1000} />
-            <Field label="Product URL" optional placeholder="https://amazon.com/dp/..." icon="🔗" />
+            <TextAreaField
+              label="Description"
+              onChange={(value) => setFormField('description', value)}
+              placeholder="Condition, specs, reason for selling..."
+              value={form.description}
+              maxLength={1000}
+            />
+            <Field
+              icon="🔗"
+              label="Product URL"
+              optional
+              placeholder="https://amazon.com/dp/..."
+              onChange={(value) => setFormField('productUrl', value)}
+              value={form.productUrl}
+            />
           </div>
         </section>
 
@@ -596,9 +815,36 @@ export default function AddItem() {
           <h2 className="wizard-card__title">USAGE HISTORY</h2>
           <div className="notice notice--soft">How long have you been using this item?</div>
           <div className="three-col">
-            <Field label="Years" placeholder="0" />
-            <Field label="Months" placeholder="0" />
-            <Field label="Days" placeholder="0" />
+            <Field
+              label="Years"
+              onChange={(value) => setFormField('usageYears', value)}
+              placeholder="0"
+              inputMode="numeric"
+              min="0"
+              step="1"
+              type="number"
+              value={form.usageYears}
+            />
+            <Field
+              label="Months"
+              onChange={(value) => setFormField('usageMonths', value)}
+              placeholder="0"
+              inputMode="numeric"
+              min="0"
+              step="1"
+              type="number"
+              value={form.usageMonths}
+            />
+            <Field
+              label="Days"
+              onChange={(value) => setFormField('usageDays', value)}
+              placeholder="0"
+              inputMode="numeric"
+              min="0"
+              step="1"
+              type="number"
+              value={form.usageDays}
+            />
           </div>
         </section>
 
@@ -643,7 +889,7 @@ export default function AddItem() {
           onOriginalPriceChange={setOriginalPrice}
           price={price}
           priceError={submitAttempted && !positivePrice(price)}
-          priceLabel="Selling Price"
+          priceLabel="Selling Price (₹)"
           quantity={quantity}
           quantityError={submitAttempted && !positiveQuantity(quantity)}
           quantityLabel="Quantity"
@@ -715,9 +961,9 @@ export default function AddItem() {
               className="primary-button"
               onClick={handleContinue}
               type="button"
-              disabled={!isFinalStep && continueDisabled}
+              disabled={isSubmitting || (!isFinalStep && continueDisabled)}
             >
-              {isFinalStep ? `✓ ${submitLabel}` : 'Continue →'}
+              {isFinalStep ? (isSubmitting ? 'Publishing...' : `✓ ${submitLabel}`) : 'Continue →'}
             </button>
           </div>
         ) : null}
@@ -761,6 +1007,9 @@ function Field({
   icon,
   optional,
   type = 'text',
+  inputMode,
+  min,
+  step,
   value = '',
   onChange,
   error,
@@ -770,6 +1019,9 @@ function Field({
   icon?: string
   optional?: boolean
   type?: string
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
+  min?: string
+  step?: string
   value?: string
   onChange?: (value: string) => void
   error?: boolean
@@ -783,9 +1035,16 @@ function Field({
         {icon ? <span className="field__icon">{icon}</span> : null}
         <input
           placeholder={placeholder}
+          inputMode={inputMode}
+          min={min}
+          step={step}
           type={type}
-          value={value}
-          onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+          {...(onChange
+            ? {
+                value,
+                onChange: (event: React.ChangeEvent<HTMLInputElement>) => onChange(event.target.value),
+              }
+            : { defaultValue: value })}
         />
       </span>
       {error ? <span className="field__error">This field is required</span> : null}
@@ -816,16 +1075,17 @@ function SelectFieldFound({
           value={value}
         >
           <option value="" disabled>{placeholder}</option>
-          <option value="general">Electronics</option>
-          <option value="electronics">Wearables</option>
-          <option value="fashion">Accessories</option>
-          <option value="fashion">Books & Documents</option>
-          <option value="fashion">Grooming</option>
-          <option value="fashion">Money</option>
-          <option value="fashion">ID Cards</option>
-          <option value="fashion">Sports & Fitness</option>
-          <option value="fashion">Keys</option>
-          <option value="fashion">Other</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Wearables">Wearables</option>
+          <option value="Accessories">Accessories</option>
+          <option value="Books & Documents">Books & Documents</option>
+          <option value="Grooming">Grooming</option>
+          <option value="Money">Money</option>
+          <option value="ID Cards">ID Cards</option>
+          <option value="Stationary">Stationary</option>
+          <option value="Sports & Fitness">Sports & Fitness</option>
+          <option value="Keys">Keys</option>
+          <option value="Other">Other</option>
         </select>
         <span className="field__chevron">▾</span>
       </span>
@@ -857,10 +1117,10 @@ function SelectFieldPass({
           value={value}
         >
           <option value="" disabled>{placeholder}</option>
-          <option value="general">Concert</option>
-          <option value="electronics">Movie</option>
-          <option value="fashion">Event</option>
-          <option value="fashion">Other</option>
+          <option value="Concert">Concert</option>
+          <option value="Movie">Movie</option>
+          <option value="Event">Event</option>
+          <option value="Other">Other</option>
         </select>
         <span className="field__chevron">▾</span>
       </span>
@@ -892,14 +1152,17 @@ function SelectFieldOther({
           value={value}
         >
           <option value="" disabled>{placeholder}</option>
-          <option value="general">Electronics</option>
-          <option value="electronics">Wearables</option>
-          <option value="fashion">Grooming</option>
-          <option value="fashion">Stationery</option>
-          <option value="fashion">Books</option>
-          <option value="fashion">Hostel Essentials</option>
-          <option value="fashion">Sports & Fitness</option>
-          <option value="fashion">Other</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Wearables">Wearables</option>
+          <option value="Accessories">Accessories</option>
+          <option value="Books & Documents">Books & Documents</option>
+          <option value="Grooming">Grooming</option>
+          <option value="Money">Money</option>
+          <option value="ID Cards">ID Cards</option>
+          <option value="Stationary">Stationary</option>
+          <option value="Sports & Fitness">Sports & Fitness</option>
+          <option value="Keys">Keys</option>
+          <option value="Other">Other</option>
         </select>
         <span className="field__chevron">▾</span>
       </span>
@@ -931,9 +1194,9 @@ function SelectFieldWarranty({
           value={value}
         >
           <option value="" disabled>{placeholder}</option>
-          <option value="general">Days</option>
-          <option value="electronics">Months</option>
-          <option value="fashion">Years</option>
+          <option value="days">Days</option>
+          <option value="months">Months</option>
+          <option value="years">Years</option>
         </select>
         <span className="field__chevron">▾</span>
       </span>
@@ -947,17 +1210,30 @@ function SelectFieldWarranty({
 function TextAreaField({
   label,
   placeholder,
+  value = '',
+  onChange,
   maxLength,
 }: {
   label: string
   placeholder: string
+  value?: string
+  onChange?: (value: string) => void
   maxLength?: number
 }) {
   return (
     <label className="field">
       <span className="field__label">{label}</span>
       <span className="field__shell field__shell--textarea">
-        <textarea placeholder={placeholder} maxLength={maxLength} />
+        <textarea
+          maxLength={maxLength}
+          placeholder={placeholder}
+          {...(onChange
+            ? {
+                value,
+                onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => onChange(event.target.value),
+              }
+            : { defaultValue: value })}
+        />
       </span>
       {maxLength ? <span className="field__counter">0 / {maxLength}</span> : null}
     </label>
@@ -1138,21 +1414,43 @@ function PricingCard({
         <div className="two-col two-col--tight">
           <Field
             error={priceError}
-            icon="$"
+            icon="₹"
+            inputMode="decimal"
             label={priceLabel}
             onChange={onPriceChange}
-            placeholder="$ 0.00"
+            placeholder="₹ 0.00"
+            min="0"
+            step="0.01"
+            type="number"
             value={price}
           />
           {originalPriceLabel ? (
-            <Field icon="$" label={originalPriceLabel} optional placeholder="$ 0.00" value={originalPrice} onChange={onOriginalPriceChange}/>
+            <Field
+              icon="₹"
+              inputMode="decimal"
+              label={originalPriceLabel}
+              optional
+              onChange={onOriginalPriceChange}
+              placeholder="₹ 0.00"
+              min="0"
+              step="0.01"
+              type="number"
+              value={originalPrice}
+            />
           ) : null}
           <Field
             error={quantityError}
             icon="▣"
+            inputMode="numeric"
             label={quantityLabel}
-            onChange={onQuantityChange}
+            onChange={(value) => {
+              const digitsOnly = value.replace(/\D+/g, '')
+              onQuantityChange(digitsOnly)
+            }}
             placeholder="1"
+            min="1"
+            step="1"
+            type="number"
             value={quantity}
           />
           <div className="field">
@@ -1176,9 +1474,9 @@ function PricingCard({
         ) : null}
         {totalLabel && totalValue !== undefined ? (
           <div className="pricing-total">
-            <span className="pricing-total__icon">$</span>
+            <span className="pricing-total__icon">₹</span>
             <span>
-              {totalLabel}: <strong>${totalValue.toFixed(2)}</strong>
+              {totalLabel}: <strong>₹{totalValue.toFixed(2)}</strong>
             </span>
           </div>
         ) : null}

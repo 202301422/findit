@@ -1,10 +1,13 @@
 export const ResellProductCatagory = [
     "Electronics",
     "Wearables",
+    "Accessories",
+    "Books & Documents",
     "Grooming",
+    "Money",
+    "ID Cards",
     "Stationary",
-    "Books",
-    "Hostel Essentials",
     "Sports & Fitness",
+    "Keys",
     "Other"
 ];
