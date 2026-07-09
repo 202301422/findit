@@ -10,6 +10,7 @@ import foundProductRoutes from "./src/routes/foundRoutes.js";
 import passRoutes from "./src/routes/passRoutes.js";
 import ticketRoutes from "./src/routes/ticketRoutes.js";
 import sellRoutes from "./src/routes/sellRoutes.js";
+import profileRoutes from "./src/routes/profileRoutes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/api/found-products", foundProductRoutes);
 app.use("/api/passes", passRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/sell-products", sellRoutes);
+app.use("/api/profile", profileRoutes);
 app.get("/", (req, res) => {
     res.send("FindIt API Running");
 });

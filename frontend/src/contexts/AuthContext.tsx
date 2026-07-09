@@ -9,6 +9,13 @@ interface User {
   name: string;
   email: string;
   phone: string;
+  username?: string;
+  avatar?: string;
+  bio?: string;
+  college?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   isVerified: boolean;
   authProvider: string;
 }
@@ -24,6 +31,7 @@ interface AuthContextType {
   verifyEmail: (data: any) => Promise<any>;
   forgotPassword: (data: any) => Promise<any>;
   resetPassword: (data: any) => Promise<any>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,44 +49,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('refreshToken');
   };
 
-  useEffect(() => {
+  const fetchCurrentUser = async () => {
     const storedToken = localStorage.getItem('accessToken');
+    if (!storedToken) return null;
 
-    const validateSession = async () => {
-      if (!storedToken) {
-        clearSession();
-        setIsLoading(false);
-        return;
+    try {
+      const response = await axios.get(`${api.defaults.baseURL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${storedToken}`
+        }
+      });
+
+      if (response.data.success) {
+        return response.data.data.user as User;
       }
+    } catch (error) {
+       console.error('Session validation failed', error);
+    }
+    return null;
+  }
 
-      try {
-        const response = await axios.get(`${api.defaults.baseURL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${storedToken}`
-          }
-        });
-
-        if (response.data.success) {
-          const currentUser = response.data.data.user as User;
+  useEffect(() => {
+    const validateSession = async () => {
+      const currentUser = await fetchCurrentUser();
+      if (currentUser) {
           setUser(currentUser);
           setIsAuthenticated(true);
           localStorage.setItem('user', JSON.stringify(currentUser));
-          return;
-        }
-
-        clearSession();
-      } catch (error) {
-        clearSession();
-        if (axios.isAxiosError(error)) {
-          console.error('Session validation failed', error.response?.data || error.message);
-        }
-      } finally {
-        setIsLoading(false);
+      } else {
+          clearSession();
       }
+      setIsLoading(false);
     };
 
     void validateSession();
   }, []);
+
+  const refreshUser = async () => {
+    const currentUser = await fetchCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      localStorage.setItem('user', JSON.stringify(currentUser));
+    }
+  };
 
   const handleLoginSuccess = (userData: User, accessToken: string, refreshToken: string) => {
     setUser(userData);
@@ -184,7 +197,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         verifyEmail,
         forgotPassword,
-        resetPassword
+        resetPassword,
+        refreshUser
       }}
     >
       {children}

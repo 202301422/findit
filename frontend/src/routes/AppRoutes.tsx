@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from '../pages/Login/Login'
 import Home from '../pages/Home/Home'
 import AddItem from '../pages/AddItem/AddItem'
+import Profile from '../pages/Profile/Profile'
 import AuthRoute from '../components/AuthRoute'
 import ProtectedRoute from '../components/ProtectedRoute'
 
@@ -20,6 +21,7 @@ export default function AppRoutes() {
       {/* App routes */}
       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
       <Route path="/add-item" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

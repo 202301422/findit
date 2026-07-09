@@ -7,6 +7,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { firebaseAuth } from "../config/firebaseAdmin.js";
+import { validatePasswordPolicy } from "../utils/validators.js";
 
 const emailRegex = /^[0-9]{9}@dau\.ac\.in$/;
 
@@ -19,22 +20,6 @@ const passwordResetOtpExpiryMinutes = Number(process.env.PASSWORD_RESET_OTP_EXPI
 const passwordResetOtpExpiryMs = Number.isFinite(passwordResetOtpExpiryMinutes) && passwordResetOtpExpiryMinutes > 0
   ? passwordResetOtpExpiryMinutes * 60 * 1000
   : 15 * 60 * 1000;
-
-const passwordPolicyChecks = [
-  { test: (value) => value.length >= 8, message: "Password must be at least 8 characters long" },
-  { test: (value) => /[A-Z]/.test(value), message: "Password must include at least one uppercase letter" },
-  { test: (value) => /[a-z]/.test(value), message: "Password must include at least one lowercase letter" },
-  { test: (value) => /[0-9]/.test(value), message: "Password must include at least one number" },
-  { test: (value) => /[^A-Za-z0-9]/.test(value), message: "Password must include at least one special character" }
-];
-
-const validatePasswordPolicy = (password) => {
-  const failedRule = passwordPolicyChecks.find((rule) => !rule.test(password));
-
-  if (failedRule) {
-    throw new ApiError(400, failedRule.message);
-  }
-};
 
 export const signup = asyncHandler(async (req, res) => {
 
