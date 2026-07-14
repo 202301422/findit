@@ -62,3 +62,22 @@
     padding:1rem
   }
 }
+
+/* Custom Empty State Styling */
+.empty-state {
+  grid-column: 1 / -1; /* Ensures it spans the entire grid horizontally */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  background: rgba(255, 255, 255, 0.6);
+  border: 3px dashed #e0e0e0;
+  border-radius: 18px;
+  color: #888;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 2rem;
+  margin-top: 1rem;
+}

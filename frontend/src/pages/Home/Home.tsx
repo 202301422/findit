@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import api from '../../utils/api' // Imports your Axios interceptor setup
+import api from '../../utils/api'
 
 import '../../styles/variables.css'
 import '../../styles/sidebar.css'
@@ -16,14 +16,18 @@ export default function Home() {
   const [selected, setSelected] = useState('Buy & Sell')
   const [catsOpen, setCatsOpen] = useState(false)
   
-  // NEW: State to hold the dynamic data from MongoDB
+  // LIFTED FILTER STATE
+  const [categories, setCategories] = useState<string[]>([])
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [maxPrice, setMaxPrice] = useState(0)
+
+  // DATA STATE
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
   const navigate = useNavigate()
   const { logout } = useAuth()
 
-  // NEW: Helper function to translate UI tab names into the 'type' our backend expects
   const getBackendType = (tab: string) => {
     switch (tab) {
       case 'Buy & Sell': return 'sell';
@@ -34,55 +38,64 @@ export default function Home() {
     }
   }
 
-  // NEW: Fetch data whenever the component loads or the 'selected' tab changes
-  // NEW: Fetch data whenever the component loads or the 'selected' tab changes
+  // EFFECT 1: Handle Tab Switching (Reset UI & Fetch new Categories)
   useEffect(() => {
-    const fetchFeedData = async () => {
-      // FIX: Empty the array immediately so previous tab data disappears
-      setItems([]); 
-      setLoading(true);
-      
+    // Forcefully reset the filters and UI states when moving to a new page
+    setSelectedCategory('');
+    setMaxPrice(0);
+    setCatsOpen(false);
+    setItems([]); 
+
+    const fetchCategories = async () => {
       try {
         const type = getBackendType(selected);
-        const response = await api.get(`/feed/list?type=${type}`);
+        const response = await api.get(`/feed/categories?type=${type}`);
+        if (response.data.success) {
+          setCategories(response.data.data.categories);
+        }
+      } catch (error) {
+        console.error(`Failed to fetch categories for ${selected}:`, error);
+      }
+    };
+
+    fetchCategories();
+  }, [selected]); 
+
+  // EFFECT 2: Fetch the actual Feed Items (Triggers on Tab, Category, or Price change)
+  useEffect(() => {
+    const fetchFeedData = async () => {
+      setLoading(true);
+      try {
+        const type = getBackendType(selected);
+        
+        // Build the dynamic URL query parameters
+        let url = `/feed/list?type=${type}`;
+        if (selectedCategory) url += `&category=${selectedCategory}`;
+        if (maxPrice > 0) url += `&maxPrice=${maxPrice}`;
+
+        const response = await api.get(url);
         
         if (response.data.success) {
           setItems(response.data.data.items);
         }
       } catch (error) {
-        // Now if it fails, it will just show an empty page instead of wrong items
         console.error(`Failed to fetch ${selected} data:`, error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeedData();
-  }, [selected]);
+    // Debounce the fetch by 300ms. This prevents the frontend from spamming 
+    // the backend with 100 API calls if the user slides the price slider quickly.
+    const timeoutId = setTimeout(() => {
+      fetchFeedData();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [selected, selectedCategory, maxPrice]);
 
   function handleNav(section: string) {
     setSelected(section)
-  }
-
-  function handleAddItem() {
-    navigate('/add-item')
-  }
-
-  function handleNotif() {
-    navigate('/notifications')
-  }
-
-  function handleProfile() {
-    navigate('/profile')
-  }
-
-  function handleHelp() {
-    navigate('/help')
-  }
-
-  async function handleLogout() {
-    await logout()
-    navigate('/signin')
   }
 
   return (
@@ -92,38 +105,46 @@ export default function Home() {
         setOpen={setOpen}
         selected={selected}
         handleNav={handleNav}
-        handleHelp={handleHelp}
-        handleLogout={handleLogout}
+        handleHelp={() => navigate('/help')}
+        handleLogout={async () => {
+          await logout();
+          navigate('/signin');
+        }}
       />
 
       <div className="main">
         <Topbar
           catsOpen={catsOpen}
           setCatsOpen={setCatsOpen}
-          handleAddItem={handleAddItem}
-          handleNotif={handleNotif}
-          handleProfile={handleProfile}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          maxPrice={maxPrice}
+          setMaxPrice={setMaxPrice}
+          handleAddItem={() => navigate('/add-item')}
+          handleNotif={() => navigate('/notifications')}
+          handleProfile={() => navigate('/profile')}
         />
 
         <main className="content">
           <div className="cards">
-            {/* NEW: Dynamic rendering based on loading state and fetched items */}
             {loading ? (
-              <div style={{ padding: '2rem', color: '#666' }}>Loading {selected}...</div>
+              <div className="empty-state">Loading {selected}...</div>
             ) : items.length === 0 ? (
-              <div style={{ padding: '2rem', color: '#666' }}>No items found for {selected}.</div>
+              // Enhanced Empty State Applied Here
+              <div className="empty-state">
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📦</div>
+                No items found for {selected}.
+              </div>
             ) : (
               items.map((item) => (
                 <button
                   key={item._id}
                   className="product-card"
-                  // Passes the backend type to the details page URL so it knows what to query later
                   onClick={() => navigate(`/product/${item._id}?type=${getBackendType(selected)}`)}
-                  aria-label={`Open ${item.name || item.ticketType}`}
                 >
                   <div 
                     className="image" 
-                    // Safely handles images, using inline styles for dynamic URL injection
                     style={item.imageUrl ? { 
                       backgroundImage: `url(${item.imageUrl})`, 
                       backgroundSize: 'cover', 
@@ -131,13 +152,14 @@ export default function Home() {
                     } : {}}
                   />
                   <div className="meta">
-                    {/* Handles the difference in schema naming (name vs ticketType) */}
                     <div className="title">{item.name || item.ticketType}</div>
                     
-                    {/* Handles the difference in pricing fields (sellingPrice vs price vs None for Lost&Found) */}
-                    <div className="price">
-                      {item.sellingPrice ? `₹${item.sellingPrice}` : item.price ? `₹${item.price}` : '—'}
-                    </div>
+                    {/* Hides the price box entirely for Lost & Found items */}
+                    {selected !== 'Lost & Found' && (
+                      <div className="price">
+                        {item.sellingPrice ? `₹${item.sellingPrice}` : item.price ? `₹${item.price}` : '—'}
+                      </div>
+                    )}
                   </div>
                 </button>
               ))
