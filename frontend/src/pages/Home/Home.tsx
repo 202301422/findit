@@ -137,7 +137,10 @@ export default function Home() {
                 No items found for {selected}.
               </div>
             ) : (
-              items.map((item) => (
+              items.map((item) => {
+                const primaryImageUrl = item.images?.[0]?.url || item.imageUrl
+
+                return (
                 <button
                   key={item._id}
                   className="product-card"
@@ -145,8 +148,8 @@ export default function Home() {
                 >
                   <div 
                     className="image" 
-                    style={item.imageUrl ? { 
-                      backgroundImage: `url(${item.imageUrl})`, 
+                    style={primaryImageUrl ? { 
+                      backgroundImage: `url(${primaryImageUrl})`, 
                       backgroundSize: 'cover', 
                       backgroundPosition: 'center' 
                     } : {}}
@@ -162,7 +165,8 @@ export default function Home() {
                     )}
                   </div>
                 </button>
-              ))
+                )
+              })
             )}
           </div>
         </main>

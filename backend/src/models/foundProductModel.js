@@ -1,6 +1,30 @@
 import mongoose from "mongoose";
 import ProductCategory from "../enums/FoundProductCatagory.js";
-import { getPublicIdFromUrl } from "../utils/cloudinary.js";
+import { UPLOAD_CONFIG } from "../config/uploadConfig.js";
+
+const imageSchema = new mongoose.Schema({
+    url: {
+        type: String,
+        required: [true, "Image URL is required"],
+        set: function (url) {
+            if (url && url.startsWith("http://")) {
+                return url.replace("http://", "https://");
+            }
+
+            return url;
+        }
+    },
+    publicId: {
+        type: String,
+        required: [true, "Image public ID is required"]
+    },
+    width: {
+        type: Number
+    },
+    height: {
+        type: Number
+    }
+}, { _id: false });
 
 const foundProductSchema = new mongoose.Schema(
     {
@@ -17,23 +41,22 @@ const foundProductSchema = new mongoose.Schema(
             enum: ProductCategory
         },
 
-        imageUrl: {
-            type: String,
-            required: [true, "Image URL is required"],
-
-            set: function (url) {
-
-                if (url && url.startsWith("http://")) {
-                    return url.replace("http://", "https://");
+        images: {
+            type: [imageSchema],
+            validate: [
+                {
+                    validator: function (arr) {
+                        return arr && arr.length >= 1;
+                    },
+                    message: "At least one image is required"
+                },
+                {
+                    validator: function (arr) {
+                        return !arr || arr.length <= UPLOAD_CONFIG.MAX_IMAGES;
+                    },
+                    message: `Cannot upload more than ${UPLOAD_CONFIG.MAX_IMAGES} images`
                 }
-
-                return url;
-            }
-        },
-
-        imagePublicId: {
-            type: String,
-            required: [true, "Image public ID is required"]
+            ]
         },
 
         description: {
@@ -71,43 +94,23 @@ const foundProductSchema = new mongoose.Schema(
     }
 );
 
-
-
-
-
-
-
-// Auto-populate imagePublicId for legacy compatibility
-foundProductSchema.pre("validate", function () {
-
-    if (this.imageUrl && !this.imagePublicId) {
-
-        this.imagePublicId =
-            getPublicIdFromUrl(this.imageUrl);
-    }
+foundProductSchema.virtual("imageUrl").get(function () {
+    return this.images && this.images.length > 0 ? this.images[0].url : null;
 });
 
+foundProductSchema.virtual("imagePublicId").get(function () {
+    return this.images && this.images.length > 0 ? this.images[0].publicId : null;
+});
 
-
-
-
-
-
-// Clean JSON output
 foundProductSchema.set("toJSON", {
+    virtuals: true,
     transform: function (doc, ret) {
-
         delete ret.__v;
-
         return ret;
     }
 });
 
-
-
-
-
-
+foundProductSchema.set("toObject", { virtuals: true });
 
 const FoundProduct = mongoose.model(
     "FoundProduct",

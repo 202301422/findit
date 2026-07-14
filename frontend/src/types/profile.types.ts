@@ -31,10 +31,16 @@ export interface UpdateProfileData {
 export type ListingStatus = 'active' | 'sold' | 'closed' | 'expired' | 'draft';
 export type ListingCategory = 'Lost & Found' | 'Event Passes' | 'Travelling Tickets' | 'Buy & Sell';
 
+export interface ListingImage {
+  url: string;
+  publicId: string;
+}
+
 export interface Listing {
   _id: string;
   title: string;
   image: string;
+  images?: ListingImage[];
   price?: number;
   status: ListingStatus;
   createdAt: string;
@@ -49,3 +55,4 @@ export interface ProfileStats {
   lostItemsReturned: number;
   ticketsSold: number;
 }
+

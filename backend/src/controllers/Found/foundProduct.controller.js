@@ -2,50 +2,70 @@ import FoundProduct from "../../models/foundProductModel.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
-import { uploadOnCloudinary, deleteFromCloudinary } from "../../utils/cloudinary.js";
+import { uploadImages, deleteImages } from "../../utils/cloudinary.js";
+import { UPLOAD_CONFIG } from "../../config/uploadConfig.js";
+
+function parseBoolean(value) {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") return value.toLowerCase() === "true";
+    return false;
+}
+
+function parseStringArray(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.map(String).filter(Boolean);
+
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : [];
+        } catch (error) {
+            return value.split(",").map((item) => item.trim()).filter(Boolean);
+        }
+    }
+
+    return [];
+}
 
 /**
- * Creates a new found product.
- * Handles validation first, uploads image to Cloudinary via buffer stream, and rolls back the upload if DB creation fails.
+ * Creates a new found product with multiple images.
+ * Accepts images via `upload.array("images")`.
  */
 export const createFoundProduct = asyncHandler(async (req, res) => {
     const { name, category, description, venue, dateTime } = req.body;
 
-    // 1. Strict validation prior to external upload to prevent security and resource leaks
     if (!name || !category || !venue || !dateTime) {
         throw new ApiError(400, "All required fields (name, category, venue, dateTime) must be provided");
     }
 
-    if (!req.file) {
-        throw new ApiError(400, "Image file is required");
+    const files = Array.isArray(req.files) ? req.files : [];
+    console.log("[FOUND CREATE] req.files:", files);
+
+    if (files.length === 0) {
+        throw new ApiError(400, "At least one image file is required in the images field");
     }
 
-    // 2. Stream upload file from memory buffer to Cloudinary
-    const uploaded = await uploadOnCloudinary(req.file.buffer);
-    if (!uploaded) {
-        throw new ApiError(500, "Image upload failed. Please try again.");
-    }
+    const uploadedImages = await uploadImages(files, "findit/found-products");
+    console.log("[FOUND CREATE] uploadedImages:", uploadedImages);
 
     try {
-        // 3. Persist product metadata to MongoDB
         const product = await FoundProduct.create({
             name,
             category,
             description,
             venue,
             dateTime,
-            imageUrl: uploaded.secure_url,    // Always save HTTPS secure URL
-            imagePublicId: uploaded.public_id, // Store explicit identifier for efficient CDN operations
+            images: uploadedImages,
             user: req.user._id
         });
+        console.log("[FOUND CREATE] product.images:", product.images);
 
         return res
             .status(201)
             .json(new ApiResponse(201, product, "Product created successfully"));
     } catch (error) {
-        // 4. Transaction Rollback: Clean up uploaded asset if DB creation fails to prevent orphaned file leak
-        console.error(`[ROLLBACK] DB creation failed. Deleting uploaded asset '${uploaded.public_id}':`, error.message);
-        await deleteFromCloudinary(uploaded.public_id);
+        console.error(`[ROLLBACK] Found product creation failed. Deleting ${uploadedImages.length} uploaded assets:`, error.message);
+        await deleteImages(uploadedImages.map((img) => img.publicId));
         throw error;
     }
 });
@@ -80,12 +100,14 @@ export const getSingleFoundProduct = asyncHandler(async (req, res) => {
 });
 
 /**
- * Updates a found product.
- * Authorizes user first, handles upload of new image, commits changes to DB, cleans up old image, and handles upload rollback on DB errors.
+ * Updates a found product. Supports keeping, removing, adding, or replacing images.
+ * Optional form fields:
+ * - removeImagePublicIds: JSON array or comma-separated public IDs to remove.
+ * - keepImagePublicIds: JSON array or comma-separated public IDs to keep.
+ * - replaceImages: "true" to replace the current image set with newly uploaded files.
  */
 export const updateFoundProduct = asyncHandler(async (req, res) => {
-    // 1. Verify existence and authorization before doing any external CDN operations
-    let product = await FoundProduct.findById(req.params.id);
+    const product = await FoundProduct.findById(req.params.id);
 
     if (!product) {
         throw new ApiError(404, "Product not found");
@@ -95,52 +117,84 @@ export const updateFoundProduct = asyncHandler(async (req, res) => {
         throw new ApiError(403, "Not authorized to update this product");
     }
 
-    const originalImagePublicId = product.imagePublicId;
-    const originalImageUrl = product.imageUrl;
-    let newUploaded = null;
+    const oldImages = [...(product.images || [])];
+    const files = Array.isArray(req.files) ? req.files : [];
+    const removeImagePublicIds = parseStringArray(req.body.removeImagePublicIds);
+    const keepImagePublicIds = parseStringArray(req.body.keepImagePublicIds);
+    const replaceImages = parseBoolean(req.body.replaceImages);
+    let newUploadedImages = [];
 
-    // 2. Upload new image if provided
-    if (req.file) {
-        newUploaded = await uploadOnCloudinary(req.file.buffer);
-        if (!newUploaded) {
-            throw new ApiError(500, "New image upload failed");
-        }
-        req.body.imageUrl = newUploaded.secure_url;
-        req.body.imagePublicId = newUploaded.public_id;
+    console.log("[FOUND UPDATE] req.files:", files);
+
+    if (files.length > 0) {
+        newUploadedImages = await uploadImages(files, "findit/found-products");
+        console.log("[FOUND UPDATE] uploadedImages:", newUploadedImages);
     }
 
     try {
-        // 3. Commit update to MongoDB
+        const updateData = { ...req.body };
+
+        delete updateData.images;
+        delete updateData.imageUrl;
+        delete updateData.imagePublicId;
+        delete updateData.removeImagePublicIds;
+        delete updateData.keepImagePublicIds;
+        delete updateData.replaceImages;
+
+        let nextImages = oldImages;
+
+        if (replaceImages) {
+            nextImages = newUploadedImages;
+        } else if (keepImagePublicIds.length > 0) {
+            const keepSet = new Set(keepImagePublicIds);
+            nextImages = oldImages.filter((img) => keepSet.has(img.publicId)).concat(newUploadedImages);
+        } else if (removeImagePublicIds.length > 0 || newUploadedImages.length > 0) {
+            const removeSet = new Set(removeImagePublicIds);
+            nextImages = oldImages.filter((img) => !removeSet.has(img.publicId)).concat(newUploadedImages);
+        }
+
+        if (nextImages.length === 0) {
+            throw new ApiError(400, "At least one image is required");
+        }
+
+        if (nextImages.length > UPLOAD_CONFIG.MAX_IMAGES) {
+            throw new ApiError(400, `Cannot upload more than ${UPLOAD_CONFIG.MAX_IMAGES} images`);
+        }
+
+        updateData.images = nextImages;
+
         const updatedProduct = await FoundProduct.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData,
             { new: true, runValidators: true }
         );
+        console.log("[FOUND UPDATE] product.images:", updatedProduct.images);
 
-        // 4. Delete old asset ONLY after DB update successfully commits
-        if (newUploaded && (originalImagePublicId || originalImageUrl)) {
-            await deleteFromCloudinary(originalImagePublicId || originalImageUrl);
+        const nextPublicIds = new Set(nextImages.map((img) => img.publicId));
+        const removedPublicIds = oldImages
+            .filter((img) => !nextPublicIds.has(img.publicId))
+            .map((img) => img.publicId);
+
+        if (removedPublicIds.length > 0) {
+            await deleteImages(removedPublicIds);
         }
 
         return res
             .status(200)
             .json(new ApiResponse(200, updatedProduct, "Product updated successfully"));
     } catch (error) {
-        // 5. Transaction Rollback: Clean up newly uploaded image if update fails to prevent orphans
-        if (newUploaded) {
-            console.error(`[ROLLBACK] DB update failed. Deleting newly uploaded asset '${newUploaded.public_id}':`, error.message);
-            await deleteFromCloudinary(newUploaded.public_id);
+        if (newUploadedImages.length > 0) {
+            console.error(`[ROLLBACK] Found product update failed. Deleting ${newUploadedImages.length} newly uploaded assets:`, error.message);
+            await deleteImages(newUploadedImages.map((img) => img.publicId));
         }
         throw error;
     }
 });
 
 /**
- * Deletes a found product.
- * Authorizes user, deletes DB document, and cleans up Cloudinary assets afterward.
+ * Deletes a found product and all Cloudinary images.
  */
 export const deleteFoundProduct = asyncHandler(async (req, res) => {
-    // 1. Validate existence and authorization
     const product = await FoundProduct.findById(req.params.id);
 
     if (!product) {
@@ -151,16 +205,12 @@ export const deleteFoundProduct = asyncHandler(async (req, res) => {
         throw new ApiError(403, "Not authorized to delete this product");
     }
 
-    const imagePublicId = product.imagePublicId;
-    const imageUrl = product.imageUrl;
+    const imagePublicIds = (product.images || []).map((img) => img.publicId);
 
-    // 2. Delete database entry first to guarantee consistent database state
     await product.deleteOne();
 
-    // 3. Clean up Cloudinary asset after successful DB record deletion
-    if (imagePublicId || imageUrl) {
-        // deleteFromCloudinary handles publicId or parsing fallback URLs safely
-        await deleteFromCloudinary(imagePublicId || imageUrl);
+    if (imagePublicIds.length > 0) {
+        await deleteImages(imagePublicIds);
     }
 
     return res

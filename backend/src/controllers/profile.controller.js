@@ -1,11 +1,12 @@
 import User from "../models/user.model.js";
 import FoundProduct from "../models/foundProductModel.js";
 import Pass from "../models/expirable_item/passModel.js";
+import SellProduct from "../models/SellProduct.js";
 import bcrypt from "bcryptjs";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary, deleteImages } from "../utils/cloudinary.js";
 import { validatePasswordPolicy } from "../utils/validators.js";
 
 /**
@@ -247,14 +248,25 @@ export const deleteAccount = asyncHandler(async (req, res) => {
   // Delete all user's listings across all models
   const userId = user._id;
 
-  // Delete found products and clean up their Cloudinary images
+  // Delete found products and clean up their Cloudinary images (multi-image)
   const foundProducts = await FoundProduct.find({ user: userId });
-  for (const product of foundProducts) {
-    if (product.imagePublicId) {
-      await deleteFromCloudinary(product.imagePublicId);
-    }
+  const foundImagePublicIds = foundProducts.flatMap(
+    (product) => (product.images || []).map((img) => img.publicId)
+  );
+  if (foundImagePublicIds.length > 0) {
+    await deleteImages(foundImagePublicIds);
   }
   await FoundProduct.deleteMany({ user: userId });
+
+  // Delete sell products and clean up their Cloudinary images (multi-image)
+  const sellProducts = await SellProduct.find({ user: userId });
+  const sellImagePublicIds = sellProducts.flatMap(
+    (product) => (product.images || []).map((img) => img.publicId)
+  );
+  if (sellImagePublicIds.length > 0) {
+    await deleteImages(sellImagePublicIds);
+  }
+  await SellProduct.deleteMany({ user: userId });
 
   // Delete passes (passes don't use Cloudinary in current implementation)
   await Pass.deleteMany({ user: userId });
@@ -290,7 +302,8 @@ export const getMyListings = asyncHandler(async (req, res) => {
     result.lostFound = foundProducts.map((item) => ({
       _id: item._id,
       title: item.name,
-      image: item.imageUrl,
+      images: item.images || [],
+      image: item.images?.[0]?.url || "",
       status: item.status || "active",
       createdAt: item.createdAt,
       category: "Lost & Found",
@@ -316,8 +329,29 @@ export const getMyListings = asyncHandler(async (req, res) => {
     }));
   }
 
+
+  // Fetch sell products (Buy & Sell)
+  if (!category || category === "buy-sell") {
+    const sellProducts = await SellProduct.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    result.buySell = sellProducts.map((item) => ({
+      _id: item._id,
+      title: item.name,
+      images: item.images || [],
+      image: item.images?.[0]?.url || "",
+      price: item.sellingPrice,
+      status: item.status || "active",
+      createdAt: item.createdAt,
+      category: "Buy & Sell",
+      type: "sell"
+    }));
+  }
+
   // Aggregate all listings for "all" view
   const allListings = [
+    ...(result.buySell || []),
     ...(result.lostFound || []),
     ...(result.eventPasses || [])
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -354,3 +388,4 @@ export const getProfileStats = asyncHandler(async (req, res) => {
 
   return res.json(new ApiResponse(200, { stats }, "Stats fetched successfully"));
 });
+

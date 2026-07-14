@@ -11,6 +11,10 @@ type ProductType = 'pass' | 'ticket' | 'other'
 type TicketType = 'Bus' | 'Train' | 'Plane'
 type Photo = { id: string; file: File; preview: string }
 
+const MAX_IMAGE_FILES = 5
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
 type WizardForm = {
   name: string
   category: string
@@ -117,7 +121,13 @@ export default function AddItem() {
     return photos[0]
   }
 
-  function buildSubmitFormData(payload: Record<string, string>) {
+  /**
+   * Builds FormData for endpoints that accept a SINGLE image.
+   * Used by: /passes
+   * Backend middleware: upload.single("image")
+   * Field name: "image" (singular)
+   */
+  function buildSingleImageFormData(payload: Record<string, string>) {
     const photo = getPrimaryPhoto()
 
     if (!photo) {
@@ -133,8 +143,32 @@ export default function AddItem() {
     return formData
   }
 
+  /**
+   * Builds FormData for endpoints that accept MULTIPLE images.
+   * Used by: /found-products, /sell-products
+   * Backend middleware: upload.array("images", MAX_IMAGES)
+   * Field name: "images" (plural) — all photos appended under the same key
+   */
+  function buildMultiImageFormData(payload: Record<string, string>) {
+    if (photos.length === 0) {
+      throw new Error('At least one photo is required')
+    }
+
+    const formData = new FormData()
+    Object.entries(payload).forEach(([key, value]) => {
+      formData.append(key, value)
+    })
+    // Append every selected photo under the field name "images"
+    // This matches upload.array("images", MAX_IMAGES) on the backend
+    photos.forEach((photo) => {
+      formData.append('images', photo.file)
+    })
+
+    return formData
+  }
+
   async function submitFoundListing() {
-    const payload = buildSubmitFormData({
+    const payload = buildMultiImageFormData({
       name: form.name.trim(),
       category: form.category,
       description: form.description.trim(),
@@ -146,7 +180,7 @@ export default function AddItem() {
   }
 
   async function submitPassListing() {
-    const payload = buildSubmitFormData({
+    const payload = buildSingleImageFormData({
       name: form.name.trim(),
       category: form.category,
       description: form.description.trim(),
@@ -187,7 +221,11 @@ export default function AddItem() {
   }
 
   async function submitOtherListing() {
-    const payload = buildSubmitFormData({
+    // Uses buildMultiImageFormData — appends files as "images" (plural)
+    // to match the backend route: upload.array("images", MAX_IMAGES)
+
+    // Build the base payload without warranty fields
+    const basePayload: Record<string, string> = {
       name: form.name.trim(),
       category: form.category,
       description: form.description.trim(),
@@ -197,17 +235,26 @@ export default function AddItem() {
       quantity,
       isNegotiable: String(isNegotiable),
       hasWarranty: String(hasWarranty),
-      warrantyValue: form.warrantyDuration,
-      warrantyUnit: form.warrantyUnit,
       usageTime: JSON.stringify({
         years: form.usageYears,
         months: form.usageMonths,
         days: form.usageDays,
       }),
-    })
+    }
+
+    // Only include warrantyValue and warrantyUnit when hasWarranty is explicitly true.
+    // Omitting them entirely prevents "" from reaching the backend enum validator.
+    if (hasWarranty === true) {
+      basePayload.warrantyValue = form.warrantyDuration
+      basePayload.warrantyUnit = form.warrantyUnit
+    }
+
+    const payload = buildMultiImageFormData(basePayload)
 
     await api.post('/sell-products', payload)
   }
+
+
 
   async function handleSubmitListing() {
     if (isSubmitting) return
@@ -475,7 +522,7 @@ export default function AddItem() {
 
           <PhotoDrop
             error={submitAttempted && photos.length === 0}
-            helper="PNG, JPG, WEBP · up to 8 images"
+            helper={`PNG, JPG, WEBP � up to ${MAX_IMAGE_FILES} images`}
             label="PHOTO"
             onPhotosChange={setPhotos}
             photos={photos}
@@ -568,7 +615,7 @@ export default function AddItem() {
               />
               <PhotoDrop
                 error={submitAttempted && photos.length === 0}
-                helper="PNG, JPG, WEBP · up to 8 images"
+                helper={`PNG, JPG, WEBP � up to ${MAX_IMAGE_FILES} images`}
                 label="PHOTOS"
                 onPhotosChange={setPhotos}
                 photos={photos}
@@ -804,7 +851,7 @@ export default function AddItem() {
 
         <PhotoDrop
           error={submitAttempted && photos.length === 0}
-          helper="PNG, JPG, WEBP · up to 8 images"
+          helper={`PNG, JPG, WEBP � up to ${MAX_IMAGE_FILES} images`}
           label="PHOTOS"
           onPhotosChange={setPhotos}
           photos={photos}
@@ -1270,13 +1317,21 @@ function PhotoDrop({
   function addFiles(fileList: FileList | null) {
     if (!fileList) return
 
-    const remaining = 8 - photos.length
+    const remaining = MAX_IMAGE_FILES - photos.length
     if (remaining <= 0) return
 
-    const accepted = Array.from(fileList).filter((file) =>
-      ['image/png', 'image/jpeg', 'image/webp'].includes(file.type),
+    const selectedFiles = Array.from(fileList)
+    const accepted = selectedFiles.filter((file) =>
+      ALLOWED_IMAGE_TYPES.includes(file.type) && file.size <= MAX_IMAGE_SIZE_BYTES,
     )
+    const rejectedCount = selectedFiles.length - accepted.length
+    if (rejectedCount > 0) {
+      toast.error('Only JPG, JPEG, PNG, or WEBP images up to 5 MB are allowed')
+    }
 
+    if (selectedFiles.length > remaining) {
+      toast.error(`You can upload up to ${MAX_IMAGE_FILES} images`)
+    }
     const nextPhotos = accepted.slice(0, remaining).map((file) => ({
       id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
       file,
@@ -1287,7 +1342,7 @@ function PhotoDrop({
   }
 
   function openPicker() {
-    if (photos.length >= 8) return
+    if (photos.length >= MAX_IMAGE_FILES) return
     inputRef.current?.click()
   }
 
@@ -1329,7 +1384,7 @@ function PhotoDrop({
               </button>
             </div>
           ))}
-          {photos.length < 8 ? (
+          {photos.length < MAX_IMAGE_FILES ? (
             <button className="photo-thumb" onClick={openPicker} type="button">
               Add
             </button>
@@ -1353,6 +1408,7 @@ function PhotoDrop({
           <div className="photo-drop__icon">⤴</div>
           <strong>Drop photos here or click to browse</strong>
           <span>{helper}</span>
+          <span>{photos.length} / {MAX_IMAGE_FILES} selected</span>
         </button>
       </div>
       {error ? <span className="field__error">At least one photo is required</span> : null}

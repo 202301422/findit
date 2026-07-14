@@ -138,3 +138,124 @@ export const deleteFromCloudinary = async (publicIdOrUrl) => {
         return false;
     }
 };
+
+// ────────────────────────────────────────────────────────────────────────────
+// High-level wrappers for single / multi image operations
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Uploads a single Multer file to Cloudinary.
+ * Thin convenience wrapper over `uploadOnCloudinary` that accepts a Multer file
+ * object and returns a normalized, frontend-ready metadata object.
+ *
+ * @param {object} file - Multer file object (must have `buffer` property).
+ * @param {string} [folder="findit/products"] - Cloudinary destination folder.
+ * @returns {Promise<{ url: string, publicId: string, width: number, height: number } | null>}
+ */
+export const uploadImage = async (file, folder = "findit/products") => {
+    if (!file || !file.buffer) return null;
+
+    const result = await uploadOnCloudinary(file.buffer, folder);
+    if (!result) return null;
+
+    return {
+        url: result.secure_url,
+        publicId: result.public_id,
+        width: result.width,
+        height: result.height
+    };
+};
+
+/**
+ * Uploads multiple Multer files to Cloudinary concurrently.
+ * Uses Promise.allSettled() so we can identify which uploads succeeded and which
+ * failed. On partial failure the successfully-uploaded assets are automatically
+ * deleted (rollback) and the function throws an ApiError-compatible error listing
+ * per-file failures.
+ *
+ * @param {object[]} files - Array of Multer file objects (each must have `buffer`).
+ * @param {string} [folder="findit/products"] - Cloudinary destination folder.
+ * @returns {Promise<Array<{ url: string, publicId: string, width: number, height: number }>>}
+ * @throws {Error} If any upload fails (after rolling back successful ones).
+ */
+export const uploadImages = async (files, folder = "findit/products") => {
+    if (!files || files.length === 0) {
+        throw new Error("No files provided for upload");
+    }
+
+    // Launch all uploads concurrently
+    const results = await Promise.allSettled(
+        files.map((file) => uploadImage(file, folder))
+    );
+
+    const succeeded = [];
+    const failed = [];
+
+    results.forEach((result, index) => {
+        if (result.status === "fulfilled" && result.value) {
+            succeeded.push(result.value);
+        } else {
+            failed.push({
+                index,
+                filename: files[index]?.originalname || `file_${index}`,
+                reason: result.status === "rejected"
+                    ? result.reason?.message || "Upload failed"
+                    : "Upload returned null"
+            });
+        }
+    });
+
+    // If any uploads failed, rollback all successful uploads to prevent orphans
+    if (failed.length > 0) {
+        if (succeeded.length > 0) {
+            console.error(
+                `[ROLLBACK] ${failed.length}/${files.length} uploads failed. ` +
+                `Rolling back ${succeeded.length} successful uploads.`
+            );
+            await deleteImages(succeeded.map((img) => img.publicId));
+        }
+
+        const failDetails = failed
+            .map((f) => `  - ${f.filename}: ${f.reason}`)
+            .join("\n");
+        throw new Error(
+            `${failed.length} of ${files.length} image uploads failed:\n${failDetails}`
+        );
+    }
+
+    return succeeded;
+};
+
+/**
+ * Deletes multiple assets from Cloudinary by their public IDs.
+ * Uses Promise.allSettled() so a single failure does not block others.
+ *
+ * @param {string[]} publicIds - Array of Cloudinary public IDs to delete.
+ * @returns {Promise<{ succeeded: string[], failed: string[] }>}
+ */
+export const deleteImages = async (publicIds) => {
+    if (!publicIds || publicIds.length === 0) {
+        return { succeeded: [], failed: [] };
+    }
+
+    const results = await Promise.allSettled(
+        publicIds.map((id) => deleteFromCloudinary(id))
+    );
+
+    const succeeded = [];
+    const failed = [];
+
+    results.forEach((result, index) => {
+        if (result.status === "fulfilled" && result.value === true) {
+            succeeded.push(publicIds[index]);
+        } else {
+            failed.push(publicIds[index]);
+        }
+    });
+
+    if (failed.length > 0) {
+        console.warn(`[WARNING] Failed to delete ${failed.length} Cloudinary assets:`, failed);
+    }
+
+    return { succeeded, failed };
+};

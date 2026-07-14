@@ -57,7 +57,8 @@ export default function Profile() {
     let apiCategory = '';
     if (activeTab === 'Lost & Found') apiCategory = 'lost-found';
     if (activeTab === 'Event Passes') apiCategory = 'event-passes';
-    // 'Buy & Sell' and 'Travelling Tickets' are not implemented in the backend yet.
+    if (activeTab === 'Buy & Sell') apiCategory = 'buy-sell';
+    // 'Travelling Tickets' are not implemented in the backend yet.
     
     fetchListings(apiCategory);
   }, [activeTab, fetchListings]);
@@ -97,7 +98,7 @@ export default function Profile() {
       <div className="site-root">
         <Sidebar open={open} setOpen={setOpen} selected="Profile" handleNav={handleNav} handleHelp={handleHelp} handleLogout={handleLogout} />
         <div className="main">
-          <Topbar catsOpen={catsOpen} setCatsOpen={setCatsOpen} handleAddItem={handleAddItem} handleNotif={handleNotif} handleProfile={handleProfileClick} />
+          <Topbar catsOpen={catsOpen} setCatsOpen={setCatsOpen} categories={[]} selectedCategory="" setSelectedCategory={() => undefined} maxPrice={0} setMaxPrice={() => undefined} handleAddItem={handleAddItem} handleNotif={handleNotif} handleProfile={handleProfileClick} />
           <main className="content profile-page">
             <div style={{ textAlign: 'center', padding: '4rem', color: '#666' }}>Loading profile...</div>
           </main>
@@ -121,6 +122,11 @@ export default function Profile() {
         <Topbar
           catsOpen={catsOpen}
           setCatsOpen={setCatsOpen}
+          categories={[]}
+          selectedCategory=""
+          setSelectedCategory={() => undefined}
+          maxPrice={0}
+          setMaxPrice={() => undefined}
           handleAddItem={handleAddItem}
           handleNotif={handleNotif}
           handleProfile={handleProfileClick}
@@ -198,3 +204,4 @@ export default function Profile() {
     </div>
   );
 }
+
