@@ -98,7 +98,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
     { $set: updateData },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   ).select("-password -otp -otpExpiry -resetPasswordOtp -resetPasswordOtpExpiry -verificationExpiresAt -accessToken -refreshToken -__v");
 
   return res.json(new ApiResponse(200, { user: updatedUser }, "Profile updated successfully"));

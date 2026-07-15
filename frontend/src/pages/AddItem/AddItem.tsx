@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+ï»¿import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 
@@ -84,6 +84,14 @@ function positiveQuantity(value: string) {
 function isFutureDateTime(value: string) {
   if (!filled(value)) return false
   return new Date(value).getTime() > Date.now()
+}
+
+function nowDateTimeLocal() {
+  const d = new Date()
+  d.setSeconds(0, 0)
+  // Convert to datetime-local format YYYY-MM-DDTHH:MM
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes())
 }
 
 function isArrivalAfterDeparture(departureTime: string, arrivalTime: string) {
@@ -180,7 +188,7 @@ export default function AddItem() {
   }
 
   async function submitPassListing() {
-    const payload = buildSingleImageFormData({
+    const payload = buildMultiImageFormData({
       name: form.name.trim(),
       category: form.category,
       description: form.description.trim(),
@@ -522,7 +530,7 @@ export default function AddItem() {
 
           <PhotoDrop
             error={submitAttempted && photos.length === 0}
-            helper={`PNG, JPG, WEBP · up to ${MAX_IMAGE_FILES} images`}
+            helper={`PNG, JPG, WEBP ï¿½ up to ${MAX_IMAGE_FILES} images`}
             label="PHOTO"
             onPhotosChange={setPhotos}
             photos={photos}
@@ -615,7 +623,7 @@ export default function AddItem() {
               />
               <PhotoDrop
                 error={submitAttempted && photos.length === 0}
-                helper={`PNG, JPG, WEBP · up to ${MAX_IMAGE_FILES} images`}
+                helper={`PNG, JPG, WEBP ï¿½ up to ${MAX_IMAGE_FILES} images`}
                 label="PHOTOS"
                 onPhotosChange={setPhotos}
                 photos={photos}
@@ -628,6 +636,7 @@ export default function AddItem() {
                 onChange={(value) => setFormField('eventDateTime', value)}
                 placeholder="mm/dd/yyyy --:-- --"
                 type="datetime-local"
+                min={nowDateTimeLocal()}
                 value={form.eventDateTime}
               />
               {submitAttempted && !isFutureDateTime(form.eventDateTime) ? (
@@ -765,6 +774,7 @@ export default function AddItem() {
                   onChange={(value) => setFormField('departureTime', value)}
                   placeholder="mm/dd/yyyy --:-- --"
                   type="datetime-local"
+                  min={nowDateTimeLocal()}
                   value={form.departureTime}
                 />
                 <Field
@@ -851,7 +861,7 @@ export default function AddItem() {
 
         <PhotoDrop
           error={submitAttempted && photos.length === 0}
-          helper={`PNG, JPG, WEBP · up to ${MAX_IMAGE_FILES} images`}
+          helper={`PNG, JPG, WEBP ï¿½ up to ${MAX_IMAGE_FILES} images`}
           label="PHOTOS"
           onPhotosChange={setPhotos}
           photos={photos}
@@ -904,7 +914,7 @@ export default function AddItem() {
               <ToggleButton active={hasWarranty === false} onClick={() => setHasWarranty(false)}>No</ToggleButton>
             </div>
           </div>
-          {hasWarranty ? (
+          {hasWarranty === true ? (
             <div className="two-col two-col--tight">
               <Field
                 error={submitAttempted && !filled(form.warrantyDuration)}

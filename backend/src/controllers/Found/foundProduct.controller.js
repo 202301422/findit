@@ -88,7 +88,7 @@ export const getAllFoundProducts = asyncHandler(async (req, res) => {
  */
 export const getSingleFoundProduct = asyncHandler(async (req, res) => {
     const product = await FoundProduct.findById(req.params.id)
-        .populate("user", "name email");
+        .populate("user", "name email avatar createdAt");
 
     if (!product) {
         throw new ApiError(404, "Product not found");
@@ -166,7 +166,7 @@ export const updateFoundProduct = asyncHandler(async (req, res) => {
         const updatedProduct = await FoundProduct.findByIdAndUpdate(
             req.params.id,
             updateData,
-            { new: true, runValidators: true }
+            { returnDocument: "after", runValidators: true }
         );
         console.log("[FOUND UPDATE] product.images:", updatedProduct.images);
 

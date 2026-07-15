@@ -13,7 +13,9 @@ import Topbar from '../../components/Topbar/Topbar'
 
 export default function Home() {
   const [open, setOpen] = useState(false)
-  const [selected, setSelected] = useState('Buy & Sell')
+  const [selected, setSelected] = useState(
+    () => sessionStorage.getItem('home_tab') || 'Buy & Sell'
+  )
   const [catsOpen, setCatsOpen] = useState(false)
   
   // LIFTED FILTER STATE
@@ -95,6 +97,7 @@ export default function Home() {
   }, [selected, selectedCategory, maxPrice]);
 
   function handleNav(section: string) {
+    sessionStorage.setItem('home_tab', section)
     setSelected(section)
   }
 
@@ -140,22 +143,53 @@ export default function Home() {
               items.map((item) => {
                 const primaryImageUrl = item.images?.[0]?.url || item.imageUrl
 
+                // Emoji placeholder per type when no image exists
+                const placeholderIcon =
+                  selected === 'Travelling Tickets'
+                    ? (item.ticketType === 'Bus' ? '🚌' : item.ticketType === 'Train' ? '🚆' : '✈️')
+                    : selected === 'Event Passes' ? '🎟️'
+                    : selected === 'Lost & Found' ? '🔍'
+                    : '📦'
+
                 return (
                 <button
                   key={item._id}
                   className="product-card"
                   onClick={() => navigate(`/product/${item._id}?type=${getBackendType(selected)}`)}
                 >
-                  <div 
-                    className="image" 
-                    style={primaryImageUrl ? { 
-                      backgroundImage: `url(${primaryImageUrl})`, 
-                      backgroundSize: 'cover', 
-                      backgroundPosition: 'center' 
-                    } : {}}
-                  />
+                  <div className="image">
+                    {primaryImageUrl ? (
+                      <img
+                        src={primaryImageUrl}
+                        alt={item.name || item.ticketType || 'Item'}
+                        style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', borderRadius:'inherit' }}
+                        onError={(e) => {
+                          // Hide broken image and show placeholder instead
+                          const target = e.currentTarget
+                          target.style.display = 'none'
+                          const parent = target.parentElement
+                          if (parent && !parent.querySelector('.img-placeholder')) {
+                            const ph = document.createElement('div')
+                            ph.className = 'img-placeholder'
+                            ph.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:linear-gradient(135deg,#fff3ee,#ffe5d5);border-radius:inherit;'
+                            ph.textContent = placeholderIcon
+                            parent.appendChild(ph)
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2.5rem', background:'linear-gradient(135deg,#fff3ee,#ffe5d5)', borderRadius:'inherit' }}>
+                        {placeholderIcon}
+                      </div>
+                    )}
+                  </div>
                   <div className="meta">
-                    <div className="title">{item.name || item.ticketType}</div>
+                    <div className="title">
+                      {item.name ||
+                        (item.origin?.city && item.destination?.city
+                          ? `${item.origin.city} → ${item.destination.city}`
+                          : item.ticketType)}
+                    </div>
                     
                     {/* Hides the price box entirely for Lost & Found items */}
                     {selected !== 'Lost & Found' && (

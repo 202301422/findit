@@ -1,3 +1,9 @@
+/* Remove browser default black focus outline */
+.add-item-page button:focus,
+.add-item-page input:focus,
+.add-item-page textarea:focus,
+.add-item-page select:focus { outline: none; }
+
 .add-item-page{
   min-height:100vh;
   background:linear-gradient(180deg,#fffdfb 0%,#fff6f1 100%);

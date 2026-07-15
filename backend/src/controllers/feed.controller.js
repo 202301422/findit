@@ -113,7 +113,7 @@ export const getFeedDetails = asyncHandler(async (req, res) => {
 
     // Populate user with contact details so buyers can reach out
     const itemDetails = await config.model.findById(id)
-        .populate("user", "name email phone avatar college");
+        .populate("user", "name email phone avatar college createdAt");
 
     if (!itemDetails) {
         throw new ApiError(404, "Item not found");

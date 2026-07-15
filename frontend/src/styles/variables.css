@@ -9,6 +9,21 @@
   box-sizing:border-box
 }
 
+/* Remove browser's default black focus ring app-wide */
+button:focus,
+button:focus-visible,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+a:focus,
+a:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
 body{
   margin:0;
   font-family:Inter,system-ui,Arial,sans-serif

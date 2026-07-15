@@ -279,7 +279,7 @@ export const getSellProductDetail = asyncHandler(async (req, res) => {
  */
 export const getSingleSellProduct = asyncHandler(async (req, res) => {
     const product = await sellProduct.findById(req.params.id)
-        .populate("user", "name email");
+        .populate("user", "name email avatar createdAt");
 
     if (!product) {
         throw new ApiError(404, "Product not found");
@@ -385,7 +385,7 @@ export const updateSellProduct = asyncHandler(async (req, res) => {
         const updatedProduct = await sellProduct.findByIdAndUpdate(
             req.params.id,
             updateData,
-            { new: true, runValidators: true }
+            { returnDocument: "after", runValidators: true }
         );
 
         console.log("[SELL UPDATE] product.images:", updatedProduct.images);
