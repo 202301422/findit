@@ -5,6 +5,8 @@ import Home from '../pages/Home/Home'
 import AddItem from '../pages/AddItem/AddItem'
 import Profile from '../pages/Profile/Profile'
 import ProductDetail from '../pages/ProductDetail/ProductDetail'
+import Messages from '../pages/Messages/Messages'
+import ChatDetail from '../pages/Messages/ChatDetail'
 import AuthRoute from '../components/AuthRoute'
 import ProtectedRoute from '../components/ProtectedRoute'
 
@@ -24,6 +26,8 @@ export default function AppRoutes() {
       <Route path="/add-item" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/product/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+      <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+      <Route path="/messages/:id" element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

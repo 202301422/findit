@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react'
+import { getTotalUnread } from '../../services/chatService'
+
 type SidebarProps = {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -15,6 +18,29 @@ export default function Sidebar({
   handleHelp,
   handleLogout,
 }: SidebarProps) {
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchUnread = async () => {
+      try {
+        const count = await getTotalUnread()
+        if (!cancelled) setUnreadCount(count)
+      } catch {
+        // silently ignore — not critical
+      }
+    }
+
+    fetchUnread()
+
+    // Refresh unread count every 30 seconds
+    const interval = setInterval(fetchUnread, 30_000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [])
+
   return (
     <aside className={`sidebar ${open ? 'expanded' : 'collapsed'}`}>
         <button className="sb-btn" onClick={() => setOpen((s) => !s)} aria-label="Toggle sidebar">☰</button>
@@ -50,6 +76,27 @@ export default function Sidebar({
           >
             <span className="nav-icon">🎟️</span>
             <span className="label">Event Passes</span>
+          </button>
+
+          {/* Messages nav item */}
+          <button
+            className={`nav-item ${selected === 'Messages' ? 'active' : ''} ${unreadCount > 0 ? 'has-unread-messages' : ''}`}
+            onClick={() => handleNav('Messages')}
+            aria-current={selected === 'Messages' ? 'page' : undefined}
+            style={{ position: 'relative' }}
+          >
+            <span className={`nav-icon ${unreadCount > 0 ? 'jiggle' : ''}`} style={{ position: 'relative' }}>
+              💬
+              {unreadCount > 0 && (
+                <span
+                  className="sb-unread-dot pulse-animation"
+                  aria-label={`${unreadCount} unread messages`}
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </span>
+            <span className="label">Messages</span>
           </button>
         </nav>
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column' }}>

@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import api from '../../utils/api'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import Topbar from '../../components/Topbar/Topbar'
+import { getOrCreateConversation, sendMessage } from '../../services/chatService'
 
 import '../../styles/variables.css'
 import '../../styles/sidebar.css'
@@ -247,14 +248,15 @@ function SellerAvatar({ seller, size = 48 }: { seller: Seller; size?: number }) 
 const QUICK_MSGS = ['Is this still available?', 'Can you do a lower price?', "I'm interested. When can we meet?"]
 const QUICK_MSGS_FOUND = ['Is this item still available?', 'I think this belongs to me.', 'Can I verify ownership details?']
 
-function ChatModal({ seller, productName, isFound, onClose }: {
-  seller: Seller; productName: string; isFound?: boolean; onClose: () => void
+function ChatModal({ seller, productName, isFound, itemId, itemType, itemImage, onClose }: {
+  seller: Seller; productName: string; isFound?: boolean; itemId?: string; itemType?: string; itemImage?: string; onClose: () => void
 }) {
   const quickMsgs = isFound ? QUICK_MSGS_FOUND : QUICK_MSGS
   const [quick, setQuick] = useState<string | null>(null)
   const [msg, setMsg] = useState('')
   const [sending, setSending] = useState(false)
   const effective = msg.trim() || quick || ''
+  const navigate = useNavigate()
 
   function pickQuick(m: string) { setQuick(m); setMsg(m) }
 
@@ -262,11 +264,20 @@ function ChatModal({ seller, productName, isFound, onClose }: {
     if (!effective || sending) return
     setSending(true)
     try {
-      await api.post('/messages', { recipientId: seller._id, message: effective, context: productName })
+      const conv = await getOrCreateConversation({
+        recipientId: seller._id,
+        itemId,
+        itemType,
+        itemName: productName,
+        itemImage
+      })
+      await sendMessage(conv._id, effective)
       toast.success('Message sent!')
+      onClose()
+      navigate(`/messages/${conv._id}`)
     } catch {
-      toast.success('Message sent to ' + seller.name + '!')
-    } finally { setSending(false); onClose() }
+      toast.error('Failed to send message to ' + seller.name + '!')
+    } finally { setSending(false) }
   }
 
   return (
@@ -1344,6 +1355,7 @@ export default function ProductDetail() {
     : 'Item'
   const itemSeller = currentItem ? currentItem.user as Seller : null
   const itemStatus = (currentItem as any)?.status
+  const itemImage = (currentItem as any)?.images?.[0]?.url || (currentItem as any)?.imageUrl || ''
 
   return (
     <div className="pd-root">
@@ -1358,7 +1370,8 @@ export default function ProductDetail() {
           maxPrice={0} setMaxPrice={() => {}}
           handleAddItem={() => navigate('/add-item')}
           handleNotif={() => navigate('/notifications')}
-          handleProfile={() => navigate('/profile')} />
+          handleProfile={() => navigate('/profile')}
+          userAvatar={user?.avatar} />
 
         <div className="pd-content">
           {loading ? (
@@ -1401,7 +1414,15 @@ export default function ProductDetail() {
       </div>
 
       {showChat && itemSeller && (
-        <ChatModal seller={itemSeller} productName={itemName} isFound={type==='found'} onClose={() => setShowChat(false)} />
+        <ChatModal 
+          seller={itemSeller} 
+          productName={itemName} 
+          isFound={type==='found'}
+          itemId={id}
+          itemType={type}
+          itemImage={itemImage}
+          onClose={() => setShowChat(false)} 
+        />
       )}
     </div>
   )

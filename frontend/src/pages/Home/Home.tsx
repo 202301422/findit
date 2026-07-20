@@ -97,6 +97,10 @@ export default function Home() {
   }, [selected, selectedCategory, maxPrice]);
 
   function handleNav(section: string) {
+    if (section === 'Messages') {
+      navigate('/messages')
+      return
+    }
     sessionStorage.setItem('home_tab', section)
     setSelected(section)
   }
