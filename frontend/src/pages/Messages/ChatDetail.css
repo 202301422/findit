@@ -579,10 +579,6 @@
   border: 1px solid #f0e8e4;
 }
 
-.bubble-row.mine .bubble-menu-dropdown {
-  right: auto;
-  left: 0;
-}
 
 .bubble-menu-item {
   display: block;
