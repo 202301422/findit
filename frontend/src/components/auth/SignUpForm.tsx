@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../contexts/AuthContext'
-import BrandLogo from '../BrandLogo'
+import { useAuth } from '@/contexts/AuthContext'
+import BrandLogo from '@/components/BrandLogo'
+import Input from '@/components/ui/Input'
+import Button from '@/components/ui/Button'
+import { User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react'
 
 interface SignUpFormProps {
   onSignUp?: (data: {
@@ -90,259 +93,185 @@ export default function SignUpForm({ onSignUp }: SignUpFormProps) {
   }
 
   return (
-    <>
-      <BrandLogo to="/" variant="full" className="auth-shell__brand" showTagline />
+    <div className="w-full max-w-md space-y-6">
+      <div className="flex flex-col items-center text-center">
+        <BrandLogo variant="full" className="mb-4" showTagline />
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+          Create Account
+        </h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
+          Join Findit and start buying &amp; selling
+        </p>
+      </div>
 
-      <h1>Create Account</h1>
-      <p className="subtitle">Join Findit and start buying &amp; selling</p>
-
-      <div className="social-row">
-        <button 
-          type="button" 
-          className="social-btn google"
+      <div className="social-row flex justify-center">
+        <Button
+          type="button"
+          variant="secondary"
           onClick={handleGoogleLogin}
           disabled={googleLoading || loading}
+          fullWidth
+          iconLeft={<GoogleIcon />}
+          className="h-11 shadow-sm hover:shadow-md transition-shadow font-semibold"
         >
-          <GoogleIcon />
-          <span>{googleLoading ? 'Loading...' : 'Google'}</span>
-        </button>
+          {googleLoading ? 'Connecting...' : 'Continue with Google'}
+        </Button>
       </div>
 
-      <div className="divider" aria-hidden="true">
-        <span />
-        <p>or sign up with email</p>
-        <span />
+      <div className="relative flex py-2 items-center">
+        <div className="flex-grow border-t border-[var(--border-primary)]"></div>
+        <span className="flex-shrink mx-4 text-xs text-[var(--text-tertiary)] uppercase tracking-wider">
+          or email
+        </span>
+        <div className="flex-grow border-t border-[var(--border-primary)]"></div>
       </div>
 
-      <form className="auth-form" onSubmit={handleSubmit}>
-        {/* Full Name */}
-        <label>
-          Full Name
-          <div className="field-shell">
-            <UserIcon />
-            <input
-              type="text"
-              placeholder="John Doe"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              autoComplete="name"
-              required
-              disabled={loading || googleLoading}
-            />
-          </div>
-          {errors.fullName && <span className="field-error">{errors.fullName}</span>}
-        </label>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <Input
+          label="Full Name"
+          type="text"
+          placeholder="John Doe"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          autoComplete="name"
+          required
+          disabled={loading || googleLoading}
+          iconLeft={<User size={16} />}
+          error={errors.fullName}
+        />
 
-        {/* Email */}
-        <label>
-          Email Address
-          <div className="field-shell">
-            <MailIcon />
-            <input
-              type="email"
-              placeholder="you@dau.ac.in"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-              disabled={loading || googleLoading}
-            />
-          </div>
-          {errors.email && <span className="field-error">{errors.email}</span>}
-        </label>
+        <Input
+          label="Email Address"
+          type="email"
+          placeholder="you@dau.ac.in"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          required
+          disabled={loading || googleLoading}
+          iconLeft={<Mail size={16} />}
+          error={errors.email}
+        />
 
-        {/* Phone */}
-        <label>
-          Phone Number
-          <div className="field-shell">
-            <PhoneIcon />
-            <input
-              type="tel"
-              placeholder="+1 555 123456"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              autoComplete="tel"
-              required
-              disabled={loading || googleLoading}
-            />
-          </div>
-          {errors.phone && <span className="field-error">{errors.phone}</span>}
-        </label>
+        <Input
+          label="Phone Number"
+          type="tel"
+          placeholder="+91 99999 99999"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          autoComplete="tel"
+          required
+          disabled={loading || googleLoading}
+          iconLeft={<Phone size={16} />}
+          error={errors.phone}
+        />
 
-        {/* Password */}
-        <label>
-          Password
-          <div className="field-shell password-shell">
-            <LockIcon />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Create a password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
-              required
-              disabled={loading || googleLoading}
-            />
+        <Input
+          label="Password"
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Create a password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          required
+          disabled={loading || googleLoading}
+          iconLeft={<Lock size={16} />}
+          error={errors.password}
+          iconRight={
             <button
               type="button"
-              className="icon-button"
+              className="focus:outline-none text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer"
               onClick={() => setShowPassword((c) => !c)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              <EyeIcon open={showPassword} />
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
-          </div>
-          <ul
-            aria-label="Password requirements"
-            style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: '0.6rem 0 0',
-              display: 'grid',
-              gap: '0.35rem',
-              fontSize: '0.92rem',
-              color: 'var(--muted, #6b7280)'
-            }}
-          >
-            {passwordRequirements.map((rule) => {
-              const isMet = rule.test(password)
+          }
+        />
 
-              return (
-                <li
-                  key={rule.label}
-                  style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{ color: isMet ? 'var(--success, #16a34a)' : 'var(--muted, #6b7280)' }}
-                  >
-                    {isMet ? '✓' : '•'}
-                  </span>
-                  <span style={{ color: isMet ? 'var(--text, #111827)' : 'inherit' }}>
-                    {rule.label}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-          {errors.password && <span className="field-error">{errors.password}</span>}
-        </label>
+        <ul className="grid grid-cols-1 gap-1 text-xs text-[var(--text-secondary)] mt-1.5 px-1 bg-[var(--bg-secondary)] p-3 rounded-[var(--radius-md)] border border-[var(--border-secondary)]">
+          {passwordRequirements.map((rule) => {
+            const isMet = rule.test(password)
+            return (
+              <li key={rule.label} className="flex items-center gap-2">
+                <span className={isMet ? 'text-[var(--color-success-500)]' : 'text-[var(--text-tertiary)]'}>
+                  {isMet ? '✓' : '•'}
+                </span>
+                <span className={isMet ? 'text-[var(--text-primary)] line-through opacity-60' : ''}>
+                  {rule.label}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
 
-        {/* Confirm Password */}
-        <label>
-          Confirm Password
-          <div className="field-shell password-shell">
-            <LockIcon />
-            <input
-              type={showConfirm ? 'text' : 'password'}
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              autoComplete="new-password"
-              required
-              disabled={loading || googleLoading}
-            />
+        <Input
+          label="Confirm Password"
+          type={showConfirm ? 'text' : 'password'}
+          placeholder="Confirm your password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          autoComplete="new-password"
+          required
+          disabled={loading || googleLoading}
+          iconLeft={<Lock size={16} />}
+          error={errors.confirmPassword}
+          iconRight={
             <button
               type="button"
-              className="icon-button"
+              className="focus:outline-none text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer"
               onClick={() => setShowConfirm((c) => !c)}
               aria-label={showConfirm ? 'Hide password' : 'Show password'}
             >
-              <EyeIcon open={showConfirm} />
+              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
-          </div>
-          {errors.confirmPassword && (
-            <span className="field-error">{errors.confirmPassword}</span>
-          )}
-        </label>
+          }
+        />
 
-        {/* Terms */}
-        <p className="terms-copy">
+        <p className="text-xs text-[var(--text-secondary)] leading-relaxed mt-3">
           By signing up you agree to our{' '}
-          <Link to="#" className="text-link inline">
+          <Link to="#" className="font-semibold text-[var(--color-primary-500)] hover:text-[var(--color-primary-600)] transition-colors">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link to="#" className="text-link inline">
+          <Link to="#" className="font-semibold text-[var(--color-primary-500)] hover:text-[var(--color-primary-600)] transition-colors">
             Privacy Policy
           </Link>
           .
         </p>
 
-        <button type="submit" className="primary-btn" disabled={loading || googleLoading}>
-          {loading ? 'Creating Account...' : 'Create Account'}
-        </button>
-
-        <p className="footer-copy">
-          Already have an account?{' '}
-          <Link to="/signin" className="text-link inline">
-            Sign In
-          </Link>
-        </p>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={loading}
+          disabled={loading || googleLoading}
+          fullWidth
+          className="h-11"
+        >
+          Create Account
+        </Button>
       </form>
-    </>
+
+      <p className="text-center text-sm text-[var(--text-secondary)] mt-4">
+        Already have an account?{' '}
+        <Link
+          to="/signin"
+          className="font-semibold text-[var(--color-primary-500)] hover:text-[var(--color-primary-600)] transition-colors"
+        >
+          Sign In
+        </Link>
+      </p>
+    </div>
   )
 }
 
-/* ── Icons ── */
-
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="w-5 h-5 mr-1" aria-hidden="true">
       <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.1-.9 2.6-2.2 3.7l3.3 2.5c1.9-1.8 3-4.4 3-7.5 0-.7-.1-1.3-.2-1.9H12z" />
       <path fill="#34A853" d="M6.6 14.1l-.7.5-2.4 1.8C5 19.4 8.2 21 12 21c2.6 0 4.8-.9 6.4-2.4l-3.3-2.5c-.9.6-2 .9-3.1.9-2.3 0-4.3-1.6-5-3.9z" />
       <path fill="#FBBC05" d="M3.5 7.7A9 9 0 0 0 3 12c0 .8.1 1.5.3 2.2l3.1-2.4c-.1-.5-.2-1.1-.2-1.7s.1-1.2.2-1.7L3.5 7.7z" />
       <path fill="#4285F4" d="M12 4.8c1.5 0 2.8.5 3.8 1.4l2.8-2.8A9.8 9.8 0 0 0 12 1C8.2 1 5 2.6 3.5 5.7l3.1 2.4C7.7 6.2 9.7 4.8 12 4.8z" />
-    </svg>
-  )
-}
-
-function MailIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2 8 5 8-5" />
-    </svg>
-  )
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  )
-}
-
-function PhoneIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 10V8a5 5 0 0 1 10 0v2" />
-      <rect x="4" y="10" width="16" height="10" rx="2" />
-    </svg>
-  )
-}
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 12s3.5-7 9-7c1.2 0 2.4.2 3.5.6" />
-      <path d="M21 12s-3.5 7-9 7-9-7-9-7a17 17 0 0 1 3.2-4.2" />
-      <path d="M10 14a3 3 0 0 1 4-4" />
-      <path d="M4 4l16 16" />
     </svg>
   )
 }

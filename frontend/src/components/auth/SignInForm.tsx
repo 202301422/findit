@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../contexts/AuthContext'
-import BrandLogo from '../BrandLogo'
+import { useAuth } from '@/contexts/AuthContext'
+import BrandLogo from '@/components/BrandLogo'
+import Input from '@/components/ui/Input'
+import Button from '@/components/ui/Button'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 
 interface SignInFormProps {
   onSignIn?: (data: { email: string; password: string }) => void
@@ -49,132 +52,115 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
   }
 
   return (
-    <>
-      <BrandLogo to="/" variant="full" className="auth-shell__brand" showTagline />
+    <div className="w-full max-w-md space-y-6">
+      <div className="flex flex-col items-center text-center">
+        <BrandLogo variant="full" className="mb-4" showTagline />
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+          Welcome back!
+        </h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
+          Sign in to your Findit account
+        </p>
+      </div>
 
-      <h1>Welcome back!</h1>
-      <p className="subtitle">Sign in to your Findit account</p>
-
-      <div className="social-row">
-        <button
+      <div className="social-row flex justify-center">
+        <Button
           type="button"
-          className="social-btn google"
+          variant="secondary"
           onClick={handleGoogleLogin}
           disabled={googleLoading || loading}
+          fullWidth
+          iconLeft={<GoogleIcon />}
+          className="h-11 shadow-sm hover:shadow-md transition-shadow font-semibold"
         >
-          <GoogleIcon />
-          <span>{googleLoading ? 'Loading...' : 'Google'}</span>
-        </button>
+          {googleLoading ? 'Connecting...' : 'Continue with Google'}
+        </Button>
       </div>
 
-      <div className="divider" aria-hidden="true">
-        <span />
-        <p>or continue with email</p>
-        <span />
+      <div className="relative flex py-2 items-center">
+        <div className="flex-grow border-t border-[var(--border-primary)]"></div>
+        <span className="flex-shrink mx-4 text-xs text-[var(--text-tertiary)] uppercase tracking-wider">
+          or email
+        </span>
+        <div className="flex-grow border-t border-[var(--border-primary)]"></div>
       </div>
 
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <label>
-          Email Address
-          <div className="field-shell">
-            <MailIcon />
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              required
-              disabled={loading || googleLoading}
-            />
-          </div>
-        </label>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <Input
+          label="Email Address"
+          type="email"
+          placeholder="you@dau.ac.in"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+          disabled={loading || googleLoading}
+          iconLeft={<Mail size={16} />}
+        />
 
-        <label>
-          Password
-          <div className="field-shell password-shell">
-            <LockIcon />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              required
-              disabled={loading || googleLoading}
-            />
+        <Input
+          label="Password"
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Enter your password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+          disabled={loading || googleLoading}
+          iconLeft={<Lock size={16} />}
+          iconRight={
             <button
               type="button"
-              className="icon-button"
+              className="focus:outline-none text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer"
               onClick={() => setShowPassword((current) => !current)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              <EyeIcon open={showPassword} />
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
-          </div>
-        </label>
+          }
+        />
 
-        <Link to="/forgot-password" className="text-link align-right">
-          Forgot password?
-        </Link>
-
-        <button type="submit" className="primary-btn" disabled={loading || googleLoading}>
-          {loading ? 'Signing in...' : 'Sign In'}
-        </button>
-
-        <p className="footer-copy">
-          Don&apos;t have an account?{' '}
-          <Link to="/signup" className="text-link inline">
-            Sign Up
+        <div className="flex items-center justify-end">
+          <Link
+            to="/forgot-password"
+            className="text-xs font-semibold text-[var(--color-primary-500)] hover:text-[var(--color-primary-600)] transition-colors"
+          >
+            Forgot password?
           </Link>
-        </p>
+        </div>
+
+        <Button
+          type="submit"
+          variant="primary"
+          loading={loading}
+          disabled={loading || googleLoading}
+          fullWidth
+          className="h-11"
+        >
+          Sign In
+        </Button>
       </form>
-    </>
+
+      <p className="text-center text-sm text-[var(--text-secondary)]">
+        Don&apos;t have an account?{' '}
+        <Link
+          to="/signup"
+          className="font-semibold text-[var(--color-primary-500)] hover:text-[var(--color-primary-600)] transition-colors"
+        >
+          Sign Up
+        </Link>
+      </p>
+    </div>
   )
 }
 
-/* ── Icons ── */
-
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="w-5 h-5 mr-1" aria-hidden="true">
       <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.1-.9 2.6-2.2 3.7l3.3 2.5c1.9-1.8 3-4.4 3-7.5 0-.7-.1-1.3-.2-1.9H12z" />
       <path fill="#34A853" d="M6.6 14.1l-.7.5-2.4 1.8C5 19.4 8.2 21 12 21c2.6 0 4.8-.9 6.4-2.4l-3.3-2.5c-.9.6-2 .9-3.1.9-2.3 0-4.3-1.6-5-3.9z" />
       <path fill="#FBBC05" d="M3.5 7.7A9 9 0 0 0 3 12c0 .8.1 1.5.3 2.2l3.1-2.4c-.1-.5-.2-1.1-.2-1.7s.1-1.2.2-1.7L3.5 7.7z" />
       <path fill="#4285F4" d="M12 4.8c1.5 0 2.8.5 3.8 1.4l2.8-2.8A9.8 9.8 0 0 0 12 1C8.2 1 5 2.6 3.5 5.7l3.1 2.4C7.7 6.2 9.7 4.8 12 4.8z" />
-    </svg>
-  )
-}
-
-function MailIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2 8 5 8-5" />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 10V8a5 5 0 0 1 10 0v2" />
-      <rect x="4" y="10" width="16" height="10" rx="2" />
-    </svg>
-  )
-}
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 12s3.5-7 9-7c1.2 0 2.4.2 3.5.6" />
-      <path d="M21 12s-3.5 7-9 7-9-7-9-7a17 17 0 0 1 3.2-4.2" />
-      <path d="M10 14a3 3 0 0 1 4-4" />
-      <path d="M4 4l16 16" />
     </svg>
   )
 }

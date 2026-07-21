@@ -1,56 +1,99 @@
-import { useState, useRef } from 'react';
-import { useProfile } from '../../hooks/useProfile';
+import { useState, useRef } from 'react'
+import { useProfile } from '../../hooks/useProfile'
+import Avatar from '@/components/ui/Avatar'
+import Button from '@/components/ui/Button'
+import { Upload, Trash2, Camera } from 'lucide-react'
 
-export default function ProfileAvatar({ avatar, name }: { avatar?: string, name: string }) {
-  const { uploadAvatar, deleteAvatar } = useProfile();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [loading, setLoading] = useState(false);
+export default function ProfileAvatar({
+  avatar,
+  name,
+}: {
+  avatar?: string
+  name: string
+}) {
+  const { uploadAvatar, deleteAvatar } = useProfile()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setLoading(true);
-      await uploadAvatar(file);
-      setLoading(false);
+      setLoading(true)
+      await uploadAvatar(file)
+      setLoading(false)
     }
-  };
+  }
 
   const handleRemove = async () => {
-    setLoading(true);
-    await deleteAvatar();
-    setLoading(false);
-  };
+    setLoading(true)
+    await deleteAvatar()
+    setLoading(false)
+  }
 
   return (
-    <div className="profile-avatar-edit">
-      <div className="avatar-preview">
-        {avatar ? (
-          <img src={avatar} alt={name} />
-        ) : (
-          <div className="avatar-placeholder-large">
-            {name?.charAt(0).toUpperCase()}
-          </div>
-        )}
-        {loading && <div className="avatar-loading">Uploading...</div>}
+    <div className="flex flex-col items-center gap-4 p-4 bg-[var(--bg-secondary)] border border-[var(--border-secondary)] rounded-[var(--radius-lg)]">
+      <div className="relative group">
+        <div className="relative p-1 rounded-full bg-[var(--bg-primary)] ring-2 ring-[var(--border-primary)] shadow-sm overflow-hidden">
+          <Avatar
+            src={avatar}
+            name={name}
+            className="w-24 h-24 sm:w-28 sm:h-28"
+          />
+          {loading && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xs font-semibold text-white">
+              Uploading...
+            </div>
+          )}
+        </div>
+        
+        {/* Hover Camera icon indicator */}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-[var(--color-primary-500)] text-white flex items-center justify-center shadow-md hover:bg-[var(--color-primary-600)] transition-all cursor-pointer"
+          disabled={loading}
+          aria-label="Upload profile image"
+        >
+          <Camera size={14} />
+        </button>
       </div>
-      <div className="avatar-actions">
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          style={{ display: 'none' }} 
+
+      <div className="flex flex-wrap justify-center gap-2">
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
           accept="image/jpeg, image/png, image/webp"
           onChange={handleFileChange}
         />
-        <button type="button" className="secondary-btn" onClick={() => fileInputRef.current?.click()} disabled={loading}>
-          {avatar ? 'Replace' : 'Upload Image'}
-        </button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={loading}
+          iconLeft={<Upload size={14} />}
+          className="text-xs font-semibold"
+        >
+          {avatar ? 'Replace Image' : 'Upload Image'}
+        </Button>
         {avatar && (
-          <button type="button" className="danger-btn outline" onClick={handleRemove} disabled={loading}>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            onClick={handleRemove}
+            disabled={loading}
+            iconLeft={<Trash2 size={14} />}
+            className="text-xs font-semibold !bg-[var(--color-error-50)] !text-[var(--color-error-600)] !border-[var(--color-error-500)]/20 hover:!bg-[var(--color-error-500)]/10"
+          >
             Remove
-          </button>
+          </Button>
         )}
       </div>
-      <p className="avatar-help">JPG, PNG or WEBP. Max 5MB.</p>
+      <p className="text-[10px] text-[var(--text-tertiary)] font-medium text-center">
+        Allowed formats: JPG, PNG, WEBP. Max 5MB.
+      </p>
     </div>
-  );
+  )
 }

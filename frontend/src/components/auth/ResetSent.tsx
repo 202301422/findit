@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../contexts/AuthContext'
-import BrandLogo from '../BrandLogo'
+import { useAuth } from '@/contexts/AuthContext'
+import BrandLogo from '@/components/BrandLogo'
+import Input from '@/components/ui/Input'
+import Button from '@/components/ui/Button'
+import { KeyRound, ArrowLeft } from 'lucide-react'
 
 export default function ResetSent() {
   const [otp, setOtp] = useState('')
@@ -61,101 +64,73 @@ export default function ResetSent() {
   }
 
   return (
-    <>
-      <BrandLogo to="/" variant="icon" className="auth-shell__brand" />
+    <div className="w-full max-w-md space-y-6">
+      <div className="flex flex-col items-center text-center">
+        <BrandLogo variant="icon" className="mb-4" />
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+          Reset Password
+        </h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-xs">
+          We&apos;ve sent a password reset code to <span className="font-semibold text-[var(--text-primary)]">{email || 'your email'}</span>.
+        </p>
+      </div>
 
-      <h1>Reset Password</h1>
-      <p className="subtitle">
-        We&apos;ve sent a password reset code to {email || 'your email'}.
-      </p>
-
-      <form className="auth-form" onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
-        <label>
-          Reset Code
-          <div className="field-shell">
-            <input
-              type="text"
-              placeholder="Enter 6-character code"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
-              required
-              disabled={loading}
-              maxLength={6}
-            />
-          </div>
-        </label>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <Input
+          label="Reset Code"
+          type="text"
+          placeholder="Enter 6-character code"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+          required
+          disabled={loading}
+          maxLength={6}
+          iconLeft={<KeyRound size={16} />}
+        />
         
-        <label>
-          New Password
-          <div className="field-shell">
-            <input
-              type="password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
-          <ul
-            aria-label="Password requirements"
-            style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: '0.6rem 0 0',
-              display: 'grid',
-              gap: '0.35rem',
-              fontSize: '0.92rem',
-              color: 'var(--muted, #6b7280)'
-            }}
-          >
+        <div className="space-y-1.5">
+          <Input
+            label="New Password"
+            type="password"
+            placeholder="Enter new password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            disabled={loading}
+            error={errors.password}
+          />
+          
+          <ul className="grid grid-cols-1 gap-1 text-xs text-[var(--text-secondary)] mt-1.5 px-1 bg-[var(--bg-secondary)] p-3 rounded-[var(--radius-md)] border border-[var(--border-secondary)]">
             {passwordRequirements.map((rule) => {
               const isMet = rule.test(newPassword)
-
               return (
-                <li
-                  key={rule.label}
-                  style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{ color: isMet ? 'var(--success, #16a34a)' : 'var(--muted, #6b7280)' }}
-                  >
+                <li key={rule.label} className="flex items-center gap-2">
+                  <span className={isMet ? 'text-[var(--color-success-500)]' : 'text-[var(--text-tertiary)]'}>
                     {isMet ? '✓' : '•'}
                   </span>
-                  <span style={{ color: isMet ? 'var(--text, #111827)' : 'inherit' }}>
+                  <span className={isMet ? 'text-[var(--text-primary)] line-through opacity-60' : ''}>
                     {rule.label}
                   </span>
                 </li>
               )
             })}
           </ul>
-          {errors.password && <span className="field-error">{errors.password}</span>}
-        </label>
+        </div>
 
-        <button type="submit" className="primary-btn" disabled={loading} style={{ marginTop: '1rem' }}>
-          {loading ? 'Resetting...' : 'Reset Password'}
-        </button>
+        <Button type="submit" variant="primary" loading={loading} fullWidth className="h-11 mt-2">
+          Reset Password
+        </Button>
+      </form>
 
+      <div className="text-center">
         <Link
           to="/signin"
-          className="primary-btn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textDecoration: 'none',
-            background: 'transparent',
-            color: 'var(--accent)',
-            border: '1.5px solid var(--line)',
-            boxShadow: 'none',
-            marginTop: '0.5rem'
-          }}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
+          <ArrowLeft size={16} />
           Back to Sign In
         </Link>
-      </form>
-    </>
+      </div>
+    </div>
   )
 }
-

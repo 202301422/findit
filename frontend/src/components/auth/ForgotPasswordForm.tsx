@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../contexts/AuthContext'
-import BrandLogo from '../BrandLogo'
+import { useAuth } from '@/contexts/AuthContext'
+import BrandLogo from '@/components/BrandLogo'
+import Input from '@/components/ui/Input'
+import Button from '@/components/ui/Button'
+import { Mail, ArrowLeft } from 'lucide-react'
 
 interface ForgotPasswordFormProps {
   onForgotPassword?: (data: { email: string }) => void
@@ -33,49 +36,44 @@ export default function ForgotPasswordForm({ onForgotPassword }: ForgotPasswordF
   }
 
   return (
-    <>
-      <BrandLogo to="/" variant="icon" className="auth-shell__brand" />
-
-      <h1>Forgot Password?</h1>
-      <p className="subtitle">
-        Enter your email and we&apos;ll send you a reset link.
-      </p>
-
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <label>
-          Email Address
-          <div className="field-shell">
-            <MailFieldIcon />
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-              disabled={loading}
-            />
-          </div>
-        </label>
-
-        <button type="submit" className="primary-btn" disabled={loading}>
-          {loading ? 'Sending...' : 'Send Reset Link'}
-        </button>
-
-        <p className="footer-copy">
-          <Link to="/signin" className="text-link inline">
-            ← Back to Sign In
-          </Link>
+    <div className="w-full max-w-md space-y-6">
+      <div className="flex flex-col items-center text-center">
+        <BrandLogo variant="icon" className="mb-4" />
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+          Forgot Password?
+        </h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-xs">
+          Enter your student email and we&apos;ll send you a reset code.
         </p>
-      </form>
-    </>
-  )
-}
+      </div>
 
-function MailFieldIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2 8 5 8-5" />
-    </svg>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <Input
+          label="Email Address"
+          type="email"
+          placeholder="you@dau.ac.in"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          required
+          disabled={loading}
+          iconLeft={<Mail size={16} />}
+        />
+
+        <Button type="submit" variant="primary" loading={loading} fullWidth className="h-11">
+          Send Reset Link
+        </Button>
+      </form>
+
+      <div className="text-center">
+        <Link
+          to="/signin"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to Sign In
+        </Link>
+      </div>
+    </div>
   )
 }

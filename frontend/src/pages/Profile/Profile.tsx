@@ -1,39 +1,32 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useProfile } from '../../hooks/useProfile';
-import type { ListingCategory } from '../../types/profile.types';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import '../../styles/variables.css';
-import '../../styles/sidebar.css';
-import '../../styles/topbar.css';
-import './Profile.css';
+import { useProfile } from '@/hooks/useProfile'
+import type { ListingCategory } from '@/types/profile.types'
 
-import Sidebar from '../../components/Sidebar/Sidebar';
-import Topbar from '../../components/Topbar/Topbar';
-import ProfileHeader from '../../components/profile/ProfileHeader';
-import ProfileInfo from '../../components/profile/ProfileInfo';
-import ProfileStats from '../../components/profile/ProfileStats';
-import ListingTabs from '../../components/profile/ListingTabs';
-import ListingCard from '../../components/profile/ListingCard';
-import EditProfileModal from '../../components/profile/EditProfileModal';
-import ChangePasswordModal from '../../components/profile/ChangePasswordModal';
-import DeleteAccountModal from '../../components/profile/DeleteAccountModal';
+import ProfileHeader from '@/components/profile/ProfileHeader'
+import ProfileInfo from '@/components/profile/ProfileInfo'
+import ProfileStats from '@/components/profile/ProfileStats'
+import ListingTabs from '@/components/profile/ListingTabs'
+import ListingCard from '@/components/profile/ListingCard'
+import EditProfileModal from '@/components/profile/EditProfileModal'
+import ChangePasswordModal from '@/components/profile/ChangePasswordModal'
+import DeleteAccountModal from '@/components/profile/DeleteAccountModal'
+import Card from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
+import EmptyState from '@/components/ui/EmptyState'
 
-const CATEGORIES: ListingCategory[] = ['Buy & Sell', 'Lost & Found', 'Event Passes', 'Travelling Tickets'];
+const CATEGORIES: ListingCategory[] = ['Lost & Found', 'Event Passes', 'Travelling Tickets', 'Buy & Sell']
 
 export default function Profile() {
-  const [open, setOpen] = useState(false);
-  const [catsOpen, setCatsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<ListingCategory>('Lost & Found');
+  const [activeTab, setActiveTab] = useState<ListingCategory>('Lost & Found')
   
   // Modals state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
-  const navigate = useNavigate();
-  const { logout } = useAuth();
+  const navigate = useNavigate()
   
   const { 
     profile, 
@@ -46,139 +39,116 @@ export default function Profile() {
     fetchListings, 
     fetchStats,
     updateProfile
-  } = useProfile();
+  } = useProfile()
 
   useEffect(() => {
-    fetchProfile();
-    fetchStats();
-  }, [fetchProfile, fetchStats]);
+    fetchProfile()
+    fetchStats()
+  }, [fetchProfile, fetchStats])
 
   useEffect(() => {
-    let apiCategory = '';
-    if (activeTab === 'Lost & Found') apiCategory = 'lost-found';
-    if (activeTab === 'Event Passes') apiCategory = 'event-passes';
-    if (activeTab === 'Buy & Sell') apiCategory = 'buy-sell';
+    let apiCategory = ''
+    if (activeTab === 'Lost & Found') apiCategory = 'lost-found'
+    if (activeTab === 'Event Passes') apiCategory = 'event-passes'
+    if (activeTab === 'Buy & Sell') apiCategory = 'buy-sell'
     // 'Travelling Tickets' are not implemented in the backend yet.
     
-    fetchListings(apiCategory);
-  }, [activeTab, fetchListings]);
+    fetchListings(apiCategory)
+  }, [activeTab, fetchListings])
 
-  function handleNav(_section: string) {
-    // TODO: implement navigation to different sections if needed
-  }
-
-  function handleAddItem() {
-    navigate('/add-item');
-  }
-
-  function handleNotif() {
-    // TODO: navigate to notifications page when implemented
-    navigate('/notifications');
-  }
-
-  function handleProfileClick() {
-    // Already on profile page
-  }
-
-  function handleHelp() {
-    // TODO: navigate to help/FAQ page when implemented
-    navigate('/help');
-  }
-
-  async function handleLogout() {
-    await logout();
-    navigate('/signin');
-  }
-
-  // Filter listings by the active tab
-  const filteredListings = listings.filter(listing => listing.category === activeTab);
+  // Filter listings by the active category tab
+  const filteredListings = listings.filter(listing => listing.category === activeTab)
 
   if (loadingProfile && !profile) {
     return (
-      <div className="site-root">
-        <Sidebar open={open} setOpen={setOpen} selected="Profile" handleNav={handleNav} handleHelp={handleHelp} handleLogout={handleLogout} />
-        <div className="main">
-          <Topbar catsOpen={catsOpen} setCatsOpen={setCatsOpen} categories={[]} selectedCategory="" setSelectedCategory={() => undefined} maxPrice={0} setMaxPrice={() => undefined} handleAddItem={handleAddItem} handleNotif={handleNotif} handleProfile={handleProfileClick} />
-          <main className="content profile-page">
-            <div style={{ textAlign: 'center', padding: '4rem', color: '#666' }}>Loading profile...</div>
-          </main>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-[var(--border-primary)] border-t-[var(--color-primary-500)] rounded-full animate-spin" />
+          <p className="text-sm text-[var(--text-tertiary)]">Loading profile data...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="site-root">
-      <Sidebar
-        open={open}
-        setOpen={setOpen}
-        selected="Profile"
-        handleNav={handleNav}
-        handleHelp={handleHelp}
-        handleLogout={handleLogout}
-      />
-
-      <div className="main">
-        <Topbar
-          catsOpen={catsOpen}
-          setCatsOpen={setCatsOpen}
-          categories={[]}
-          selectedCategory=""
-          setSelectedCategory={() => undefined}
-          maxPrice={0}
-          setMaxPrice={() => undefined}
-          handleAddItem={handleAddItem}
-          handleNotif={handleNotif}
-          handleProfile={handleProfileClick}
+    <div className="space-y-6 max-w-5xl mx-auto animate-fade-in">
+      {profile && (
+        <ProfileHeader
+          profile={profile}
+          onEdit={() => setIsEditModalOpen(true)}
         />
+      )}
+      
+      <ProfileStats stats={stats} />
 
-        <main className="content profile-page">
-          <ProfileHeader profile={profile} onEdit={() => setIsEditModalOpen(true)} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Listings Section */}
+        <div className="lg:col-span-8 space-y-4">
+          <ListingTabs 
+            categories={CATEGORIES} 
+            activeCategory={activeTab} 
+            onTabChange={setActiveTab} 
+          />
           
-          <ProfileStats stats={stats} />
+          {loadingListings ? (
+            <div className="grid grid-cols-2 gap-4">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div key={idx} className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] overflow-hidden h-60 animate-shimmer" />
+              ))}
+            </div>
+          ) : filteredListings.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4">
+              {filteredListings.map((listing) => (
+                <ListingCard key={listing._id} listing={listing} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon="🔍"
+              title={`No ${activeTab} listings`}
+              description="You have not posted any listings under this tab yet."
+              action={
+                <Button variant="primary" onClick={() => navigate('/add-item')}>
+                  Post an Item
+                </Button>
+              }
+              className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] shadow-sm"
+            />
+          )}
+        </div>
 
-          <div className="profile-main-grid">
-            <div className="profile-listings">
-              <ListingTabs 
-                categories={CATEGORIES} 
-                activeCategory={activeTab} 
-                onTabChange={setActiveTab} 
-              />
-              
-              {loadingListings ? (
-                <div className="empty-state">Loading listings...</div>
-              ) : filteredListings.length > 0 ? (
-                <div className="listing-grid">
-                  {filteredListings.map(listing => (
-                    <ListingCard key={listing._id} listing={listing} />
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state">
-                  No {activeTab} listings found.
-                </div>
+        {/* Sidebar Info Section */}
+        <div className="lg:col-span-4 space-y-6">
+          {profile && <ProfileInfo profile={profile} />}
+          
+          <Card padding="md" className="space-y-4">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider border-b border-[var(--border-secondary)] pb-2">
+              Account Settings
+            </h3>
+            <div className="flex flex-col gap-2">
+              {profile?.authProvider === 'local' && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setIsPasswordModalOpen(true)}
+                  className="text-xs font-semibold"
+                >
+                  Change Password
+                </Button>
               )}
+              <Button
+                type="button"
+                variant="danger"
+                fullWidth
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="text-xs font-semibold !bg-[var(--color-error-50)] !text-[var(--color-error-600)] !border-[var(--color-error-500)]/20 hover:!bg-[var(--color-error-500)]/10"
+              >
+                Delete Account
+              </Button>
             </div>
-
-            <div className="profile-sidebar-right">
-              {profile && <ProfileInfo profile={profile} />}
-              
-              <div className="profile-settings" style={{ marginTop: '1.5rem' }}>
-                <h3>Account Settings</h3>
-                <div className="settings-list">
-                  {profile?.authProvider === 'local' && (
-                    <button className="settings-btn" onClick={() => setIsPasswordModalOpen(true)}>
-                      Change Password
-                    </button>
-                  )}
-                  <button className="settings-btn danger" onClick={() => setIsDeleteModalOpen(true)}>
-                    Delete Account
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
+          </Card>
+        </div>
       </div>
 
       {profile && (
@@ -202,6 +172,5 @@ export default function Profile() {
         requiresPassword={profile?.authProvider === 'local'}
       />
     </div>
-  );
+  )
 }
-
