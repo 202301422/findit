@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import api from '../../utils/api'
 import '../../styles/variables.css'
+import BrandLogo from '../../components/BrandLogo'
 import './AddItem.css'
 
 type ListingType = 'product' | 'found'
@@ -973,7 +974,7 @@ export default function AddItem() {
           onClick={() => navigate('/home')}
           aria-label="Findit home"
         >
-          Findit
+          <BrandLogo variant="compact" />
         </button>
 
         <div className="add-item-page__header">

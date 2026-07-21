@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
+import BrandLogo from '../BrandLogo'
 
 interface SignInFormProps {
   onSignIn?: (data: { email: string; password: string }) => void
@@ -49,14 +50,7 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
 
   return (
     <>
-      <button
-        className="brand-mark"
-        type="button"
-        onClick={() => navigate('/')}
-        aria-label="Findit home"
-      >
-        Findit
-      </button>
+      <BrandLogo to="/" variant="full" className="auth-shell__brand" showTagline />
 
       <h1>Welcome back!</h1>
       <p className="subtitle">Sign in to your Findit account</p>

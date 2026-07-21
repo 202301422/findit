@@ -9,6 +9,12 @@ import FoundProduct from "../models/foundProductModel.js";
 import Ticket from "../models/expirable_item/ticketModel.js";
 import Pass from "../models/expirable_item/passModel.js";
 
+const CATEGORY_ALIASES = {
+    "Books & Documents": ["Books & Documents", "Books & Document", "Books & Stationery"],
+    "Books & Document": ["Books & Documents", "Books & Document", "Books & Stationery"],
+    "Books & Stationery": ["Books & Documents", "Books & Document", "Books & Stationery"],
+};
+
 /**
  * Helper function to dynamically map the requested feed type to the correct
  * Mongoose model and schema field names.
@@ -47,7 +53,9 @@ export const getFeedList = asyncHandler(async (req, res) => {
 
     // 2. Apply dynamic Category filter if provided by the frontend
     if (category) {
-        filterQuery[categoryField] = category;
+        const normalizedCategory = String(category).trim();
+        const categoryOptions = CATEGORY_ALIASES[normalizedCategory] || [normalizedCategory];
+        filterQuery[categoryField] = categoryOptions.length > 1 ? { $in: categoryOptions } : normalizedCategory;
     }
 
     // 3. Apply dynamic Max Price filter (Only if the model supports pricing)

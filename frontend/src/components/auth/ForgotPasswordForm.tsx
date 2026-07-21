@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
+import BrandLogo from '../BrandLogo'
 
 interface ForgotPasswordFormProps {
   onForgotPassword?: (data: { email: string }) => void
@@ -33,9 +34,7 @@ export default function ForgotPasswordForm({ onForgotPassword }: ForgotPasswordF
 
   return (
     <>
-      <div className="brand-mark" aria-hidden="true">
-        <MailIcon />
-      </div>
+      <BrandLogo to="/" variant="icon" className="auth-shell__brand" />
 
       <h1>Forgot Password?</h1>
       <p className="subtitle">
@@ -70,16 +69,6 @@ export default function ForgotPasswordForm({ onForgotPassword }: ForgotPasswordF
         </p>
       </form>
     </>
-  )
-}
-
-/* ── Icons ── */
-
-function MailIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" style={{ stroke: '#ff7a2f', strokeWidth: 1.8, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-      <path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 2 8 5 8-5" />
-    </svg>
   )
 }
 

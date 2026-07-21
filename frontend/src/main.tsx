@@ -4,6 +4,7 @@ import {BrowserRouter} from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 
 import './index.css'
+import './styles/brand.css'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext.tsx'
 

@@ -69,11 +69,13 @@ export default function Home() {
       setLoading(true);
       try {
         const type = getBackendType(selected);
-        
-        // Build the dynamic URL query parameters
-        let url = `/feed/list?type=${type}`;
-        if (selectedCategory) url += `&category=${selectedCategory}`;
-        if (maxPrice > 0) url += `&maxPrice=${maxPrice}`;
+
+        // Build the query string safely so categories containing `&` stay intact.
+        const params = new URLSearchParams({ type });
+        if (selectedCategory) params.set('category', selectedCategory);
+        if (maxPrice > 0) params.set('maxPrice', String(maxPrice));
+
+        const url = `/feed/list?${params.toString()}`;
 
         const response = await api.get(url);
         

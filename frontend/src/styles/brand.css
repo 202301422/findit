@@ -1,0 +1,128 @@
+.findit-brand {
+  --brand-ink: #1f2734;
+  --brand-accent: #ff7a12;
+  --brand-mark-start: #ff9a1f;
+  --brand-mark-end: #ff6a00;
+  --brand-mark-cut: #fff2e4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.78rem;
+  color: var(--brand-ink);
+  text-decoration: none;
+  user-select: none;
+  white-space: nowrap;
+  transition: transform 160ms ease, filter 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.findit-brand:hover {
+  color: var(--brand-ink);
+  transform: translateY(-1px);
+}
+
+.findit-brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: clamp(2.8rem, 4vw, 4.5rem);
+  aspect-ratio: 1;
+}
+
+.findit-brand__mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.findit-brand__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.findit-brand__wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.08em;
+  font-size: clamp(1.55rem, 2.8vw, 2.55rem);
+  line-height: 1;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+
+.findit-brand__find {
+  color: var(--brand-ink);
+}
+
+.findit-brand__it {
+  color: var(--brand-accent);
+}
+
+.findit-brand__tagline {
+  color: #5d6879;
+  font-size: 0.68rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+}
+
+.findit-brand--full {
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.findit-brand--full .findit-brand__mark {
+  width: clamp(4rem, 9vw, 6.75rem);
+}
+
+.findit-brand--full .findit-brand__wordmark {
+  font-size: clamp(2.4rem, 6vw, 4.15rem);
+}
+
+.findit-brand--compact .findit-brand__mark {
+  width: clamp(2.55rem, 4vw, 3.2rem);
+}
+
+.findit-brand--compact .findit-brand__wordmark {
+  font-size: clamp(1.45rem, 2.4vw, 2.1rem);
+}
+
+.findit-brand--compact .findit-brand__tagline {
+  display: none;
+}
+
+.findit-brand--icon {
+  gap: 0;
+}
+
+.findit-brand--icon .findit-brand__copy {
+  display: none;
+}
+
+.findit-brand--inverse {
+  --brand-ink: #ffffff;
+  --brand-accent: #fff2e0;
+  --brand-mark-start: #fff4e6;
+  --brand-mark-end: #ffffff;
+  --brand-mark-cut: rgba(255, 255, 255, 0.78);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.16));
+}
+
+.findit-brand--inverse .findit-brand__tagline {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.findit-brand--inverse .findit-brand__find {
+  color: #ffffff;
+}
+
+.findit-brand--inverse .findit-brand__it {
+  color: #111111;
+}
+
+.findit-brand--inverse:hover {
+  color: #ffffff;
+}

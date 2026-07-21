@@ -62,7 +62,7 @@ interface TravelTicket {
    Constants
    ============================================================ */
 const SELL_CATEGORIES = [
-  'Electronics','Clothing & Accessories','Books & Stationery','Furniture & Home',
+  'Electronics','Clothing & Accessories','Books & Documents','Furniture & Home',
   'Sports & Fitness','Vehicles & Parts','Musical Instruments','Gaming','Art & Collectibles','Other',
 ]
 const PASS_CATEGORIES = ['Concert','Movie','Event','Other']

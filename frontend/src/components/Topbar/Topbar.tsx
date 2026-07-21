@@ -1,3 +1,5 @@
+import BrandLogo from '../BrandLogo'
+
 type TopbarProps = {
   catsOpen: boolean
   setCatsOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -38,9 +40,23 @@ export default function Topbar({
     return `≤ ₹${value}`
   }
 
+  function handlePriceChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const nextValue = event.target.value
+
+    if (nextValue === '') {
+      setMaxPrice(0)
+      return
+    }
+
+    const parsedValue = Number(nextValue)
+    if (Number.isNaN(parsedValue)) return
+
+    setMaxPrice(Math.max(0, parsedValue))
+  }
+
   return (
     <header className="topbar">
-      <div className="brand">Findit</div>
+      <BrandLogo to="/home" variant="compact" tone="inverse" className="topbar__brand" />
       <div className="search-row">
         <div className="search">
           <span className="magnifier">🔎</span>
@@ -66,21 +82,33 @@ export default function Topbar({
             )}
           </div>
           <div className="price-shell" aria-label="Maximum price filter">
+            <span className="price-shell__prefix" aria-hidden="true">
+              ≤
+            </span>
+            <span className="price-shell__currency" aria-hidden="true">
+              ₹
+            </span>
             <input
-              className="price-slider"
-              type="range"
+              className="price-shell__input"
+              type="number"
               min="0"
-              max="100000" /* Increased max range for high-value items like iPhones */
-              step="1000"
-              value={maxPrice}
-              onChange={(event) => setMaxPrice(Number(event.target.value))}
+              max="100000"
+              step="10"
+              inputMode="numeric"
+              value={maxPrice === 0 ? '' : maxPrice}
+              onChange={handlePriceChange}
+              onKeyDown={(event) => {
+                if (event.key === '-' || event.key === 'e' || event.key === 'E') {
+                  event.preventDefault()
+                }
+              }}
+              placeholder="Any"
               aria-label="Maximum price"
               aria-valuemin={0}
               aria-valuemax={100000}
               aria-valuenow={maxPrice}
               aria-valuetext={formatMaxPriceLabel(maxPrice)}
             />
-            <strong className="price-shell__value">{formatMaxPriceLabel(maxPrice)}</strong>
           </div>
         </div>
       </div>
