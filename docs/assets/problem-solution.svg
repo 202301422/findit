@@ -1,0 +1,104 @@
+<svg width="1500" height="680" viewBox="0 0 1500 680" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">From fragmented WhatsApp groups to FindIt</title>
+  <desc id="desc">A side-by-side comparison showing noisy chat messages transformed into searchable structured campus listings.</desc>
+  <defs>
+    <linearGradient id="orange" x1="730" y1="170" x2="1330" y2="580" gradientUnits="userSpaceOnUse"><stop stop-color="#FF9B57"/><stop offset="1" stop-color="#EA580C"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#111827" flood-opacity="0.09"/></filter>
+  </defs>
+  <rect width="1500" height="680" rx="32" fill="#F9FAFB"/>
+  <text x="750" y="66" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="36" font-weight="800" fill="#111827">From chat clutter to structured discovery</text>
+  <text x="750" y="105" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" fill="#6B7280">FindIt turns scattered campus messages into searchable, accountable and actionable listings.</text>
+
+  <g transform="translate(80 145)">
+    <rect width="530" height="450" rx="30" fill="#FFFFFF"/>
+    <rect width="530" height="70" rx="30" fill="#EEF7EF"/>
+    <rect y="40" width="530" height="30" fill="#EEF7EF"/>
+    <circle cx="44" cy="35" r="19" fill="#25D366"/>
+    <path d="M36 28C39 24 46 24 50 28C54 32 54 39 50 43L39 49L41 43C35 40 33 33 36 28Z" fill="#FFFFFF"/>
+    <text x="78" y="43" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="750" fill="#1F2937">Campus WhatsApp Group</text>
+    <text x="430" y="42" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#DC2626">284 unread</text>
+
+    <g transform="translate(24 92)">
+      <rect width="370" height="60" rx="14" fill="#DCF8C6"/>
+      <text x="18" y="26" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#1F2937">Lost my black wallet near CEP lawn 😭</text>
+      <text x="18" y="47" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11" fill="#6B7280">Which gate? Any photo? Still missing?</text>
+    </g>
+    <g transform="translate(104 166)">
+      <rect width="390" height="60" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+      <text x="18" y="26" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#1F2937">Selling concert pass. DM fast.</text>
+      <text x="18" y="47" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11" fill="#6B7280">Price? Venue? Date? Available?</text>
+    </g>
+    <g transform="translate(24 240)">
+      <rect width="410" height="60" rx="14" fill="#DCF8C6"/>
+      <text x="18" y="26" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#1F2937">Anyone travelling to Ahmedabad tonight?</text>
+      <text x="18" y="47" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11" fill="#6B7280">Buried after 47 unrelated messages</text>
+    </g>
+    <g transform="translate(118 314)">
+      <rect width="376" height="60" rx="14" fill="#FFFFFF" stroke="#E5E7EB"/>
+      <text x="18" y="26" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#1F2937">Laptop sold already. Please stop DMing.</text>
+      <text x="18" y="47" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11" fill="#DC2626">No listing status or automatic closure</text>
+    </g>
+    <text x="265" y="418" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#DC2626">Noise · Missing context · No search · No status</text>
+  </g>
+
+  <g transform="translate(656 315)">
+    <circle cx="0" cy="0" r="54" fill="#FFF1E7"/>
+    <path d="M-19 0H18M8-11L20 0L8 11" stroke="#EA580C" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g transform="translate(750 145)">
+    <rect width="670" height="450" rx="30" fill="#FFFFFF"/>
+    <rect width="670" height="70" rx="30" fill="#FFF7ED"/>
+    <rect y="40" width="670" height="30" fill="#FFF7ED"/>
+    <circle cx="44" cy="35" r="19" fill="url(#orange)"/>
+    <path d="M37 26H52L48 31H42L41 35H49L45 40H40L37 49H31L37 26Z" fill="#FFFFFF"/>
+    <text x="78" y="43" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="800" fill="#111827">FindIt Campus Feed</text>
+    <rect x="460" y="20" width="182" height="32" rx="16" fill="#FFFFFF" stroke="#FED7AA"/>
+    <text x="489" y="42" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#9A3412">Search listings...</text>
+
+    <g transform="translate(24 94)">
+      <rect width="622" height="48" rx="15" fill="#F9FAFB"/>
+      <rect x="10" y="8" width="132" height="32" rx="16" fill="#FF7A30"/>
+      <text x="41" y="29" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">Buy &amp; Sell</text>
+      <text x="178" y="29" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#6B7280">Lost &amp; Found</text>
+      <text x="328" y="29" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#6B7280">Tickets</text>
+      <text x="430" y="29" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#6B7280">Passes</text>
+      <rect x="515" y="8" width="96" height="32" rx="16" fill="#FFFFFF" stroke="#E5E7EB"/>
+      <text x="542" y="29" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#374151">Filters</text>
+    </g>
+
+    <g transform="translate(24 165)">
+      <rect width="190" height="220" rx="20" fill="#FFFFFF" stroke="#E5E7EB"/>
+      <rect x="12" y="12" width="166" height="98" rx="14" fill="#FFF1E7"/>
+      <circle cx="95" cy="61" r="30" fill="#FF7A30" fill-opacity="0.12"/>
+      <path d="M76 55H114V75H76V55Z" stroke="#EA580C" stroke-width="3"/>
+      <text x="16" y="139" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="750" fill="#111827">Scientific Calculator</text>
+      <text x="16" y="164" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" fill="#6B7280">Electronics · Like new</text>
+      <text x="16" y="196" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="800" fill="#111827">₹850</text>
+      <rect x="121" y="181" width="54" height="22" rx="11" fill="#ECFDF5"/>
+      <text x="133" y="196" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#15803D">Active</text>
+    </g>
+
+    <g transform="translate(238 165)">
+      <rect width="190" height="220" rx="20" fill="#FFFFFF" stroke="#E5E7EB"/>
+      <rect x="12" y="12" width="166" height="98" rx="14" fill="#EFF6FF"/>
+      <path d="M95 34C78 34 67 46 67 61C67 83 95 97 95 97C95 97 123 83 123 61C123 46 112 34 95 34Z" stroke="#2563EB" stroke-width="4"/>
+      <circle cx="95" cy="61" r="7" fill="#2563EB"/>
+      <text x="16" y="139" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="750" fill="#111827">Black Wallet</text>
+      <text x="16" y="164" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" fill="#6B7280">Found · CEP lawn</text>
+      <text x="16" y="196" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#1D4ED8">Posted 18 min ago</text>
+    </g>
+
+    <g transform="translate(452 165)">
+      <rect width="194" height="220" rx="20" fill="#FFFFFF" stroke="#E5E7EB"/>
+      <rect x="12" y="12" width="170" height="98" rx="14" fill="#F5F3FF"/>
+      <path d="M66 47H128V78H66V47Z" stroke="#7C3AED" stroke-width="4"/>
+      <path d="M78 47V78M116 47V78" stroke="#7C3AED" stroke-width="2" stroke-dasharray="4 4"/>
+      <text x="16" y="139" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="750" fill="#111827">Concert Pass</text>
+      <text x="16" y="164" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" fill="#6B7280">Tomorrow · 7:30 PM</text>
+      <text x="16" y="196" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="800" fill="#111827">₹1,500</text>
+    </g>
+
+    <text x="335" y="423" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#15803D">Searchable · Filterable · Status-aware · Direct chat</text>
+  </g>
+</svg>
