@@ -11,10 +11,11 @@ interface ProductImage {
 interface ImageGalleryProps {
   images?: ProductImage[]
   isSold?: boolean
+  soldLabel?: string
   singleUrl?: string
 }
 
-export default function ImageGallery({ images, isSold, singleUrl }: ImageGalleryProps) {
+export default function ImageGallery({ images, isSold, soldLabel = 'Sold', singleUrl }: ImageGalleryProps) {
   const allImages: ProductImage[] =
     images && images.length > 0
       ? images
@@ -25,21 +26,6 @@ export default function ImageGallery({ images, isSold, singleUrl }: ImageGallery
   const [activeIdx, setActiveIdx] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
 
-  if (allImages.length === 0) {
-    return (
-      <div className="relative aspect-[4/3] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] overflow-hidden bg-gradient-to-br from-[var(--color-primary-50)]/90 via-[var(--bg-tertiary)] to-[var(--color-primary-100)]/60 dark:from-[var(--color-primary-500)]/12 dark:via-[var(--surface-card)] dark:to-[var(--color-primary-500)]/5 flex flex-col items-center justify-center p-4">
-        {/* Soft ambient circle */}
-        <div className="absolute w-32 h-32 rounded-full bg-[var(--color-primary-500)]/15 blur-xl pointer-events-none" />
-
-        <div className="relative p-4 rounded-2xl bg-[var(--surface-card)] border border-[var(--border-secondary)] shadow-sm flex items-center justify-center">
-          <ImageOff className="w-10 h-10 text-[var(--color-primary-500)]" />
-        </div>
-      </div>
-    )
-  }
-
-  const activeImage = allImages[activeIdx]
-
   const handlePrev = () => {
     setActiveIdx((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))
   }
@@ -47,6 +33,17 @@ export default function ImageGallery({ images, isSold, singleUrl }: ImageGallery
   const handleNext = () => {
     setActiveIdx((prev) => (prev === allImages.length - 1 ? 0 : prev + 1))
   }
+
+  if (allImages.length === 0) {
+    return (
+      <div className="w-full aspect-[4/3] sm:aspect-[16/10] rounded-[var(--radius-lg)] bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] flex flex-col items-center justify-center text-[var(--text-tertiary)] gap-2">
+        <ImageOff className="w-10 h-10 stroke-[1.5]" />
+        <span className="text-xs font-medium">No images uploaded</span>
+      </div>
+    )
+  }
+
+  const activeImage = allImages[activeIdx]
 
   return (
     <div className="space-y-3">
@@ -61,7 +58,7 @@ export default function ImageGallery({ images, isSold, singleUrl }: ImageGallery
         {isSold && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-xs">
             <span className="px-5 py-2 rounded-full text-sm font-bold text-white bg-[var(--color-error-500)] tracking-widest uppercase">
-              Sold / Closed
+              {soldLabel}
             </span>
           </div>
         )}

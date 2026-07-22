@@ -68,11 +68,6 @@ export default function Login() {
             })}
           </div>
         </div>
-
-        {/* Footer Copy */}
-        <div className="relative z-10 text-white/60 text-xs">
-          &copy; {new Date().getFullYear()} FindIt Inc. All rights reserved.
-        </div>
       </section>
 
       {/* Right Column - Authentication forms */}

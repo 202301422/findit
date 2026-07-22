@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 
 import { useProfile } from '@/hooks/useProfile'
 import type { ListingCategory } from '@/types/profile.types'
@@ -27,6 +28,19 @@ export default function Profile() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('edit') === 'true' || searchParams.get('settings') === 'true') {
+      setIsEditModalOpen(true)
+      setSearchParams((params) => {
+        const next = new URLSearchParams(params)
+        next.delete('edit')
+        next.delete('settings')
+        return next
+      }, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
   
   const { 
     profile, 
@@ -38,7 +52,9 @@ export default function Profile() {
     fetchProfile, 
     fetchListings, 
     fetchStats,
-    updateProfile
+    updateProfile,
+    uploadAvatar,
+    deleteAvatar,
   } = useProfile()
 
   useEffect(() => {
@@ -51,7 +67,7 @@ export default function Profile() {
     if (activeTab === 'Lost & Found') apiCategory = 'lost-found'
     if (activeTab === 'Event Passes') apiCategory = 'event-passes'
     if (activeTab === 'Buy & Sell') apiCategory = 'buy-sell'
-    // 'Travelling Tickets' are not implemented in the backend yet.
+    if (activeTab === 'Travelling Tickets') apiCategory = 'travelling-tickets'
     
     fetchListings(apiCategory)
   }, [activeTab, fetchListings])
@@ -71,11 +87,23 @@ export default function Profile() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto animate-fade-in">
+    <div className="space-y-6 max-w-5xl mx-auto animate-fade-in py-2">
+      {/* Top Header Navigation */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="p-1.5 rounded-full border border-[var(--border-primary)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] transition-all cursor-pointer"
+          aria-label="Back to home"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <h1 className="text-xl font-bold text-[var(--text-primary)]">My Profile</h1>
+      </div>
+
       {profile && (
         <ProfileHeader
           profile={profile}
-          onEdit={() => setIsEditModalOpen(true)}
         />
       )}
       
@@ -126,6 +154,15 @@ export default function Profile() {
               Account Settings
             </h3>
             <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                fullWidth
+                onClick={() => setIsEditModalOpen(true)}
+                className="text-xs font-semibold"
+              >
+                Edit Profile Details
+              </Button>
               {profile?.authProvider === 'local' && (
                 <Button
                   type="button"
@@ -157,6 +194,8 @@ export default function Profile() {
           onClose={() => setIsEditModalOpen(false)} 
           profile={profile} 
           onSave={updateProfile}
+          uploadAvatar={uploadAvatar}
+          deleteAvatar={deleteAvatar}
           loading={loadingUpdate}
         />
       )}

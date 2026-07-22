@@ -10,6 +10,8 @@ interface EditProfileModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (data: UpdateProfileData) => Promise<boolean>
+  uploadAvatar: (file: File) => Promise<boolean>
+  deleteAvatar: () => Promise<boolean>
   loading: boolean
 }
 
@@ -18,6 +20,8 @@ export default function EditProfileModal({
   isOpen,
   onClose,
   onSave,
+  uploadAvatar,
+  deleteAvatar,
   loading,
 }: EditProfileModalProps) {
   const [formData, setFormData] = useState<UpdateProfileData>({
@@ -31,6 +35,11 @@ export default function EditProfileModal({
     country: profile?.country || '',
   })
 
+  const [avatarPreview, setAvatarPreview] = useState<string>(profile?.avatar || '')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [isAvatarRemoved, setIsAvatarRemoved] = useState<boolean>(false)
+  const [isSaving, setIsSaving] = useState(false)
+
   useEffect(() => {
     if (isOpen && profile) {
       setFormData({
@@ -43,6 +52,9 @@ export default function EditProfileModal({
         state: profile.state || '',
         country: profile.country || '',
       })
+      setAvatarPreview(profile.avatar || '')
+      setAvatarFile(null)
+      setIsAvatarRemoved(false)
     }
   }, [profile, isOpen])
 
@@ -50,13 +62,40 @@ export default function EditProfileModal({
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleFileSelect = (file: File) => {
+    const objectUrl = URL.createObjectURL(file)
+    setAvatarPreview(objectUrl)
+    setAvatarFile(file)
+    setIsAvatarRemoved(false)
+  }
+
+  const handleRemoveAvatar = () => {
+    setAvatarPreview('')
+    setAvatarFile(null)
+    setIsAvatarRemoved(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const success = await onSave(formData)
-    if (success) {
-      onClose()
+    setIsSaving(true)
+    try {
+      if (isAvatarRemoved && profile?.avatar) {
+        await deleteAvatar()
+      } else if (avatarFile) {
+        await uploadAvatar(avatarFile)
+      }
+      const success = await onSave(formData)
+      if (success) {
+        onClose()
+      }
+    } catch (err) {
+      console.error('Error saving profile changes:', err)
+    } finally {
+      setIsSaving(false)
     }
   }
+
+  const isBusy = loading || isSaving
 
   return (
     <Modal
@@ -69,7 +108,12 @@ export default function EditProfileModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Avatar Area */}
-        <ProfileAvatar avatar={profile?.avatar} name={profile?.name || ''} />
+        <ProfileAvatar
+          avatarPreview={avatarPreview}
+          name={formData.name || profile?.name || ''}
+          onFileSelect={handleFileSelect}
+          onRemove={handleRemoveAvatar}
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
@@ -165,11 +209,11 @@ export default function EditProfileModal({
             type="button"
             variant="secondary"
             onClick={onClose}
-            disabled={loading}
+            disabled={isBusy}
           >
             Cancel
           </Button>
-          <Button type="submit" variant="primary" loading={loading} disabled={loading}>
+          <Button type="submit" variant="primary" loading={isBusy} disabled={isBusy}>
             Save Changes
           </Button>
         </div>

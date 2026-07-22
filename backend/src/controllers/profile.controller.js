@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import FoundProduct from "../models/foundProductModel.js";
 import Pass from "../models/expirable_item/passModel.js";
 import SellProduct from "../models/SellProduct.js";
+import Ticket from "../models/expirable_item/ticketModel.js";
 import bcrypt from "bcryptjs";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
@@ -349,11 +350,33 @@ export const getMyListings = asyncHandler(async (req, res) => {
     }));
   }
 
+  // Fetch travel tickets (Travelling Tickets)
+  if (!category || category === "travelling-tickets") {
+    const tickets = await Ticket.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    result.travellingTickets = tickets.map((item) => ({
+      _id: item._id,
+      title: `${item.ticketType} Ticket (${item.origin?.city || ''} → ${item.destination?.city || ''})`,
+      ticketType: item.ticketType,
+      origin: item.origin,
+      destination: item.destination,
+      price: item.price,
+      quantity: item.quantity,
+      status: item.status || "active",
+      createdAt: item.createdAt,
+      category: "Travelling Tickets",
+      type: "ticket"
+    }));
+  }
+
   // Aggregate all listings for "all" view
   const allListings = [
     ...(result.buySell || []),
     ...(result.lostFound || []),
-    ...(result.eventPasses || [])
+    ...(result.eventPasses || []),
+    ...(result.travellingTickets || [])
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   return res.json(
@@ -378,12 +401,22 @@ export const getProfileStats = asyncHandler(async (req, res) => {
   const activePasses = await Pass.countDocuments({ user: userId, status: "active" });
   const soldPasses = await Pass.countDocuments({ user: userId, status: "sold" });
 
+  // Count sell products
+  const totalSell = await SellProduct.countDocuments({ user: userId });
+  const activeSell = await SellProduct.countDocuments({ user: userId, status: "active" });
+  const soldSell = await SellProduct.countDocuments({ user: userId, status: "sold" });
+
+  // Count tickets
+  const totalTickets = await Ticket.countDocuments({ user: userId });
+  const activeTickets = await Ticket.countDocuments({ user: userId, status: "active" });
+  const soldTickets = await Ticket.countDocuments({ user: userId, status: "sold" });
+
   const stats = {
-    totalListings: totalFound + totalPasses,
-    activeListings: activeFound + activePasses,
-    soldItems: soldPasses,
+    totalListings: totalFound + totalPasses + totalSell + totalTickets,
+    activeListings: activeFound + activePasses + activeSell + activeTickets,
+    soldItems: soldPasses + soldSell,
     lostItemsReturned: closedFound,
-    ticketsSold: 0 // Ticket model doesn't have user reference yet
+    ticketsSold: soldTickets
   };
 
   return res.json(new ApiResponse(200, { stats }, "Stats fetched successfully"));

@@ -1,23 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
 import type { Message } from '../services/chatService';
-
-const SOCKET_URL = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace('/api', '')
-  : 'http://localhost:5000';
-
-// Singleton socket instance
-let socketInstance: Socket | null = null;
-
-function getSocket(): Socket {
-  if (!socketInstance) {
-    socketInstance = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-      autoConnect: true,
-    });
-  }
-  return socketInstance;
-}
+import { connectSocket, getSocket, setSocketAuthToken } from '../utils/socketClient';
 
 interface UseSocketOptions {
   conversationId: string | null;
@@ -35,9 +18,20 @@ export function useSocket({ conversationId, onNewMessage, onMessageDeleted }: Us
   useEffect(() => {
     if (!conversationId) return;
 
-    const socket = getSocket();
+    setSocketAuthToken(localStorage.getItem('accessToken'));
+    const socket = connectSocket();
 
-    socket.emit('join_conversation', conversationId);
+    const handleSocketError = (payload: { message?: string }) => {
+      if (payload?.message) {
+        console.error(payload.message);
+      }
+    };
+
+    socket.emit('join_conversation', { conversationId }, (response: { success?: boolean; message?: string }) => {
+      if (!response?.success && response?.message) {
+        console.error(response.message);
+      }
+    });
 
     const handleNewMessage = (message: Message) => {
       onNewMessageRef.current(message);
@@ -49,10 +43,12 @@ export function useSocket({ conversationId, onNewMessage, onMessageDeleted }: Us
 
     socket.on('new_message', handleNewMessage);
     socket.on('message_deleted', handleMessageDeleted);
+    socket.on('socket_error', handleSocketError);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('message_deleted', handleMessageDeleted);
+      socket.off('socket_error', handleSocketError);
       socket.emit('leave_conversation', conversationId);
     };
   }, [conversationId]);

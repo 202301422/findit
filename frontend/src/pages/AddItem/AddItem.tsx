@@ -102,6 +102,11 @@ function isFutureDateTime(value: string) {
   return new Date(value).getTime() > Date.now()
 }
 
+function isPastOrPresentDateTime(value: string) {
+  if (!filled(value)) return false
+  return new Date(value).getTime() <= Date.now() + 60000
+}
+
 function nowDateTimeLocal() {
   const d = new Date()
   d.setSeconds(0, 0)
@@ -115,6 +120,204 @@ function isArrivalAfterDeparture(departureTime: string, arrivalTime: string) {
   const arrival = new Date(arrivalTime).getTime()
   if (Number.isNaN(departure) || Number.isNaN(arrival)) return false
   return arrival > departure
+}
+
+interface PhotoDropSectionProps {
+  photos: Photo[]
+  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>
+  error?: boolean
+}
+
+function PhotoDropSection({ photos, setPhotos, error }: PhotoDropSectionProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [dragOver, setDragOver] = useState(false)
+
+  const handleFiles = (fileList: FileList | null) => {
+    if (!fileList) return
+    const remaining = MAX_IMAGE_FILES - photos.length
+    if (remaining <= 0) return
+
+    const selectedFiles = Array.from(fileList)
+    const accepted = selectedFiles.filter((file) =>
+      ALLOWED_IMAGE_TYPES.includes(file.type) && file.size <= MAX_IMAGE_SIZE_BYTES,
+    )
+    const rejectedCount = selectedFiles.length - accepted.length
+    if (rejectedCount > 0) {
+      toast.error('Only JPG, JPEG, PNG, or WEBP images up to 5 MB are allowed')
+    }
+    if (selectedFiles.length > remaining) {
+      toast.error(`You can upload up to ${MAX_IMAGE_FILES} images`)
+    }
+    const nextPhotos = accepted.slice(0, remaining).map((file) => ({
+      id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
+      file,
+      preview: URL.createObjectURL(file),
+    }))
+
+    setPhotos((current) => [...current, ...nextPhotos])
+  }
+
+  const removePhoto = (id: string) => {
+    const removed = photos.find((p) => p.id === id)
+    if (removed) URL.revokeObjectURL(removed.preview)
+    setPhotos((current) => current.filter((p) => p.id !== id))
+  }
+
+  return (
+    <Card className={clsx(error && 'border-[var(--color-error-500)] bg-[var(--color-error-50)]/5')}>
+      <h3 className="text-sm font-semibold mb-2">PHOTOS *</h3>
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-3">
+          {photos.map((p) => (
+            <div key={p.id} className="relative w-20 h-20 rounded-[var(--radius-md)] border overflow-hidden bg-[var(--bg-tertiary)] border-[var(--border-secondary)]">
+              <img src={p.preview} alt="" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removePhoto(p.id)}
+                className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-black/75 hover:bg-black/90 text-white cursor-pointer text-[10px]"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          {photos.length < MAX_IMAGE_FILES && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-20 h-20 flex flex-col items-center justify-center border border-dashed rounded-[var(--radius-md)] border-[var(--border-primary)] hover:border-[var(--color-primary-500)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] cursor-pointer"
+            >
+              <Plus size={20} />
+              <span className="text-[10px] font-medium mt-1">Add</span>
+            </button>
+          )}
+        </div>
+
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDragLeave={() => setDragOver(false)}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}
+          className={clsx(
+            'border border-dashed p-6 text-center rounded-[var(--radius-lg)] cursor-pointer transition-all',
+            dragOver ? 'border-[var(--color-primary-500)] bg-[var(--bg-secondary)]' : 'border-[var(--border-primary)] hover:bg-[var(--bg-secondary)]/50'
+          )}
+        >
+          <Upload className="w-8 h-8 text-[var(--text-tertiary)] mx-auto mb-2" />
+          <p className="text-sm font-semibold">Drop photos here or click to browse</p>
+          <span className="text-xs text-[var(--text-tertiary)] mt-1 block">
+            PNG, JPG, WEBP — up to 5MB ({photos.length} / {MAX_IMAGE_FILES} selected)
+          </span>
+        </div>
+        {error && <span className="text-xs text-[var(--color-error-500)]">At least one photo is required</span>}
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        multiple
+        className="hidden"
+        onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
+      />
+    </Card>
+  )
+}
+
+interface PricingCardSectionProps {
+  listingType: ListingType | null
+  productType: ProductType | null
+  price: string
+  setPrice: (v: string) => void
+  originalPrice: string
+  setOriginalPrice: (v: string) => void
+  quantity: string
+  setQuantity: (v: string) => void
+  isNegotiable: boolean | null
+  setIsNegotiable: (v: boolean) => void
+  submitAttempted: boolean
+  pricingTotal: number
+  showOriginal?: boolean
+  discount?: number | null
+}
+
+function PricingCardSection({
+  listingType,
+  productType,
+  price,
+  setPrice,
+  originalPrice,
+  setOriginalPrice,
+  quantity,
+  setQuantity,
+  isNegotiable,
+  setIsNegotiable,
+  submitAttempted,
+  pricingTotal,
+  showOriginal = false,
+  discount = null,
+}: PricingCardSectionProps) {
+  return (
+    <Card className="space-y-4">
+      <h3 className="text-sm font-semibold">PRICING & QUANTITY</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <Input
+          label={listingType === 'found' ? '' : (productType === 'pass' ? 'Price per Pass (₹) *' : (productType === 'ticket' ? 'Price per Ticket (₹) *' : 'Selling Price (₹) *'))}
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="₹ 0.00"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          error={submitAttempted && !positivePrice(price) ? 'Valid price required' : undefined}
+        />
+        {showOriginal && (
+          <Input
+            label="Original Purchase Price (₹)"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="₹ 0.00"
+            value={originalPrice}
+            onChange={(e) => setOriginalPrice(e.target.value)}
+          />
+        )}
+        <Input
+          label="Quantity *"
+          type="number"
+          min="1"
+          placeholder="1"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value.replace(/\D+/g, ''))}
+          error={submitAttempted && !positiveQuantity(quantity) ? 'Quantity must be at least 1' : undefined}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Is price negotiable? *</label>
+        <div className="flex gap-2">
+          <Button type="button" size="sm" variant={isNegotiable === true ? 'primary' : 'secondary'} onClick={() => setIsNegotiable(true)}>Yes</Button>
+          <Button type="button" size="sm" variant={isNegotiable === false ? 'primary' : 'secondary'} onClick={() => setIsNegotiable(false)}>No</Button>
+        </div>
+        {submitAttempted && isNegotiable === null && <span className="text-xs text-[var(--color-error-500)] block">Please select an option</span>}
+      </div>
+
+      {discount !== null && (
+        <div className="p-3 bg-[var(--bg-secondary)] text-xs rounded-[var(--radius-md)] border border-[var(--border-secondary)] text-[var(--text-secondary)]">
+          {discount > 0
+            ? `Selling at ${discount}% discount from original price.`
+            : discount === 0
+            ? 'Selling at the original price.'
+            : `Selling at ${Math.abs(discount)}% above the original price.`}
+        </div>
+      )}
+
+      {productType !== 'other' && pricingTotal > 0 && (
+        <div className="pt-3 border-t border-[var(--border-primary)] flex items-center justify-between text-sm">
+          <span className="font-semibold text-[var(--text-secondary)]">Total Listing Value:</span>
+          <span className="text-lg font-bold text-[var(--color-primary-500)]">₹{pricingTotal.toLocaleString('en-IN')}</span>
+        </div>
+      )}
+    </Card>
+  )
 }
 
 export default function AddItem() {
@@ -267,7 +470,7 @@ export default function AddItem() {
         && filled(form.category)
         && photos.length > 0
         && filled(form.locationFound)
-        && filled(form.dateTimeFound)
+        && isPastOrPresentDateTime(form.dateTimeFound)
       )
     }
     if (productType === 'pass') {
@@ -368,167 +571,6 @@ export default function AddItem() {
     if (step > stepNumber) return 'complete'
     if (step === stepNumber) return 'active'
     return 'pending'
-  }
-
-  /* ── Photos Drop Field ── */
-  function PhotoDropSection({ error }: { error?: boolean }) {
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const [dragOver, setDragOver] = useState(false)
-
-    const handleFiles = (fileList: FileList | null) => {
-      if (!fileList) return
-      const remaining = MAX_IMAGE_FILES - photos.length
-      if (remaining <= 0) return
-
-      const selectedFiles = Array.from(fileList)
-      const accepted = selectedFiles.filter((file) =>
-        ALLOWED_IMAGE_TYPES.includes(file.type) && file.size <= MAX_IMAGE_SIZE_BYTES,
-      )
-      const rejectedCount = selectedFiles.length - accepted.length
-      if (rejectedCount > 0) {
-        toast.error('Only JPG, JPEG, PNG, or WEBP images up to 5 MB are allowed')
-      }
-      if (selectedFiles.length > remaining) {
-        toast.error(`You can upload up to ${MAX_IMAGE_FILES} images`)
-      }
-      const nextPhotos = accepted.slice(0, remaining).map((file) => ({
-        id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
-        file,
-        preview: URL.createObjectURL(file),
-      }))
-      setPhotos([...photos, ...nextPhotos])
-    }
-
-    const removePhoto = (id: string) => {
-      const removed = photos.find((p) => p.id === id)
-      if (removed) URL.revokeObjectURL(removed.preview)
-      setPhotos(photos.filter((p) => p.id !== id))
-    }
-
-    return (
-      <Card className={clsx(error && 'border-[var(--color-error-500)] bg-[var(--color-error-50)]/5')}>
-        <h3 className="text-sm font-semibold mb-2">PHOTOS *</h3>
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-3">
-            {photos.map((p) => (
-              <div key={p.id} className="relative w-20 h-20 rounded-[var(--radius-md)] border overflow-hidden bg-[var(--bg-tertiary)] border-[var(--border-secondary)]">
-                <img src={p.preview} alt="" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removePhoto(p.id)}
-                  className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-black/75 hover:bg-black/90 text-white cursor-pointer text-[10px]"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-            {photos.length < MAX_IMAGE_FILES && (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-20 h-20 flex flex-col items-center justify-center border border-dashed rounded-[var(--radius-md)] border-[var(--border-primary)] hover:border-[var(--color-primary-500)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] cursor-pointer"
-              >
-                <Plus size={20} />
-                <span className="text-[10px] font-medium mt-1">Add</span>
-              </button>
-            )}
-          </div>
-
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDragLeave={() => setDragOver(false)}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}
-            className={clsx(
-              'border border-dashed p-6 text-center rounded-[var(--radius-lg)] cursor-pointer transition-all',
-              dragOver ? 'border-[var(--color-primary-500)] bg-[var(--bg-secondary)]' : 'border-[var(--border-primary)] hover:bg-[var(--bg-secondary)]/50'
-            )}
-          >
-            <Upload className="w-8 h-8 text-[var(--text-tertiary)] mx-auto mb-2" />
-            <p className="text-sm font-semibold">Drop photos here or click to browse</p>
-            <span className="text-xs text-[var(--text-tertiary)] mt-1 block">
-              PNG, JPG, WEBP — up to 5MB ({photos.length} / {MAX_IMAGE_FILES} selected)
-            </span>
-          </div>
-          {error && <span className="text-xs text-[var(--color-error-500)]">At least one photo is required</span>}
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          multiple
-          className="hidden"
-          onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
-        />
-      </Card>
-    )
-  }
-
-  /* ── Pricing Card Field Component ── */
-  function PricingCardSection({ showOriginal = false, discount = null }: { showOriginal?: boolean; discount?: number | null }) {
-    return (
-      <Card className="space-y-4">
-        <h3 className="text-sm font-semibold">PRICING & QUANTITY</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <Input
-            label={listingType === 'found' ? '' : (productType === 'pass' ? 'Price per Pass (₹) *' : (productType === 'ticket' ? 'Price per Ticket (₹) *' : 'Selling Price (₹) *'))}
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="₹ 0.00"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            error={submitAttempted && !positivePrice(price) ? 'Valid price required' : undefined}
-          />
-          {showOriginal && (
-            <Input
-              label="Original Purchase Price (₹)"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="₹ 0.00"
-              value={originalPrice}
-              onChange={(e) => setOriginalPrice(e.target.value)}
-            />
-          )}
-          <Input
-            label="Quantity *"
-            type="number"
-            min="1"
-            placeholder="1"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value.replace(/\D+/g, ''))}
-            error={submitAttempted && !positiveQuantity(quantity) ? 'Quantity must be at least 1' : undefined}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Is price negotiable? *</label>
-          <div className="flex gap-2">
-            <Button type="button" size="sm" variant={isNegotiable === true ? 'primary' : 'secondary'} onClick={() => setIsNegotiable(true)}>Yes</Button>
-            <Button type="button" size="sm" variant={isNegotiable === false ? 'primary' : 'secondary'} onClick={() => setIsNegotiable(false)}>No</Button>
-          </div>
-          {submitAttempted && isNegotiable === null && <span className="text-xs text-[var(--color-error-500)] block">Please select an option</span>}
-        </div>
-
-        {discount !== null && (
-          <div className="p-3 bg-[var(--bg-secondary)] text-xs rounded-[var(--radius-md)] border border-[var(--border-secondary)] text-[var(--text-secondary)]">
-            {discount > 0
-              ? `Selling at ${discount}% discount from original price.`
-              : discount === 0
-              ? 'Selling at the original price.'
-              : `Selling at ${Math.abs(discount)}% above the original price.`}
-          </div>
-        )}
-
-        {productType !== 'other' && pricingTotal > 0 && (
-          <div className="pt-3 border-t border-[var(--border-primary)] flex items-center justify-between text-sm">
-            <span className="font-semibold text-[var(--text-secondary)]">Total Listing Value:</span>
-            <span className="text-lg font-bold text-[var(--color-primary-500)]">₹{pricingTotal.toLocaleString('en-IN')}</span>
-          </div>
-        )}
-      </Card>
-    )
   }
 
   return (
@@ -725,7 +767,7 @@ export default function AddItem() {
                 </div>
               </Card>
 
-              <PhotoDropSection error={submitAttempted && photos.length === 0} />
+              <PhotoDropSection photos={photos} setPhotos={setPhotos} error={submitAttempted && photos.length === 0} />
 
               <Card className="space-y-4">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Where & When Found</h3>
@@ -740,9 +782,18 @@ export default function AddItem() {
                 <Input
                   label="Date & Time Found *"
                   type="datetime-local"
+                  max={nowDateTimeLocal()}
                   value={form.dateTimeFound}
                   onChange={(e) => setFormField('dateTimeFound', e.target.value)}
-                  error={submitAttempted && !filled(form.dateTimeFound) ? 'Date and Time is required' : undefined}
+                  error={
+                    submitAttempted
+                      ? !filled(form.dateTimeFound)
+                        ? 'Date and Time is required'
+                        : !isPastOrPresentDateTime(form.dateTimeFound)
+                        ? 'Date must be in the past or present'
+                        : undefined
+                      : undefined
+                  }
                   iconLeft={<Clock size={16} />}
                 />
               </Card>
@@ -799,8 +850,21 @@ export default function AddItem() {
                       </div>
                     </div>
                   </Card>
-                  <PhotoDropSection error={submitAttempted && photos.length === 0} />
-                  <PricingCardSection />
+                  <PhotoDropSection photos={photos} setPhotos={setPhotos} error={submitAttempted && photos.length === 0} />
+                  <PricingCardSection
+                    listingType={listingType}
+                    productType={productType}
+                    price={price}
+                    setPrice={setPrice}
+                    originalPrice={originalPrice}
+                    setOriginalPrice={setOriginalPrice}
+                    quantity={quantity}
+                    setQuantity={setQuantity}
+                    isNegotiable={isNegotiable}
+                    setIsNegotiable={setIsNegotiable}
+                    submitAttempted={submitAttempted}
+                    pricingTotal={pricingTotal}
+                  />
                 </>
               )}
 
@@ -873,7 +937,20 @@ export default function AddItem() {
                       />
                     </div>
                   </Card>
-                  <PricingCardSection />
+                  <PricingCardSection
+                    listingType={listingType}
+                    productType={productType}
+                    price={price}
+                    setPrice={setPrice}
+                    originalPrice={originalPrice}
+                    setOriginalPrice={setOriginalPrice}
+                    quantity={quantity}
+                    setQuantity={setQuantity}
+                    isNegotiable={isNegotiable}
+                    setIsNegotiable={setIsNegotiable}
+                    submitAttempted={submitAttempted}
+                    pricingTotal={pricingTotal}
+                  />
                 </>
               )}
 
@@ -917,7 +994,7 @@ export default function AddItem() {
                     />
                   </Card>
 
-                  <PhotoDropSection error={submitAttempted && photos.length === 0} />
+                  <PhotoDropSection photos={photos} setPhotos={setPhotos} error={submitAttempted && photos.length === 0} />
 
                   <Card className="space-y-4">
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">Usage History</h3>
@@ -965,6 +1042,18 @@ export default function AddItem() {
                   </Card>
 
                   <PricingCardSection
+                    listingType={listingType}
+                    productType={productType}
+                    price={price}
+                    setPrice={setPrice}
+                    originalPrice={originalPrice}
+                    setOriginalPrice={setOriginalPrice}
+                    quantity={quantity}
+                    setQuantity={setQuantity}
+                    isNegotiable={isNegotiable}
+                    setIsNegotiable={setIsNegotiable}
+                    submitAttempted={submitAttempted}
+                    pricingTotal={pricingTotal}
                     showOriginal
                     discount={
                       Number(originalPrice) > 0 && Number(price) >= 0

@@ -1,27 +1,24 @@
 import Avatar from '@/components/ui/Avatar'
-import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
-import { Edit2, ShieldCheck, Calendar } from 'lucide-react'
+import { ShieldCheck, Calendar } from 'lucide-react'
 
 export default function ProfileHeader({
   profile,
-  onEdit,
 }: {
   profile: any
-  onEdit: () => void
 }) {
   const memberYear = new Date(profile?.createdAt || Date.now()).getFullYear()
 
   return (
-    <div className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] overflow-hidden shadow-[var(--shadow-card)]">
+    <div className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] overflow-hidden shadow-[var(--shadow-card)] relative">
       {/* Cover Banner */}
       <div className="h-32 sm:h-40 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-primary-700)] relative" />
 
       {/* Header Info area */}
-      <div className="px-4 sm:px-6 pb-6 relative flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-10 sm:-mt-14">
+      <div className="px-4 sm:px-6 pb-5">
         <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-5">
-          {/* Avatar frame */}
-          <div className="relative p-1 rounded-full bg-[var(--bg-primary)] ring-4 ring-[var(--surface-card)] shrink-0 shadow-md">
+          {/* Avatar frame - only avatar overlaps banner */}
+          <div className="relative p-1 rounded-full bg-[var(--bg-primary)] ring-4 ring-[var(--surface-card)] shrink-0 shadow-md -mt-10 sm:-mt-14">
             <Avatar
               src={profile?.avatar}
               name={profile?.name || 'User'}
@@ -29,7 +26,8 @@ export default function ProfileHeader({
             />
           </div>
 
-          <div className="space-y-1.5 pb-1">
+          {/* User info details */}
+          <div className="space-y-1.5 pt-1 sm:pt-3 pb-1">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
                 {profile?.name}
@@ -56,17 +54,6 @@ export default function ProfileHeader({
             </div>
           </div>
         </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onEdit}
-          iconLeft={<Edit2 size={13} />}
-          className="sm:mb-1 w-full sm:w-auto font-semibold"
-        >
-          Edit Profile
-        </Button>
       </div>
     </div>
   )

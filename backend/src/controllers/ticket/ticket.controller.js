@@ -149,6 +149,7 @@ export const updateTicket = asyncHandler(async (req, res) => {
     }
     if (departureTime !== undefined) updateData.departureTime = new Date(departureTime);
     if (arrivalTime !== undefined) updateData.arrivalTime = new Date(arrivalTime);
+    if (req.body.status !== undefined) updateData.status = req.body.status;
 
     const updated = await ticketModel.findByIdAndUpdate(
         req.params.id,

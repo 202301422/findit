@@ -55,7 +55,7 @@ interface TravelTicket {
   origin: Location; destination: Location
   departureTime: string; arrivalTime: string
   isNegotiable: boolean; price: number; quantity: number
-  description?: string; user: Seller; createdAt: string
+  description?: string; status?: string; user: Seller; createdAt: string
 }
 
 /* ============================================================
@@ -731,7 +731,7 @@ function SellProductDetail({ product, setProduct, isOwner, onChat }: {
     try {
       const res = await api.put(`/sell-products/${product._id}`, { status: 'sold' })
       if (res.data.success) {
-        setProduct(res.data.data)
+        setProduct({ ...product, ...res.data.data, user: typeof res.data.data.user === 'object' && res.data.data.user ? res.data.data.user : product.user })
         toast.success('Marked as sold!')
       }
     } catch {
@@ -891,7 +891,7 @@ function FoundItemDetail({ item, setItem, isOwner, onChat }: {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div className="lg:col-span-7 space-y-6">
-        <ImageGallery images={item.images} isSold={isClosed} />
+        <ImageGallery images={item.images} isSold={isClosed} soldLabel="Returned" />
         <div className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] p-5 shadow-[var(--shadow-card)] space-y-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">{item.name}</h1>
@@ -1006,7 +1006,7 @@ function EventPassDetail({ pass, setPass, isOwner, onChat }: {
       fd3.append('keepImagePublicIds', JSON.stringify(currentImgs.map((i) => i.publicId)))
       const res = await api.put(`/passes/${pass._id}`, fd3, { headers: { 'Content-Type': 'multipart/form-data' } })
       if (res.data.success) {
-        setPass({ ...pass, status: 'sold' })
+        setPass({ ...pass, ...res.data.data, status: 'sold', user: typeof res.data.data?.user === 'object' && res.data.data?.user ? res.data.data.user : pass.user })
         toast.success('Marked as sold!')
       }
     } catch {
@@ -1121,7 +1121,9 @@ function TravelTicketDetail({ ticket, setTicket, isOwner, onChat }: {
   const navigate = useNavigate()
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
+  const [showSold, setShowSold] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [marking, setMarking] = useState(false)
 
   async function handleDelete() {
     setDeleting(true)
@@ -1137,6 +1139,23 @@ function TravelTicketDetail({ ticket, setTicket, isOwner, onChat }: {
     }
   }
 
+  async function handleSold() {
+    setMarking(true)
+    try {
+      const res = await api.put(`/tickets/${ticket._id}`, { status: 'sold' })
+      if (res.data.success) {
+        setTicket({ ...ticket, ...res.data.data, status: 'sold', user: typeof res.data.data?.user === 'object' && res.data.data?.user ? res.data.data.user : ticket.user })
+        toast.success('Marked as sold!')
+      }
+    } catch {
+      toast.error('Failed to mark as sold')
+    } finally {
+      setMarking(false)
+      setShowSold(false)
+    }
+  }
+
+  const isSold = ticket.status === 'sold'
   const departure = new Date(ticket.departureTime)
   const arrival = new Date(ticket.arrivalTime)
 
@@ -1158,9 +1177,12 @@ function TravelTicketDetail({ ticket, setTicket, isOwner, onChat }: {
                 <span className="text-sm font-semibold">CAMPUS SHUTTLE</span>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-gray-400 block tracking-wider uppercase">Price</span>
-              <span className="text-lg font-bold text-[var(--color-primary-500)]">₹{ticket.price.toLocaleString()}</span>
+            <div className="text-right flex items-center gap-2">
+              {isSold && <Badge variant="error">Sold</Badge>}
+              <div>
+                <span className="text-[10px] font-bold text-gray-400 block tracking-wider uppercase">Price</span>
+                <span className="text-lg font-bold text-[var(--color-primary-500)]">₹{ticket.price.toLocaleString()}</span>
+              </div>
             </div>
           </div>
 
@@ -1236,13 +1258,26 @@ function TravelTicketDetail({ ticket, setTicket, isOwner, onChat }: {
               <Button size="sm" variant="secondary" iconLeft={<Edit2 size={13} />} onClick={() => setShowEdit(true)}>Edit</Button>
               <Button size="sm" variant="danger" iconLeft={<Trash2 size={13} />} onClick={() => setShowDelete(true)}>Delete</Button>
             </div>
+            {!isSold && (
+              <Button size="sm" variant="outline" fullWidth iconLeft={<CheckCircle size={13} />} onClick={() => setShowSold(true)}>Mark as Sold</Button>
+            )}
           </div>
         )}
 
-        <SellerCard seller={ticket.user} createdAt={ticket.createdAt} isOwner={isOwner} onChat={onChat} />
+        <SellerCard seller={ticket.user} createdAt={ticket.createdAt} isOwner={isOwner} isSold={isSold} onChat={onChat} />
       </div>
 
       {showEdit && <EditTicketPanel ticket={ticket} onClose={() => setShowEdit(false)} onSaved={(u) => { setTicket(u); setShowEdit(false) }} />}
+      <ActionConfirmModal
+        open={showSold}
+        title="Mark as Sold?"
+        desc="Are you sure you want to mark this travel ticket as sold?"
+        icon="🏷️"
+        confirmLabel="Yes, Mark Sold"
+        onCancel={() => setShowSold(false)}
+        onConfirm={handleSold}
+        loading={marking}
+      />
       <ActionConfirmModal
         open={showDelete}
         title="Delete Ticket Listing?"

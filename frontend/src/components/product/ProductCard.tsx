@@ -42,8 +42,13 @@ function renderPlaceholderIcon(tabLabel: string, item: any) {
   return <ShoppingBag className="w-8 h-8 text-[var(--color-primary-500)]" />
 }
 
-function getStatusBadge(item: any) {
-  if (item.status === 'sold') return { label: 'Sold', variant: 'error' as const }
+function getStatusBadge(item: any, type?: string, tabLabel?: string) {
+  if (item.status === 'sold' || item.status === 'closed') {
+    if (type === 'found' || tabLabel === 'Lost & Found') {
+      return { label: 'Returned', variant: 'success' as const }
+    }
+    return { label: 'Sold', variant: 'error' as const }
+  }
   if (item.isNegotiable) return { label: 'Negotiable', variant: 'success' as const }
   return null
 }
@@ -56,7 +61,7 @@ export default function ProductCard({ item, type, tabLabel }: ProductCardProps) 
   const imageUrl = getItemImage(item)
   const title = getItemTitle(item)
   const price = getItemPrice(item, tabLabel)
-  const statusBadge = getStatusBadge(item)
+  const statusBadge = getStatusBadge(item, type, tabLabel)
   const showImage = imageUrl && !imgError
 
   return (

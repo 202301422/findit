@@ -5,7 +5,7 @@ import Avatar from '@/components/ui/Avatar'
 import Card from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
 import EmptyState from '@/components/ui/EmptyState'
-import { Search, MessageSquare, ChevronRight } from 'lucide-react'
+import { Search, MessageSquare, ChevronRight, ArrowLeft } from 'lucide-react'
 import { clsx } from 'clsx'
 
 function formatTime(dateStr: string): string {
@@ -63,7 +63,15 @@ export default function Messages() {
   return (
     <div className="max-w-2xl mx-auto space-y-4 py-2">
       {/* Header */}
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="p-1.5 rounded-full border border-[var(--border-primary)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] transition-all cursor-pointer shrink-0"
+          aria-label="Back to home"
+        >
+          <ArrowLeft size={18} />
+        </button>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">Messages</h1>
           <p className="text-xs text-[var(--text-tertiary)] font-medium mt-0.5">

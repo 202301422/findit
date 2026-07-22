@@ -18,7 +18,7 @@ import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
 import { 
-  ArrowLeft, Send, Smile, Paperclip, X, Trash2, ShieldAlert, Check, MoreVertical
+  ArrowLeft, Send, Smile, Paperclip, X, Trash2, ShieldAlert, Check, CheckCheck, MoreVertical
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -338,11 +338,11 @@ export default function ChatDetail() {
                         {formatBubbleTime(msg.createdAt)}
                       </span>
                       {isMine && (
-                        <span>
+                        <span title={msg.read ? 'Seen' : 'Sent'}>
                           {msg.read ? (
-                            <Check size={10} strokeWidth={3} className="text-white/90" />
+                            <CheckCheck size={13} strokeWidth={2.5} className="text-white/90" />
                           ) : (
-                            <Check size={10} className="text-white/60" />
+                            <Check size={11} strokeWidth={2.5} className="text-white/60" />
                           )}
                         </span>
                       )}

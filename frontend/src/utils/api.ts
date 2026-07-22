@@ -1,8 +1,48 @@
 import axios from 'axios';
+import { disconnectSocket, setSocketAuthToken } from './socketClient';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  withCredentials: true,
 });
+
+let refreshAccessTokenPromise: Promise<string> | null = null;
+
+const shouldSkipRefresh = (requestUrl?: string) => {
+  if (!requestUrl) {
+    return false;
+  }
+
+  return [
+    '/auth/login',
+    '/auth/google',
+    '/auth/signup',
+    '/auth/refresh-token',
+    '/auth/logout',
+  ].some((path) => requestUrl.includes(path));
+};
+
+const refreshAccessToken = async () => {
+  if (!refreshAccessTokenPromise) {
+    refreshAccessTokenPromise = api
+      .post('/auth/refresh-token')
+      .then((response) => {
+        if (!response.data?.success) {
+          throw new Error('Token refresh failed');
+        }
+
+        const newAccessToken = response.data.data.accessToken;
+        localStorage.setItem('accessToken', newAccessToken);
+        setSocketAuthToken(newAccessToken);
+        return newAccessToken;
+      })
+      .finally(() => {
+        refreshAccessTokenPromise = null;
+      });
+  }
+
+  return refreshAccessTokenPromise;
+};
 
 // Request interceptor to add the auth token header to every request
 api.interceptors.request.use(
@@ -21,31 +61,24 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
 
-        const res = await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, { refreshToken });
-        
-        if (res.data.success) {
-          const newAccessToken = res.data.data.accessToken;
-          localStorage.setItem('accessToken', newAccessToken);
-          
-          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-          return api(originalRequest);
-        } else {
-          throw new Error('Refresh failed');
-        }
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !shouldSkipRefresh(originalRequest.url)) {
+      originalRequest._retry = true;
+
+      try {
+        const newAccessToken = await refreshAccessToken();
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
       } catch (err) {
-        // Refresh token failed or is expired, clear tokens and redirect to login
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        window.location.href = '/signin';
+        setSocketAuthToken(null);
+        disconnectSocket();
+        if (window.location.pathname !== '/signin' && window.location.pathname !== '/signup') {
+          window.location.href = '/signin';
+        }
         return Promise.reject(err);
       }
     }

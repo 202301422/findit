@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import axios from 'axios';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth as firebaseAuth } from '../firebase';
 import api from '../utils/api';
+import { disconnectSocket, setSocketAuthToken } from '../utils/socketClient';
 
 interface User {
   _id: string;
@@ -47,18 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    setSocketAuthToken(null);
+    disconnectSocket();
   };
 
   const fetchCurrentUser = async () => {
-    const storedToken = localStorage.getItem('accessToken');
-    if (!storedToken) return null;
-
     try {
-      const response = await axios.get(`${api.defaults.baseURL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${storedToken}`
-        }
-      });
+      const response = await api.get('/auth/me');
 
       if (response.data.success) {
         return response.data.data.user as User;
@@ -67,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
        console.error('Session validation failed', error);
     }
     return null;
-  }
+  };
 
   useEffect(() => {
     const validateSession = async () => {
@@ -93,20 +88,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const handleLoginSuccess = (userData: User, accessToken: string, refreshToken: string) => {
+  const handleLoginSuccess = (userData: User, accessToken: string) => {
     setUser(userData);
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
+    setSocketAuthToken(accessToken);
   };
 
   const login = async (data: any) => {
     try {
       const res = await api.post('/auth/login', data);
       if (res.data.success) {
-        const { user, accessToken, refreshToken } = res.data.data;
-        handleLoginSuccess(user, accessToken, refreshToken);
+        const { user, accessToken } = res.data.data;
+        handleLoginSuccess(user, accessToken);
       }
       return res.data;
     } catch (error: any) {
@@ -137,8 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await api.post('/auth/google', { idToken });
       
       if (res.data.success) {
-        const { user, accessToken, refreshToken } = res.data.data;
-        handleLoginSuccess(user, accessToken, refreshToken);
+        const { user, accessToken } = res.data.data;
+        handleLoginSuccess(user, accessToken);
       }
       return res.data;
     } catch (error: any) {

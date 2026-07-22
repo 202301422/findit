@@ -11,6 +11,7 @@ import {
   reportMessage,
 } from "../controllers/chat.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
+import { chatMessageRateLimiter } from "../middleware/security.middleware.js";
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.get("/unread", getTotalUnread);
 router.get("/conversations", getConversations);
 router.post("/conversations", getOrCreateConversation);
 router.get("/conversations/:id/messages", getMessages);
-router.post("/conversations/:id/messages", upload.single("image"), sendMessage);
+router.post("/conversations/:id/messages", chatMessageRateLimiter, upload.single("image"), sendMessage);
 router.patch("/conversations/:id/read", markRead);
 router.delete("/conversations/messages/:messageId", deleteMessage);
 router.post("/conversations/messages/:messageId/report", reportMessage);

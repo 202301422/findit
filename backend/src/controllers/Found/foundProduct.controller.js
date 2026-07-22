@@ -167,7 +167,7 @@ export const updateFoundProduct = asyncHandler(async (req, res) => {
             req.params.id,
             updateData,
             { returnDocument: "after", runValidators: true }
-        );
+        ).populate("user", "name avatar email rating profilePicture");
         console.log("[FOUND UPDATE] product.images:", updatedProduct.images);
 
         const nextPublicIds = new Set(nextImages.map((img) => img.publicId));

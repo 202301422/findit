@@ -386,7 +386,7 @@ export const updateSellProduct = asyncHandler(async (req, res) => {
             req.params.id,
             updateData,
             { returnDocument: "after", runValidators: true }
-        );
+        ).populate("user", "name avatar email rating profilePicture");
 
         console.log("[SELL UPDATE] product.images:", updatedProduct.images);
 

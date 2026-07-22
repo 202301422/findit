@@ -13,7 +13,6 @@ import {
   LogOut,
   HelpCircle,
   User,
-  Settings,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/contexts/AuthContext'
@@ -239,12 +238,6 @@ export default function Navbar() {
                     onSelect={() => navigate('/profile')}
                   >
                     Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    icon={<Settings size={16} />}
-                    onSelect={() => navigate('/profile')}
-                  >
-                    Settings
                   </DropdownMenuItem>
                   <div className="sm:hidden px-1 py-1">
                     <DropdownMenuItem

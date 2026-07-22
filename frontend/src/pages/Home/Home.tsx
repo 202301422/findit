@@ -25,6 +25,12 @@ export default function Home() {
   const [categories, setCategories] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState('')
   const [maxPrice, setMaxPrice] = useState(0)
+  const [isNegotiable, setIsNegotiable] = useState('')
+  const [hasWarranty, setHasWarranty] = useState('')
+  const [sort, setSort] = useState('')
+  const [dateAfter, setDateAfter] = useState('')
+  const [dateBefore, setDateBefore] = useState('')
+  const [minSeats, setMinSeats] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -48,6 +54,12 @@ export default function Home() {
   useEffect(() => {
     setSelectedCategory('')
     setMaxPrice(0)
+    setIsNegotiable('')
+    setHasWarranty('')
+    setSort('')
+    setDateAfter('')
+    setDateBefore('')
+    setMinSeats('')
     setSearchQuery('')
     setItems([])
 
@@ -75,6 +87,13 @@ export default function Home() {
         const params = new URLSearchParams({ type })
         if (selectedCategory) params.set('category', selectedCategory)
         if (maxPrice > 0) params.set('maxPrice', String(maxPrice))
+        if (isNegotiable) params.set('isNegotiable', isNegotiable)
+        if (hasWarranty) params.set('hasWarranty', hasWarranty)
+        if (sort) params.set('sort', sort)
+        if (searchQuery.trim()) params.set('search', searchQuery.trim())
+        if (dateAfter) params.set('dateAfter', dateAfter)
+        if (dateBefore) params.set('dateBefore', dateBefore)
+        if (minSeats) params.set('minSeats', minSeats)
 
         const response = await api.get(`/feed/list?${params.toString()}`)
         if (response.data.success) {
@@ -83,16 +102,13 @@ export default function Home() {
       } catch (error) {
         console.error(`Failed to fetch ${selected} data:`, error)
       } finally {
-        if (loading) {
-          // check if component still active before setting loading
-        }
         setLoading(false)
       }
     }
 
     const timeoutId = setTimeout(fetchFeedData, 300)
     return () => clearTimeout(timeoutId)
-  }, [selected, selectedCategory, maxPrice])
+  }, [selected, selectedCategory, maxPrice, isNegotiable, hasWarranty, sort, searchQuery, dateAfter, dateBefore, minSeats])
 
   // Local frontend filtering of items using the search bar query
   const filteredItems = useMemo(() => {
@@ -102,13 +118,47 @@ export default function Home() {
       const name = item.name || (item.origin?.city && item.destination?.city && `${item.origin.city} → ${item.destination.city}`) || item.ticketType || ''
       const category = item.category || ''
       const description = item.description || ''
+      
+      // Venue / Location fields for Passes, Found Items, and Tickets
+      let venueStr = ''
+      if (typeof item.venue === 'string') {
+        venueStr = item.venue
+      } else if (item.venue && typeof item.venue === 'object') {
+        venueStr = `${item.venue.area || ''} ${item.venue.city || ''} ${item.venue.state || ''}`
+      }
+      const originStr = item.origin ? `${item.origin.area || ''} ${item.origin.city || ''} ${item.origin.state || ''}` : ''
+      const destStr = item.destination ? `${item.destination.area || ''} ${item.destination.city || ''} ${item.destination.state || ''}` : ''
+      const locationStr = item.locationFound || item.location || ''
+
+      const dateStr = item.dateTime ? new Date(item.dateTime).toLocaleString() : item.departureTime ? new Date(item.departureTime).toLocaleString() : ''
+
       return (
         name.toLowerCase().includes(q) ||
         category.toLowerCase().includes(q) ||
-        description.toLowerCase().includes(q)
+        description.toLowerCase().includes(q) ||
+        venueStr.toLowerCase().includes(q) ||
+        originStr.toLowerCase().includes(q) ||
+        destStr.toLowerCase().includes(q) ||
+        locationStr.toLowerCase().includes(q) ||
+        dateStr.toLowerCase().includes(q)
       )
     })
   }, [items, searchQuery])
+
+  const hasActiveFilters = Boolean(
+    selectedCategory || maxPrice > 0 || isNegotiable || hasWarranty || sort || dateAfter || dateBefore || minSeats
+  )
+
+  const clearAllFilters = () => {
+    setSelectedCategory('')
+    setMaxPrice(0)
+    setIsNegotiable('')
+    setHasWarranty('')
+    setSort('')
+    setDateAfter('')
+    setDateBefore('')
+    setMinSeats('')
+  }
 
   return (
     <div className="space-y-6">
@@ -135,14 +185,14 @@ export default function Home() {
             Find what you need from fellow students — buy, sell, trade, and more.
           </p>
 
-          {/* Search bar in hero (sleek & compact width) */}
+          {/* Search bar in hero */}
           <div className="relative max-w-sm">
             <Search
               size={16}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
             />
             <input
-              placeholder="Search for items, tickets, passes..."
+              placeholder="Search for items, tickets, passes, venue, location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={clsx(
@@ -170,7 +220,7 @@ export default function Home() {
           onClick={() => setShowFilters(!showFilters)}
           className={clsx(showFilters && '!bg-[var(--color-primary-500)]/8 !text-[var(--color-primary-500)]')}
         >
-          Filters
+          Filters {hasActiveFilters && '•'}
         </Button>
       </div>
 
@@ -185,6 +235,29 @@ export default function Home() {
             'bg-[var(--surface-card)] border border-[var(--border-secondary)]',
           )}
         >
+          {/* Sort Filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+              Sort By
+            </label>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className={clsx(
+                'h-8 px-3 rounded-[var(--radius-sm)] text-sm',
+                'bg-[var(--bg-primary)] border border-[var(--border-primary)]',
+                'text-[var(--text-primary)]',
+                'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/30',
+              )}
+            >
+              <option value="">Latest / Default</option>
+              {selected !== 'Lost & Found' && <option value="price_asc">Price: Low to High</option>}
+              {selected !== 'Lost & Found' && <option value="price_desc">Price: High to Low</option>}
+              {selected === 'Buy & Sell' && <option value="usage_asc">Usage: Shortest First</option>}
+              {selected === 'Buy & Sell' && <option value="usage_desc">Usage: Longest First</option>}
+            </select>
+          </div>
+
           {/* Category filter */}
           <div className="flex items-center gap-2">
             <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
@@ -208,6 +281,52 @@ export default function Home() {
               ))}
             </select>
           </div>
+
+          {/* Negotiable filter */}
+          {selected !== 'Lost & Found' && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+                Price Negotiation
+              </label>
+              <select
+                value={isNegotiable}
+                onChange={(e) => setIsNegotiable(e.target.value)}
+                className={clsx(
+                  'h-8 px-3 rounded-[var(--radius-sm)] text-sm',
+                  'bg-[var(--bg-primary)] border border-[var(--border-primary)]',
+                  'text-[var(--text-primary)]',
+                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/30',
+                )}
+              >
+                <option value="">All</option>
+                <option value="true">Negotiable Only</option>
+                <option value="false">Fixed Price Only</option>
+              </select>
+            </div>
+          )}
+
+          {/* Warranty filter (Buy & Sell only) */}
+          {selected === 'Buy & Sell' && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+                Warranty
+              </label>
+              <select
+                value={hasWarranty}
+                onChange={(e) => setHasWarranty(e.target.value)}
+                className={clsx(
+                  'h-8 px-3 rounded-[var(--radius-sm)] text-sm',
+                  'bg-[var(--bg-primary)] border border-[var(--border-primary)]',
+                  'text-[var(--text-primary)]',
+                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/30',
+                )}
+              >
+                <option value="">All</option>
+                <option value="true">Has Warranty</option>
+                <option value="false">No Warranty</option>
+              </select>
+            </div>
+          )}
 
           {/* Price filter (hide for Lost & Found) */}
           {selected !== 'Lost & Found' && (
@@ -244,18 +363,78 @@ export default function Home() {
             </div>
           )}
 
+          {/* Available Seats / Quantity filter for Tickets and Passes */}
+          {(selected === 'Travelling Tickets' || selected === 'Event Passes') && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+                Min Seats
+              </label>
+              <input
+                type="number"
+                min="1"
+                placeholder="Any"
+                value={minSeats}
+                onChange={(e) => setMinSeats(e.target.value)}
+                className={clsx(
+                  'h-8 w-20 px-2 rounded-[var(--radius-sm)] text-sm',
+                  'bg-[var(--bg-primary)] border border-[var(--border-primary)]',
+                  'text-[var(--text-primary)]',
+                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/30',
+                )}
+              />
+            </div>
+          )}
+
+          {/* Date & Time Filters */}
+          {selected !== 'Buy & Sell' && (
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+                  {selected === 'Lost & Found' ? 'Found After' : selected === 'Travelling Tickets' ? 'Departure After' : 'Event After'}
+                </label>
+                <input
+                  type="datetime-local"
+                  value={dateAfter}
+                  onChange={(e) => setDateAfter(e.target.value)}
+                  className={clsx(
+                    'h-8 px-2 rounded-[var(--radius-sm)] text-xs',
+                    'bg-[var(--bg-primary)] border border-[var(--border-primary)]',
+                    'text-[var(--text-primary)]',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/30',
+                  )}
+                />
+              </div>
+
+              {selected !== 'Lost & Found' && (
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+                    {selected === 'Travelling Tickets' ? 'Departure Before' : 'Event Before'}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={dateBefore}
+                    onChange={(e) => setDateBefore(e.target.value)}
+                    className={clsx(
+                      'h-8 px-2 rounded-[var(--radius-sm)] text-xs',
+                      'bg-[var(--bg-primary)] border border-[var(--border-primary)]',
+                      'text-[var(--text-primary)]',
+                      'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/30',
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Clear filters */}
-          {(selectedCategory || maxPrice > 0) && (
+          {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               iconLeft={<X size={12} />}
-              onClick={() => {
-                setSelectedCategory('')
-                setMaxPrice(0)
-              }}
+              onClick={clearAllFilters}
             >
-              Clear
+              Clear Filters
             </Button>
           )}
         </motion.div>

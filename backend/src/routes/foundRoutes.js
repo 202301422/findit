@@ -10,6 +10,7 @@ import {
 import { authenticate } from "../middleware/auth.middleware.js";
 import { upload, validateImageCount } from "../middleware/multer.middleware.js";
 import { UPLOAD_CONFIG } from "../config/uploadConfig.js";
+import { uploadRateLimiter } from "../middleware/security.middleware.js";
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router
     .route("/")
     .post(
         authenticate,
+        uploadRateLimiter,
         upload.array("images", UPLOAD_CONFIG.MAX_IMAGES),
         validateImageCount(),
         createFoundProduct
@@ -28,6 +30,7 @@ router
     .get(getSingleFoundProduct)
     .put(
         authenticate,
+        uploadRateLimiter,
         upload.array("images", UPLOAD_CONFIG.MAX_IMAGES),
         validateImageCount(),
         updateFoundProduct

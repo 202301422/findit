@@ -53,7 +53,7 @@ export default function Avatar({
 
   return (
     <div
-      className={clsx('relative inline-flex shrink-0', className)}
+      className={clsx('relative inline-flex shrink-0 items-center justify-center', !className && container, className)}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -63,8 +63,7 @@ export default function Avatar({
           src={src}
           alt={name}
           className={clsx(
-            container,
-            'rounded-full object-cover',
+            'w-full h-full rounded-full object-cover',
             onClick && 'cursor-pointer',
           )}
           onError={() => setImgError(true)}
@@ -72,8 +71,7 @@ export default function Avatar({
       ) : (
         <div
           className={clsx(
-            container,
-            'rounded-full flex items-center justify-center font-semibold text-white',
+            'w-full h-full rounded-full flex items-center justify-center font-semibold text-white',
             onClick && 'cursor-pointer',
             text,
           )}

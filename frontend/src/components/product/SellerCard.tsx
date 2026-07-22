@@ -109,7 +109,7 @@ export default function SellerCard({
 
       {isSold && !isOwner && (
         <div className="p-3 text-center text-xs font-bold text-[var(--color-error-600)] bg-[var(--color-error-50)] border border-[var(--color-error-500)]/20 rounded-[var(--radius-md)]">
-          {isFound ? 'This item has already been claimed / closed' : 'This item has already been sold'}
+          {isFound ? 'This item has already been returned to its owner' : 'This item has already been sold'}
         </div>
       )}
     </div>

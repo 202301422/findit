@@ -27,7 +27,12 @@ const ticketSchema = mongoose.Schema({
         required: true
     },
     
-    description : { type : String }
+    description : { type : String },
+    status : {
+        type : String,
+        enum : ["active", "sold", "closed", "expired"],
+        default : "active"
+    }
 }, { timestamps : true });
 
 const ticketModel = mongoose.model("ticketModel", ticketSchema);
