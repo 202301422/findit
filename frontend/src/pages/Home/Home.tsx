@@ -50,6 +50,22 @@ export default function Home() {
     return () => window.removeEventListener('storage', handler)
   }, [selected])
 
+  // Real-time synchronization: listen for admin item status changes
+  useEffect(() => {
+    const handleStatusUpdate = (e: any) => {
+      const { itemId, status } = e.detail || {}
+      if (!itemId) return
+
+      if (status !== 'active') {
+        // Automatically hide closed / sold / expired item from home feed
+        setItems((prev) => prev.filter((item) => item._id !== itemId))
+      }
+    }
+
+    window.addEventListener('findit_item_status_updated', handleStatusUpdate)
+    return () => window.removeEventListener('findit_item_status_updated', handleStatusUpdate)
+  }, [])
+
   // Reset filters and search query on tab switch
   useEffect(() => {
     setSelectedCategory('')

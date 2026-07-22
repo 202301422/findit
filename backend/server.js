@@ -21,6 +21,8 @@ import sellRoutes from "./src/routes/sellRoutes.js";
 import profileRoutes from "./src/routes/profileRoutes.js";
 import feedRoutes from "./src/routes/feedRoutes.js";
 import chatRoutes from "./src/routes/chatRoutes.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
+import userNotificationRoutes from "./src/routes/userNotificationRoutes.js";
 
 const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || "http://localhost:5173")
   .split(",")
@@ -156,6 +158,8 @@ app.use("/api/sell-products", sellRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/feed", feedRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", userNotificationRoutes);
 
 app.get("/", (req, res) => {
     res.send("FindIt API Running");

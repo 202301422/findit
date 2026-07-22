@@ -26,7 +26,7 @@ export const authenticate = async (req, res, next) => {
     try {
         const token = extractBearerToken(req.headers.authorization);
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select("_id name email phone username avatar bio college city state country isVerified authProvider accountStatus");
+        const user = await User.findById(decoded.id).select("_id name email phone username avatar bio college city state country isVerified authProvider accountStatus role");
 
         if (!user) {
             return res.status(401).json({ success: false, message: "User not found" });
@@ -52,6 +52,7 @@ export const authenticate = async (req, res, next) => {
             isVerified: user.isVerified,
             authProvider: user.authProvider,
             accountStatus: user.accountStatus,
+            role: user.role || "user",
         };
 
         return next();
@@ -59,4 +60,16 @@ export const authenticate = async (req, res, next) => {
         const message = error instanceof ApiError ? error.message : "Invalid token";
         return res.status(error.statusCode || 401).json({ success: false, message });
     }
+};
+
+export const authenticateUser = authenticate;
+
+export const authorizeAdmin = (req, res, next) => {
+    if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Access denied. Admin privileges required.",
+        });
+    }
+    return next();
 };

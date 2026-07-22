@@ -18,6 +18,8 @@ interface User {
   country?: string;
   isVerified: boolean;
   authProvider: string;
+  role?: 'user' | 'admin';
+  accountStatus?: string;
 }
 
 interface AuthContextType {

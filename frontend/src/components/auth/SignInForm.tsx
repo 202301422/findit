@@ -28,9 +28,14 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
     
     setLoading(true)
     try {
-      await login({ email, password })
+      const res = await login({ email, password })
       toast.success('Successfully logged in!')
-      navigate('/home')
+      const loggedUser = res?.data?.user || res?.user
+      if (loggedUser?.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/home')
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to login')
     } finally {
@@ -41,9 +46,14 @@ export default function SignInForm({ onSignIn }: SignInFormProps) {
   async function handleGoogleLogin() {
     setGoogleLoading(true)
     try {
-      await googleLogin()
+      const res = await googleLogin()
       toast.success('Successfully logged in with Google!')
-      navigate('/home')
+      const loggedUser = res?.data?.user || res?.user
+      if (loggedUser?.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/home')
+      }
     } catch (error: any) {
       toast.error(error.message || 'Google login failed')
     } finally {

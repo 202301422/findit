@@ -2,6 +2,8 @@ import { type ReactNode, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Navbar from './Navbar'
 import MobileNav from './MobileNav'
+import EmergencyBanner from '../notifications/EmergencyBanner'
+import EmergencyModal from '../notifications/EmergencyModal'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -49,6 +51,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[var(--bg-secondary)]">
+      <EmergencyBanner />
+      <EmergencyModal />
       <Navbar />
 
       {/* Main content area — below navbar, above mobile nav */}

@@ -22,6 +22,7 @@ export const serializeUser = (user) => {
     isVerified: Boolean(plainUser.isVerified),
     authProvider: plainUser.authProvider ?? "local",
     accountStatus: plainUser.accountStatus ?? "active",
+    role: plainUser.role ?? "user",
     createdAt: plainUser.createdAt ?? undefined,
     updatedAt: plainUser.updatedAt ?? undefined,
   };

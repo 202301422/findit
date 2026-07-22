@@ -3,9 +3,11 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 
 import AuthRoute from '../components/AuthRoute'
 import ProtectedRoute from '../components/ProtectedRoute'
+import AdminRoute from '../components/AdminRoute'
 import AppLayout from '../components/layout/AppLayout'
+import AdminLayout from '../components/admin/AdminLayout'
 
-/* ── Lazy-loaded pages ── */
+/* ── Lazy-loaded App pages ── */
 const Login = lazy(() => import('../pages/Login/Login'))
 const Home = lazy(() => import('../pages/Home/Home'))
 const AddItem = lazy(() => import('../pages/AddItem/AddItem'))
@@ -13,6 +15,23 @@ const Profile = lazy(() => import('../pages/Profile/Profile'))
 const ProductDetail = lazy(() => import('../pages/ProductDetail/ProductDetail'))
 const Messages = lazy(() => import('../pages/Messages/Messages'))
 const ChatDetail = lazy(() => import('../pages/Messages/ChatDetail'))
+const Notifications = lazy(() => import('../pages/Notifications/Notifications'))
+
+/* ── Lazy-loaded Admin pages ── */
+const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard'))
+const AdminAnalytics = lazy(() => import('../pages/Admin/AdminAnalytics'))
+const AdminUsers = lazy(() => import('../pages/Admin/AdminUsers'))
+const AdminMarketplace = lazy(() => import('../pages/Admin/AdminMarketplace'))
+const AdminLostFound = lazy(() => import('../pages/Admin/AdminLostFound'))
+const AdminPassesTickets = lazy(() => import('../pages/Admin/AdminPassesTickets'))
+const AdminReports = lazy(() => import('../pages/Admin/AdminReports'))
+const AdminChats = lazy(() => import('../pages/Admin/AdminChats'))
+const AdminCategories = lazy(() => import('../pages/Admin/AdminCategories'))
+const AdminNotifications = lazy(() => import('../pages/Admin/AdminNotifications'))
+const AdminBroadcasts = lazy(() => import('../pages/Admin/AdminBroadcasts'))
+const AdminEmergencyAlerts = lazy(() => import('../pages/Admin/AdminEmergencyAlerts'))
+const AdminSettings = lazy(() => import('../pages/Admin/AdminSettings'))
+const AdminProfile = lazy(() => import('../pages/Admin/AdminProfile'))
 
 /* ── Loading fallback ── */
 function PageLoader() {
@@ -37,6 +56,17 @@ function AppPage({ children }: { children: React.ReactNode }) {
   )
 }
 
+/* ── Wrap admin page with AdminLayout and AdminRoute guard ── */
+function AdminPage({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminRoute>
+      <AdminLayout>
+        <Suspense fallback={<PageLoader />}>{children}</Suspense>
+      </AdminLayout>
+    </AdminRoute>
+  )
+}
+
 export default function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -56,6 +86,23 @@ export default function AppRoutes() {
         <Route path="/product/:id" element={<AppPage><ProductDetail /></AppPage>} />
         <Route path="/messages" element={<AppPage><Messages /></AppPage>} />
         <Route path="/messages/:id" element={<AppPage><ChatDetail /></AppPage>} />
+        <Route path="/notifications" element={<AppPage><Notifications /></AppPage>} />
+
+        {/* Admin Dashboard routes — Protected by AdminRoute & AdminLayout */}
+        <Route path="/admin" element={<AdminPage><AdminDashboard /></AdminPage>} />
+        <Route path="/admin/analytics" element={<AdminPage><AdminAnalytics /></AdminPage>} />
+        <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
+        <Route path="/admin/marketplace" element={<AdminPage><AdminMarketplace /></AdminPage>} />
+        <Route path="/admin/lost-found" element={<AdminPage><AdminLostFound /></AdminPage>} />
+        <Route path="/admin/passes-tickets" element={<AdminPage><AdminPassesTickets /></AdminPage>} />
+        <Route path="/admin/reports" element={<AdminPage><AdminReports /></AdminPage>} />
+        <Route path="/admin/chats" element={<AdminPage><AdminChats /></AdminPage>} />
+        <Route path="/admin/categories" element={<AdminPage><AdminCategories /></AdminPage>} />
+        <Route path="/admin/broadcasts" element={<AdminPage><AdminBroadcasts /></AdminPage>} />
+        <Route path="/admin/emergency-alerts" element={<AdminPage><AdminEmergencyAlerts /></AdminPage>} />
+        <Route path="/admin/notifications" element={<AdminPage><AdminNotifications /></AdminPage>} />
+        <Route path="/admin/settings" element={<AdminPage><AdminSettings /></AdminPage>} />
+        <Route path="/admin/profile" element={<AdminPage><AdminProfile /></AdminPage>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

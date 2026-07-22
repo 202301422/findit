@@ -13,9 +13,13 @@ import {
   LogOut,
   HelpCircle,
   User,
+  ShieldCheck,
+  Bell,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/contexts/AuthContext'
+import { useNotifications } from '@/contexts/NotificationContext'
+import NotificationDrawer from '@/components/notifications/NotificationDrawer'
 import { getTotalUnread } from '@/services/chatService'
 import Avatar from '@/components/ui/Avatar'
 import ThemeToggle from '@/components/ui/ThemeToggle'
@@ -50,12 +54,14 @@ function getResolvedTab(pathname: string, search: string): string {
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [notifDrawerOpen, setNotifDrawerOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [scrolled, setScrolled] = useState(false)
 
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
+  const { unreadCount: notifUnreadCount } = useNotifications()
 
   const [selectedTab, setSelectedTab] = useState<string>(() =>
     getResolvedTab(location.pathname, location.search),
@@ -210,6 +216,21 @@ export default function Navbar() {
                 <CountBadge count={unreadCount} />
               </button>
 
+              {/* Notification Center Bell */}
+              <button
+                onClick={() => setNotifDrawerOpen(true)}
+                className={clsx(
+                  'relative p-2 rounded-[var(--radius-md)]',
+                  'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
+                  'hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer',
+                  location.pathname.startsWith('/notifications') && 'text-[var(--color-primary-500)] bg-[var(--color-primary-500)]/8',
+                )}
+                aria-label="Notifications"
+              >
+                <Bell size={20} />
+                <CountBadge count={notifUnreadCount} />
+              </button>
+
               {/* Theme Toggle */}
               <ThemeToggle size="sm" className="hidden sm:flex" />
 
@@ -239,6 +260,14 @@ export default function Navbar() {
                   >
                     Profile
                   </DropdownMenuItem>
+                  {user?.role === 'admin' && (
+                    <DropdownMenuItem
+                      icon={<ShieldCheck size={16} />}
+                      onSelect={() => navigate('/admin')}
+                    >
+                      Admin Panel
+                    </DropdownMenuItem>
+                  )}
                   <div className="sm:hidden px-1 py-1">
                     <DropdownMenuItem
                       icon={<Plus size={16} />}
@@ -314,6 +343,22 @@ export default function Navbar() {
                 })}
               </div>
 
+              {/* Admin Panel link (mobile) */}
+              {user?.role === 'admin' && (
+                <div className="mt-4 pt-4 border-t border-[var(--border-secondary)]">
+                  <button
+                    onClick={() => {
+                      navigate('/admin')
+                      setMobileOpen(false)
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium text-[var(--color-primary-500)] hover:bg-[var(--color-primary-500)]/8 transition-all duration-200 cursor-pointer w-full"
+                  >
+                    <ShieldCheck size={18} />
+                    Admin Panel
+                  </button>
+                </div>
+              )}
+
               <div className="mt-auto flex flex-col gap-1">
                 <div className="flex items-center justify-between px-3 py-2">
                   <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
@@ -326,6 +371,8 @@ export default function Navbar() {
           </>
         )}
       </AnimatePresence>
+      {/* Notification Drawer */}
+      <NotificationDrawer isOpen={notifDrawerOpen} onClose={() => setNotifDrawerOpen(false)} />
     </>
   )
 }

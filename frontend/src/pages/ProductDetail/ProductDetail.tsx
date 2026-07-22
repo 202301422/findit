@@ -1345,6 +1345,24 @@ export default function ProductDetail() {
       .finally(() => setLoading(false))
   }, [id, type])
 
+  // Real-time synchronization: listen for admin item status changes
+  useEffect(() => {
+    const handleStatusUpdate = (e: any) => {
+      const { itemId, status, product } = e.detail || {}
+      if (!itemId || itemId !== id) return
+
+      if (type === 'sell' && product) setSellProduct((p) => p ? { ...p, status } : null)
+      else if (type === 'found' && product) setFoundItem((p) => p ? { ...p, status } : null)
+      else if (type === 'pass' && product) setEventPass((p) => p ? { ...p, status } : null)
+      else if (type === 'ticket' && product) setTravelTicket((p) => p ? { ...p, status } : null)
+      
+      toast(`Notice: Item status updated to ${status}`, { icon: 'ℹ️' })
+    }
+
+    window.addEventListener('findit_item_status_updated', handleStatusUpdate)
+    return () => window.removeEventListener('findit_item_status_updated', handleStatusUpdate)
+  }, [id, type])
+
   const currentItem = sellProduct || foundItem || eventPass || travelTicket
   const itemUserId = currentItem ? String((currentItem.user as Seller)?._id || currentItem.user) : ''
   const isOwner = !!(user && itemUserId && sameId(itemUserId, user._id))

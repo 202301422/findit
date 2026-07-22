@@ -96,8 +96,19 @@ const userSchema = new mongoose.Schema({
 
   accountStatus: {
     type: String,
-    enum: ["active", "suspended", "deleted"],
+    enum: ["active", "suspended", "banned", "deleted"],
     default: "active"
+  },
+
+  role: {
+    type: String,
+    enum: ["user", "admin"],
+    default: "user"
+  },
+
+  lastLogin: {
+    type: Date,
+    default: Date.now
   },
 
   accessToken: {
