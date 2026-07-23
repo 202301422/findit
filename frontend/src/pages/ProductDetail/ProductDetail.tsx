@@ -814,7 +814,7 @@ function SellProductDetail({ product, setProduct, isOwner, onChat }: {
           </div>
         )}
 
-        <SellerCard seller={product.user} createdAt={product.createdAt} isOwner={isOwner} isSold={isSold} onChat={onChat} />
+        <SellerCard seller={product.user} createdAt={product.createdAt} isOwner={isOwner} isSold={isSold} onChat={onChat} itemId={product._id} itemType="sell" />
       </div>
 
       {showEdit && <EditSellPanel product={product} onClose={() => setShowEdit(false)} onSaved={(u) => { setProduct(u); setShowEdit(false) }} />}
@@ -943,7 +943,7 @@ function FoundItemDetail({ item, setItem, isOwner, onChat }: {
           </div>
         )}
 
-        <SellerCard seller={item.user} createdAt={item.createdAt} isOwner={isOwner} isSold={isClosed} isFound onChat={onChat} />
+        <SellerCard seller={item.user} createdAt={item.createdAt} isOwner={isOwner} isSold={isClosed} isFound onChat={onChat} itemId={item._id} itemType="found" />
       </div>
 
       {showEdit && <EditFoundPanel item={item} onClose={() => setShowEdit(false)} onSaved={(u) => { setItem(u); setShowEdit(false) }} />}
@@ -1085,7 +1085,7 @@ function EventPassDetail({ pass, setPass, isOwner, onChat }: {
           </div>
         )}
 
-        <SellerCard seller={pass.user} createdAt={pass.createdAt} isOwner={isOwner} isSold={isSold} onChat={onChat} />
+        <SellerCard seller={pass.user} createdAt={pass.createdAt} isOwner={isOwner} isSold={isSold} onChat={onChat} itemId={pass._id} itemType="pass" />
       </div>
 
       {showEdit && <EditPassPanel pass={pass} onClose={() => setShowEdit(false)} onSaved={(u) => { setPass(u); setShowEdit(false) }} />}
@@ -1264,7 +1264,7 @@ function TravelTicketDetail({ ticket, setTicket, isOwner, onChat }: {
           </div>
         )}
 
-        <SellerCard seller={ticket.user} createdAt={ticket.createdAt} isOwner={isOwner} isSold={isSold} onChat={onChat} />
+        <SellerCard seller={ticket.user} createdAt={ticket.createdAt} isOwner={isOwner} isSold={isSold} onChat={onChat} itemId={ticket._id} itemType="ticket" />
       </div>
 
       {showEdit && <EditTicketPanel ticket={ticket} onClose={() => setShowEdit(false)} onSaved={(u) => { setTicket(u); setShowEdit(false) }} />}

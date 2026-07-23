@@ -1,6 +1,7 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import Report from "../models/report.model.js";
+import UserNotification from "../models/userNotification.model.js";
 import { uploadImage } from "../utils/cloudinary.js";
 
 // ─── GET OR CREATE CONVERSATION ─────────────────────────────────────────────
@@ -34,7 +35,9 @@ export const getOrCreateConversation = async (req, res) => {
       "name username avatar"
     );
 
+    let isNewConversation = false;
     if (!conversation) {
+      isNewConversation = true;
       conversation = await Conversation.create({
         participants: [currentUserId, recipientId],
         item: itemId
@@ -48,7 +51,15 @@ export const getOrCreateConversation = async (req, res) => {
       );
     }
 
-    return res.json({ success: true, data: { conversation } });
+    const enrichedConv = {
+      ...(conversation.toObject ? conversation.toObject() : conversation),
+      myUnread: conversation.unreadCounts?.[currentUserId] || 0,
+      otherParticipant: (conversation.participants || []).find(
+        (p) => p && p._id && p._id.toString() !== currentUserId
+      ) || null,
+    };
+
+    return res.json({ success: true, data: { conversation: enrichedConv } });
   } catch (err) {
     console.error("getOrCreateConversation error:", err);
     return res.status(500).json({ success: false, message: "Internal server error" });
@@ -60,29 +71,52 @@ export const getOrCreateConversation = async (req, res) => {
 export const getConversations = async (req, res) => {
   try {
     const currentUserId = req.user._id.toString();
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit) || 20);
+    const skip = (page - 1) * limit;
+
+    const total = await Conversation.countDocuments({ participants: currentUserId });
 
     const conversations = await Conversation.find({
       participants: currentUserId,
     })
       .sort({ lastMessageAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate("participants", "name username avatar")
       .lean();
 
     // Attach the per-user unread count as a plain number
-    const enriched = conversations.map((conv) => ({
-      ...conv,
-      myUnread: conv.unreadCounts?.[currentUserId] || 0,
-      otherParticipant: conv.participants.find(
-        (p) => p._id.toString() !== currentUserId
-      ),
-    }));
+    const enriched = conversations.map((conv) => {
+      const participants = (conv.participants || []).filter(Boolean);
+      const otherParticipant = participants.find(
+        (p) => p && p._id && p._id.toString() !== currentUserId
+      ) || { name: "User", username: "", avatar: "" };
 
-    return res.json({ success: true, data: { conversations: enriched } });
+      return {
+        ...conv,
+        myUnread: conv.unreadCounts?.[currentUserId] || 0,
+        otherParticipant,
+      };
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        conversations: enriched,
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: skip + conversations.length < total,
+      }
+    });
   } catch (err) {
     console.error("getConversations error:", err);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 
 // ─── GET MESSAGES FOR A CONVERSATION ────────────────────────────────────────
 // GET /api/chat/conversations/:id/messages?page=1&limit=50
@@ -178,6 +212,28 @@ export const sendMessage = async (req, res) => {
     const populatedMessage = await Message.findById(message._id)
       .populate("sender", "name username avatar")
       .lean();
+
+    // If this is the very first message sent in this conversation, notify the recipient
+    const totalMsgCount = await Message.countDocuments({ conversationId });
+    if (totalMsgCount === 1) {
+      const recipientId = conversation.participants.find((p) => p.toString() !== currentUserId);
+      if (recipientId) {
+        try {
+          const itemTitle = conversation.item?.itemName || "your listing";
+          const snippet = textToSave || (imageUrl ? "📷 Sent an image" : "");
+          await UserNotification.create({
+            recipient: recipientId,
+            title: `Someone is interested in "${itemTitle}"!`,
+            message: `${req.user.name} is interested in your listing "${itemTitle}" and messaged: "${snippet}"`,
+            type: "chat_inquiry",
+            relatedEntityId: conversation._id.toString(),
+            relatedEntityType: "SellProduct",
+          });
+        } catch (notifErr) {
+          console.error("Failed to create user notification on first message:", notifErr);
+        }
+      }
+    }
 
     // Emit via socket.io if available (attached to app by server.js)
     const io = req.app.get("io");

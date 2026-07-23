@@ -4,7 +4,13 @@ import { auth as firebaseAuth } from '../firebase';
 import api from '../utils/api';
 import { disconnectSocket, setSocketAuthToken } from '../utils/socketClient';
 
-interface User {
+export interface SavedPostRef {
+  itemId: string;
+  itemType: 'sell' | 'found' | 'ticket' | 'pass';
+  savedAt: string;
+}
+
+export interface User {
   _id: string;
   name: string;
   email: string;
@@ -20,6 +26,16 @@ interface User {
   authProvider: string;
   role?: 'user' | 'admin';
   accountStatus?: string;
+  savedPosts?: SavedPostRef[];
+}
+
+export function isPostSaved(user: User | null | undefined, itemId?: string): boolean {
+  if (!user || !user.savedPosts || !itemId) return false;
+  const targetId = String(itemId).trim();
+  return user.savedPosts.some((sp: any) => {
+    const rawId = sp?.itemId?._id || sp?.itemId || sp?._id || sp;
+    return String(rawId).trim() === targetId;
+  });
 }
 
 interface AuthContextType {

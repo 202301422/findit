@@ -4,12 +4,15 @@ import type { Listing } from '../../types/profile.types'
 export default function ListingCard({ listing }: { listing: Listing }) {
   // Adapt profile Listing structure to ProductCard input format
   const item = {
+    ...listing,
     _id: listing._id,
-    name: listing.title,
-    images: listing.images || (listing.image ? [{ url: listing.image, publicId: 'primary' }] : []),
-    price: listing.price,
-    sellingPrice: listing.price,
-    status: listing.status,
+    name: listing.title || (listing as any).name || (listing as any).ticketType || 'Untitled',
+    images: listing.images && listing.images.length > 0
+      ? listing.images
+      : (listing as any).image ? [{ url: (listing as any).image, publicId: 'primary' }] : [],
+    price: listing.price ?? (listing as any).sellingPrice,
+    sellingPrice: listing.price ?? (listing as any).sellingPrice,
+    status: listing.status || 'active',
     createdAt: listing.createdAt,
     type: listing.type,
   }
@@ -18,7 +21,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     <ProductCard
       item={item}
       type={listing.type}
-      tabLabel={listing.category}
+      tabLabel={listing.category || (listing as any).tabLabel || 'Buy & Sell'}
     />
   )
 }
+

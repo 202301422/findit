@@ -13,8 +13,14 @@ export function useProfile() {
   
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loadingListings, setLoadingListings] = useState(false);
+  const [loadingMoreListings, setLoadingMoreListings] = useState(false);
   const [loadingStats, setLoadingStats] = useState(false);
   const [loadingUpdate, setLoadingUpdate] = useState(false);
+
+  // Pagination state for listings
+  const [listingsPage, setListingsPage] = useState(1);
+  const [hasMoreListings, setHasMoreListings] = useState(false);
+  const [totalListings, setTotalListings] = useState(0);
 
   const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
@@ -28,17 +34,58 @@ export function useProfile() {
     }
   }, []);
 
+  /**
+   * fetchListings — loads the first page of listings for a given category (or saved posts).
+   * Resets pagination state for a fresh load (e.g. when switching tabs).
+   */
   const fetchListings = useCallback(async (category?: string) => {
     setLoadingListings(true);
+    setListingsPage(1);
+    setListings([]);
     try {
-      const data = await profileService.getMyListings(category);
-      setListings(data);
+      if (category === 'saved-posts') {
+        const data = await profileService.getSavedPosts(1, 12);
+        setListings(data.savedPosts as Listing[]);
+        setHasMoreListings(data.hasNextPage);
+        setTotalListings(data.total);
+      } else {
+        const data = await profileService.getMyListings(category, 1, 12);
+        setListings(data.listings as Listing[]);
+        setHasMoreListings(data.hasNextPage);
+        setTotalListings(data.total);
+      }
     } catch (err: any) {
       toast.error(err.message || 'Failed to fetch listings');
     } finally {
       setLoadingListings(false);
     }
   }, []);
+
+  /**
+   * fetchMoreListings — appends the next page of listings.
+   * Called by the infinite scroll sentinel.
+   */
+  const fetchMoreListings = useCallback(async (category?: string) => {
+    setLoadingMoreListings(true);
+    const nextPage = listingsPage + 1;
+    try {
+      if (category === 'saved-posts') {
+        const data = await profileService.getSavedPosts(nextPage, 12);
+        setListings((prev) => [...prev, ...(data.savedPosts as Listing[])]);
+        setHasMoreListings(data.hasNextPage);
+        setListingsPage(nextPage);
+      } else {
+        const data = await profileService.getMyListings(category, nextPage, 12);
+        setListings((prev) => [...prev, ...(data.listings as Listing[])]);
+        setHasMoreListings(data.hasNextPage);
+        setListingsPage(nextPage);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to load more listings');
+    } finally {
+      setLoadingMoreListings(false);
+    }
+  }, [listingsPage]);
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true);
@@ -100,10 +147,14 @@ export function useProfile() {
     stats,
     loadingProfile,
     loadingListings,
+    loadingMoreListings,
     loadingStats,
     loadingUpdate,
+    hasMoreListings,
+    totalListings,
     fetchProfile,
     fetchListings,
+    fetchMoreListings,
     fetchStats,
     updateProfile,
     uploadAvatar,

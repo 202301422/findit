@@ -53,7 +53,7 @@ export default function Avatar({
 
   return (
     <div
-      className={clsx('relative inline-flex shrink-0 items-center justify-center', !className && container, className)}
+      className={clsx('relative inline-flex shrink-0 items-center justify-center', container, className)}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}

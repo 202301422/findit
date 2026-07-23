@@ -35,13 +35,49 @@ export const profileService = {
     await api.delete('/profile', { data: { password } });
   },
 
-  getMyListings: async (category?: string): Promise<Listing[]> => {
-    const res = await api.get('/profile/listings', { params: { category } });
-    return res.data.data.all;
+  getMyListings: async (
+    category?: string,
+    page = 1,
+    limit = 12
+  ): Promise<{ listings: any[]; hasNextPage: boolean; total: number }> => {
+    const res = await api.get('/profile/listings', { params: { category, page, limit } });
+    return {
+      listings: res.data.data.all,
+      hasNextPage: res.data.data.hasNextPage,
+      total: res.data.data.total,
+    };
   },
 
   getProfileStats: async (): Promise<ProfileStats> => {
     const res = await api.get('/profile/stats');
     return res.data.data.stats;
+  },
+
+  toggleSavedPost: async (itemId: string, itemType: string): Promise<{ saved: boolean }> => {
+    const res = await api.post('/profile/saved', { itemId, itemType });
+    return res.data.data;
+  },
+
+  getSavedPosts: async (
+    page = 1,
+    limit = 20
+  ): Promise<{ savedPosts: any[]; hasNextPage: boolean; total: number }> => {
+    const res = await api.get('/profile/saved', { params: { page, limit } });
+    return {
+      savedPosts: res.data.data.savedPosts,
+      hasNextPage: res.data.data.hasNextPage,
+      total: res.data.data.total,
+    };
+  },
+
+  searchUsers: async (query: string): Promise<any[]> => {
+    if (!query.trim()) return [];
+    const res = await api.get('/profile/search-users', { params: { q: query } });
+    return res.data.data.users || [];
+  },
+
+  getPublicProfile: async (userId: string): Promise<{ user: any; listings: any[]; stats: any }> => {
+    const res = await api.get(`/profile/user/${userId}`);
+    return res.data.data;
   },
 };

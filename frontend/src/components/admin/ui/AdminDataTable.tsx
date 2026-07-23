@@ -1,4 +1,4 @@
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback, type ReactNode } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -35,6 +35,14 @@ interface AdminDataTableProps<T> {
     onPageChange: (page: number) => void;
     totalItems?: number;
   };
+  /** When true, replaces prev/next buttons with an IntersectionObserver sentinel */
+  infiniteScroll?: boolean;
+  /** Called when the sentinel enters the viewport (only used with infiniteScroll) */
+  onLoadMore?: () => void;
+  /** Whether more data exists to load (only used with infiniteScroll) */
+  hasMore?: boolean;
+  /** Whether additional data is currently loading (only used with infiniteScroll) */
+  loadingMore?: boolean;
   keyExtractor: (item: T) => string;
   filename?: string;
 }
@@ -50,6 +58,10 @@ export default function AdminDataTable<T extends Record<string, any>>({
   onFilterChange,
   bulkActions,
   pagination,
+  infiniteScroll = false,
+  onLoadMore,
+  hasMore = false,
+  loadingMore = false,
   keyExtractor,
   filename = 'export-data',
 }: AdminDataTableProps<T>) {
@@ -59,6 +71,28 @@ export default function AdminDataTable<T extends Record<string, any>>({
     key: null,
     direction: 'asc',
   });
+
+  // Infinite scroll sentinel ref
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const handleIntersect = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0]?.isIntersecting && hasMore && !loadingMore && onLoadMore) {
+        onLoadMore();
+      }
+    },
+    [hasMore, loadingMore, onLoadMore],
+  );
+
+  useEffect(() => {
+    if (!infiniteScroll) return;
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(handleIntersect, { rootMargin: '150px' });
+    const el = sentinelRef.current;
+    if (el) observerRef.current.observe(el);
+    return () => observerRef.current?.disconnect();
+  }, [infiniteScroll, handleIntersect]);
 
   const handleSearch = (val: string) => {
     setSearchTerm(val);
@@ -295,7 +329,7 @@ export default function AdminDataTable<T extends Record<string, any>>({
       </div>
 
       {/* Pagination Footer */}
-      {pagination && (
+      {pagination && !infiniteScroll && (
         <div className="p-4 border-t border-[var(--border-secondary)] flex items-center justify-between text-xs text-[var(--text-tertiary)]">
           <div>
             Showing page <span className="font-semibold text-[var(--text-primary)]">{pagination.currentPage}</span> of{' '}
@@ -321,6 +355,24 @@ export default function AdminDataTable<T extends Record<string, any>>({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Infinite scroll sentinel + loading indicator */}
+      {infiniteScroll && (
+        <>
+          <div ref={sentinelRef} className="h-1" />
+          {loadingMore && (
+            <div className="p-4 border-t border-[var(--border-secondary)] flex items-center justify-center gap-2 text-xs text-[var(--text-tertiary)]">
+              <div className="w-3.5 h-3.5 border-2 border-[var(--border-primary)] border-t-[var(--color-primary-500)] rounded-full animate-spin" />
+              Loading more rows...
+            </div>
+          )}
+          {!hasMore && !loadingMore && data.length > 0 && (
+            <p className="p-3 text-center text-xs text-[var(--text-tertiary)] font-medium border-t border-[var(--border-secondary)]">
+              ✓ All records loaded
+            </p>
+          )}
+        </>
       )}
     </div>
   );

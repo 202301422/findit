@@ -291,6 +291,8 @@ export const deleteAccount = asyncHandler(async (req, res) => {
 export const getMyListings = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { category } = req.query;
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit) || 12);
 
   const result = {};
 
@@ -372,15 +374,27 @@ export const getMyListings = asyncHandler(async (req, res) => {
   }
 
   // Aggregate all listings for "all" view
-  const allListings = [
+  const allListingsUnsorted = [
     ...(result.buySell || []),
     ...(result.lostFound || []),
     ...(result.eventPasses || []),
     ...(result.travellingTickets || [])
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+  // Apply pagination to the flat list
+  const total = allListingsUnsorted.length;
+  const allListings = allListingsUnsorted.slice((page - 1) * limit, page * limit);
+
   return res.json(
-    new ApiResponse(200, { listings: result, all: allListings }, "Listings fetched successfully")
+    new ApiResponse(200, {
+      listings: result,
+      all: allListings,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+    }, "Listings fetched successfully")
   );
 });
 
@@ -421,4 +435,228 @@ export const getProfileStats = asyncHandler(async (req, res) => {
 
   return res.json(new ApiResponse(200, { stats }, "Stats fetched successfully"));
 });
+
+/**
+ * POST /api/profile/saved
+ * Toggles a saved/bookmarked post for the authenticated user.
+ * Body: { itemId, itemType }
+ * Returns: { saved: boolean }  — true if now saved, false if unsaved
+ */
+export const toggleSavedPost = asyncHandler(async (req, res) => {
+  const { itemId, itemType } = req.body;
+
+  if (!itemId || !itemType) {
+    throw new ApiError(400, "itemId and itemType are required");
+  }
+
+  const validTypes = ["sell", "found", "ticket", "pass"];
+  if (!validTypes.includes(itemType)) {
+    throw new ApiError(400, `itemType must be one of: ${validTypes.join(", ")}`);
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) throw new ApiError(404, "User not found");
+
+  const existingIdx = user.savedPosts.findIndex(
+    (sp) => sp.itemId.toString() === String(itemId) && sp.itemType === itemType
+  );
+
+  let saved;
+  if (existingIdx !== -1) {
+    // Already saved — unsave it
+    user.savedPosts.splice(existingIdx, 1);
+    saved = false;
+  } else {
+    // Not saved — save it
+    user.savedPosts.push({ itemId, itemType, savedAt: new Date() });
+    saved = true;
+  }
+
+  await user.save();
+  return res.json(new ApiResponse(200, { saved }, saved ? "Post saved" : "Post unsaved"));
+});
+
+/**
+ * GET /api/profile/saved
+ * Returns the authenticated user's saved/bookmarked posts with pagination.
+ * Query: ?page=1&limit=20
+ */
+export const getSavedPosts = asyncHandler(async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit) || 20);
+
+  const user = await User.findById(req.user._id).select("savedPosts");
+  if (!user) throw new ApiError(404, "User not found");
+
+  // Sort by most recently saved first
+  const sorted = [...(user.savedPosts || [])].sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+  const total = sorted.length;
+  const paginated = sorted.slice((page - 1) * limit, page * limit);
+
+  const items = await Promise.all(
+    paginated.map(async (sp) => {
+      let itemDoc = null;
+      if (sp.itemType === "sell") {
+        itemDoc = await SellProduct.findById(sp.itemId).populate("user", "name avatar email phone college").lean();
+      } else if (sp.itemType === "found") {
+        itemDoc = await FoundProduct.findById(sp.itemId).populate("user", "name avatar email phone college").lean();
+      } else if (sp.itemType === "pass") {
+        itemDoc = await Pass.findById(sp.itemId).populate("user", "name avatar email phone college").lean();
+      } else if (sp.itemType === "ticket") {
+        itemDoc = await Ticket.findById(sp.itemId).populate("user", "name avatar email phone college").lean();
+      }
+
+      if (!itemDoc) return null;
+
+      let tabLabel = "Buy & Sell";
+      if (sp.itemType === "found") tabLabel = "Lost & Found";
+      if (sp.itemType === "pass") tabLabel = "Event Passes";
+      if (sp.itemType === "ticket") tabLabel = "Travelling Tickets";
+
+      const itemTitle = itemDoc.name || (itemDoc.origin?.city && itemDoc.destination?.city ? `${itemDoc.origin.city} → ${itemDoc.destination.city}` : `${itemDoc.ticketType || 'Listing'} Ticket`);
+      const itemPrice = itemDoc.sellingPrice ?? itemDoc.price;
+      const primaryImage = itemDoc.images?.[0]?.url || itemDoc.imageUrl || "";
+
+      return {
+        ...itemDoc,
+        _id: itemDoc._id,
+        title: itemTitle,
+        name: itemTitle,
+        image: primaryImage,
+        images: itemDoc.images || (primaryImage ? [{ url: primaryImage, publicId: 'primary' }] : []),
+        price: itemPrice,
+        sellingPrice: itemPrice,
+        status: itemDoc.status || "active",
+        type: sp.itemType,
+        category: tabLabel,
+        tabLabel,
+        savedAt: sp.savedAt,
+      };
+    })
+  );
+
+  const validItems = items.filter(Boolean);
+
+  return res.json(new ApiResponse(200, {
+    savedPosts: validItems,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+    hasNextPage: page * limit < total,
+  }, "Saved posts fetched successfully"));
+});
+
+/**
+ * GET /api/profile/search-users
+ * Searches active users by username (@username), full name, or email/student ID (e.g. 202301422).
+ * Query: ?q=searchterm
+ */
+export const searchUsers = asyncHandler(async (req, res) => {
+  const query = (req.query.q || "").trim();
+
+  if (!query || query.length < 1) {
+    return res.json(new ApiResponse(200, { users: [] }, "Search query too short"));
+  }
+
+  // Strip leading '@' if user types '@jay_balar'
+  const cleanQuery = query.startsWith("@") ? query.slice(1) : query;
+  const regex = new RegExp(cleanQuery, "i");
+
+  const users = await User.find({
+    accountStatus: "active",
+    _id: { $ne: req.user._id },
+    $or: [
+      { username: regex },
+      { name: regex },
+      { email: regex },
+    ],
+  })
+    .select("_id name username email avatar college bio createdAt")
+    .limit(10)
+    .lean();
+
+  return res.json(new ApiResponse(200, { users }, "Users fetched successfully"));
+});
+
+/**
+ * GET /api/profile/user/:userId
+ * Returns public profile data and active listings for the specified user.
+ */
+export const getPublicUserProfile = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const targetUser = await User.findById(userId).select(
+    "_id name username avatar bio college city state country createdAt authProvider accountStatus"
+  );
+
+  if (!targetUser || targetUser.accountStatus === "deleted" || targetUser.accountStatus === "banned") {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Fetch target user's active listings
+  const [foundProducts, passes, sellProducts, tickets] = await Promise.all([
+    FoundProduct.find({ user: userId, status: "active" }).sort({ createdAt: -1 }).lean(),
+    Pass.find({ user: userId, status: "active" }).sort({ createdAt: -1 }).lean(),
+    SellProduct.find({ user: userId, status: "active" }).sort({ createdAt: -1 }).lean(),
+    Ticket.find({ user: userId, status: "active" }).sort({ createdAt: -1 }).lean(),
+  ]);
+
+  const mappedFound = foundProducts.map((item) => ({
+    ...item,
+    title: item.name,
+    image: item.images?.[0]?.url || "",
+    category: "Lost & Found",
+    type: "found",
+  }));
+
+  const mappedPasses = passes.map((item) => ({
+    ...item,
+    title: item.name,
+    image: item.imageUrl,
+    category: "Event Passes",
+    type: "pass",
+  }));
+
+  const mappedSell = sellProducts.map((item) => ({
+    ...item,
+    title: item.name,
+    image: item.images?.[0]?.url || "",
+    price: item.sellingPrice,
+    category: "Buy & Sell",
+    type: "sell",
+  }));
+
+  const mappedTickets = tickets.map((item) => ({
+    ...item,
+    title: `${item.ticketType} Ticket (${item.origin?.city || ''} → ${item.destination?.city || ''})`,
+    category: "Travelling Tickets",
+    type: "ticket",
+  }));
+
+  const allListings = [...mappedSell, ...mappedFound, ...mappedPasses, ...mappedTickets].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  return res.json(
+    new ApiResponse(
+      200,
+      {
+        user: targetUser,
+        listings: allListings,
+        stats: {
+          totalActiveListings: allListings.length,
+          sellCount: mappedSell.length,
+          foundCount: mappedFound.length,
+          passCount: mappedPasses.length,
+          ticketCount: mappedTickets.length,
+        },
+      },
+      "Public profile fetched successfully"
+    )
+  );
+});
+
+
+
 

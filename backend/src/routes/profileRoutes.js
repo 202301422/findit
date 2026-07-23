@@ -7,7 +7,11 @@ import {
   changePassword,
   deleteAccount,
   getMyListings,
-  getProfileStats
+  getProfileStats,
+  toggleSavedPost,
+  getSavedPosts,
+  searchUsers,
+  getPublicUserProfile
 } from "../controllers/profile.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
@@ -28,5 +32,11 @@ router.patch("/change-password", changePassword);
 
 router.get("/listings", getMyListings);
 router.get("/stats", getProfileStats);
+
+router.get("/saved", getSavedPosts);
+router.post("/saved", toggleSavedPost);
+
+router.get("/search-users", searchUsers);
+router.get("/user/:userId", getPublicUserProfile);
 
 export default router;

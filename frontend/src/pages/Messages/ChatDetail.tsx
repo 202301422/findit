@@ -78,7 +78,7 @@ export default function ChatDetail() {
     const load = async () => {
       try {
         setLoading(true)
-        const allConvs = await getConversations()
+        const { conversations: allConvs } = await getConversations()
         const conv = allConvs.find((c) => c._id === conversationId)
         if (!cancelled && conv) setConversation(conv)
 
@@ -237,10 +237,16 @@ export default function ChatDetail() {
             <ArrowLeft size={16} />
           </button>
           {other && (
-            <div className="flex items-center gap-2.5">
-              <Avatar src={other.avatar} name={other.name} size="sm" />
+            <div
+              onClick={() => other._id && navigate(`/user/${other._id}`)}
+              className="flex items-center gap-2.5 cursor-pointer group/chatuser"
+              title={`View ${other.name}'s profile`}
+            >
+              <div className="transition-transform group-hover/chatuser:scale-105">
+                <Avatar src={other.avatar} name={other.name} size="sm" />
+              </div>
               <div>
-                <span className="text-sm font-bold text-[var(--text-primary)] block leading-tight">
+                <span className="text-sm font-bold text-[var(--text-primary)] group-hover/chatuser:text-[var(--color-primary-500)] transition-colors block leading-tight">
                   {other.name}
                 </span>
                 {conversation?.item?.itemName && (

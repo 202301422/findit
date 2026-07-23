@@ -29,7 +29,7 @@ export interface UpdateProfileData {
 }
 
 export type ListingStatus = 'active' | 'sold' | 'closed' | 'expired' | 'draft';
-export type ListingCategory = 'Lost & Found' | 'Event Passes' | 'Travelling Tickets' | 'Buy & Sell';
+export type ListingCategory = 'Lost & Found' | 'Event Passes' | 'Travelling Tickets' | 'Buy & Sell' | 'Saved Posts';
 
 export interface ListingImage {
   url: string;

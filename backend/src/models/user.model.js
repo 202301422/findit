@@ -117,7 +117,25 @@ const userSchema = new mongoose.Schema({
 
   refreshToken: {
     type: String
-  }
+  },
+
+  savedPosts: [
+    {
+      itemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+      },
+      itemType: {
+        type: String,
+        enum: ["sell", "found", "ticket", "pass"],
+        required: true
+      },
+      savedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ]
 
 }, { timestamps: true });
 

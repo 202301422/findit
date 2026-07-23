@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
@@ -7,6 +7,9 @@ import { clsx } from 'clsx'
 import api from '@/utils/api'
 import ProductGrid from '@/components/product/ProductGrid'
 import Button from '@/components/ui/Button'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
+
+const LIMIT = 12
 
 const getBackendType = (tab: string) => {
   switch (tab) {
@@ -32,11 +35,38 @@ export default function Home() {
   const [dateBefore, setDateBefore] = useState('')
   const [minSeats, setMinSeats] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [items, setItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
 
+  // Infinite scroll state
+  const [items, setItems] = useState<any[]>([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  // Track the current filter "signature" to reset on any filter change
+  const filterKey = useMemo(() => JSON.stringify({
+    selected, selectedCategory, maxPrice, isNegotiable, hasWarranty,
+    sort, searchQuery, dateAfter, dateBefore, minSeats
+  }), [selected, selectedCategory, maxPrice, isNegotiable, hasWarranty, sort, searchQuery, dateAfter, dateBefore, minSeats])
+
   const navigate = useNavigate()
+
+  // Build params for the feed API
+  const buildParams = useCallback((p: number) => {
+    const type = getBackendType(selected)
+    const params = new URLSearchParams({ type, page: String(p), limit: String(LIMIT) })
+    if (selectedCategory) params.set('category', selectedCategory)
+    if (maxPrice > 0) params.set('maxPrice', String(maxPrice))
+    if (isNegotiable) params.set('isNegotiable', isNegotiable)
+    if (hasWarranty) params.set('hasWarranty', hasWarranty)
+    if (sort) params.set('sort', sort)
+    if (searchQuery.trim()) params.set('search', searchQuery.trim())
+    if (dateAfter) params.set('dateAfter', dateAfter)
+    if (dateBefore) params.set('dateBefore', dateBefore)
+    if (minSeats) params.set('minSeats', minSeats)
+    return params
+  }, [selected, selectedCategory, maxPrice, isNegotiable, hasWarranty, sort, searchQuery, dateAfter, dateBefore, minSeats])
 
   // Listen for tab changes from navbar
   useEffect(() => {
@@ -50,35 +80,21 @@ export default function Home() {
     return () => window.removeEventListener('storage', handler)
   }, [selected])
 
-  // Real-time synchronization: listen for admin item status changes
+  // Real-time: hide removed items
   useEffect(() => {
     const handleStatusUpdate = (e: any) => {
       const { itemId, status } = e.detail || {}
       if (!itemId) return
-
       if (status !== 'active') {
-        // Automatically hide closed / sold / expired item from home feed
         setItems((prev) => prev.filter((item) => item._id !== itemId))
       }
     }
-
     window.addEventListener('findit_item_status_updated', handleStatusUpdate)
     return () => window.removeEventListener('findit_item_status_updated', handleStatusUpdate)
   }, [])
 
-  // Reset filters and search query on tab switch
+  // Fetch categories on tab change
   useEffect(() => {
-    setSelectedCategory('')
-    setMaxPrice(0)
-    setIsNegotiable('')
-    setHasWarranty('')
-    setSort('')
-    setDateAfter('')
-    setDateBefore('')
-    setMinSeats('')
-    setSearchQuery('')
-    setItems([])
-
     const fetchCategories = async () => {
       try {
         const type = getBackendType(selected)
@@ -90,43 +106,62 @@ export default function Home() {
         console.error(`Failed to fetch categories for ${selected}:`, error)
       }
     }
-
     fetchCategories()
   }, [selected])
 
-  // Fetch feed data with debounce
+  // Reset and fetch first page on filter/tab changes
   useEffect(() => {
-    const fetchFeedData = async () => {
+    let cancelled = false
+    const fetchFirstPage = async () => {
       setLoading(true)
+      setItems([])
+      setPage(1)
+      setHasMore(false)
       try {
-        const type = getBackendType(selected)
-        const params = new URLSearchParams({ type })
-        if (selectedCategory) params.set('category', selectedCategory)
-        if (maxPrice > 0) params.set('maxPrice', String(maxPrice))
-        if (isNegotiable) params.set('isNegotiable', isNegotiable)
-        if (hasWarranty) params.set('hasWarranty', hasWarranty)
-        if (sort) params.set('sort', sort)
-        if (searchQuery.trim()) params.set('search', searchQuery.trim())
-        if (dateAfter) params.set('dateAfter', dateAfter)
-        if (dateBefore) params.set('dateBefore', dateBefore)
-        if (minSeats) params.set('minSeats', minSeats)
-
+        const params = buildParams(1)
         const response = await api.get(`/feed/list?${params.toString()}`)
-        if (response.data.success) {
+        if (!cancelled && response.data.success) {
           setItems(response.data.data.items)
+          setHasMore(response.data.data.hasNextPage)
+          setPage(1)
         }
       } catch (error) {
         console.error(`Failed to fetch ${selected} data:`, error)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    const timeoutId = setTimeout(fetchFeedData, 300)
-    return () => clearTimeout(timeoutId)
-  }, [selected, selectedCategory, maxPrice, isNegotiable, hasWarranty, sort, searchQuery, dateAfter, dateBefore, minSeats])
+    const timeoutId = setTimeout(fetchFirstPage, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
+  }, [filterKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Local frontend filtering of items using the search bar query
+  // Load more handler (called by infinite scroll hook)
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    const nextPage = page + 1
+    try {
+      const params = buildParams(nextPage)
+      const response = await api.get(`/feed/list?${params.toString()}`)
+      if (response.data.success) {
+        setItems((prev) => [...prev, ...response.data.data.items])
+        setHasMore(response.data.data.hasNextPage)
+        setPage(nextPage)
+      }
+    } catch (error) {
+      console.error('Failed to load more items:', error)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [page, hasMore, loadingMore, buildParams])
+
+  const sentinelRef = useInfiniteScroll({ hasMore, loading: loadingMore, onLoadMore: loadMore })
+
+  // Local frontend filtering for search (instant feel)
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return items
     const q = searchQuery.toLowerCase()
@@ -135,7 +170,6 @@ export default function Home() {
       const category = item.category || ''
       const description = item.description || ''
       
-      // Venue / Location fields for Passes, Found Items, and Tickets
       let venueStr = ''
       if (typeof item.venue === 'string') {
         venueStr = item.venue
@@ -145,7 +179,6 @@ export default function Home() {
       const originStr = item.origin ? `${item.origin.area || ''} ${item.origin.city || ''} ${item.origin.state || ''}` : ''
       const destStr = item.destination ? `${item.destination.area || ''} ${item.destination.city || ''} ${item.destination.state || ''}` : ''
       const locationStr = item.locationFound || item.location || ''
-
       const dateStr = item.dateTime ? new Date(item.dateTime).toLocaleString() : item.departureTime ? new Date(item.departureTime).toLocaleString() : ''
 
       return (
@@ -344,7 +377,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Price filter (hide for Lost & Found) */}
+          {/* Price filter */}
           {selected !== 'Lost & Found' && (
             <div className="flex items-center gap-2">
               <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
@@ -379,7 +412,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Available Seats / Quantity filter for Tickets and Passes */}
+          {/* Min Seats filter */}
           {(selected === 'Travelling Tickets' || selected === 'Event Passes') && (
             <div className="flex items-center gap-2">
               <label className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
@@ -456,12 +489,15 @@ export default function Home() {
         </motion.div>
       )}
 
-      {/* ── Product Grid ── */}
+      {/* ── Product Grid with Infinite Scroll ── */}
       <ProductGrid
         items={filteredItems}
         type={getBackendType(selected)}
         tabLabel={selected}
         loading={loading}
+        loadingMore={loadingMore}
+        hasMore={hasMore}
+        sentinelRef={sentinelRef}
         emptyTitle={`No ${selected} items found`}
         emptyDescription={
           selectedCategory || maxPrice > 0 || searchQuery

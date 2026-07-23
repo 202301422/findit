@@ -23,6 +23,11 @@ export const serializeUser = (user) => {
     authProvider: plainUser.authProvider ?? "local",
     accountStatus: plainUser.accountStatus ?? "active",
     role: plainUser.role ?? "user",
+    savedPosts: (plainUser.savedPosts || []).map((sp) => ({
+      itemId: sp.itemId?._id?.toString?.() ?? sp.itemId?.toString?.() ?? String(sp.itemId ?? sp),
+      itemType: sp.itemType ?? "",
+      savedAt: sp.savedAt ?? undefined,
+    })),
     createdAt: plainUser.createdAt ?? undefined,
     updatedAt: plainUser.updatedAt ?? undefined,
   };

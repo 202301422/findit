@@ -36,9 +36,16 @@ export interface Message {
 
 // ─── Conversations ────────────────────────────────────────────────────────────
 
-export const getConversations = async (): Promise<Conversation[]> => {
-  const res = await api.get('/chat/conversations');
-  return res.data.data.conversations;
+export const getConversations = async (
+  page = 1,
+  limit = 20
+): Promise<{ conversations: Conversation[]; hasNextPage: boolean; total: number }> => {
+  const res = await api.get(`/chat/conversations?page=${page}&limit=${limit}`);
+  return {
+    conversations: res.data.data.conversations,
+    hasNextPage: res.data.data.hasNextPage,
+    total: res.data.data.total,
+  };
 };
 
 export const getOrCreateConversation = async (payload: {

@@ -1,16 +1,21 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import Badge from '@/components/ui/Badge'
 import { 
-  ShoppingBag, Search, Ticket, Bus, Train, Plane
+  ShoppingBag, Search, Ticket, Bus, Train, Plane, Bookmark, BookmarkCheck
 } from 'lucide-react'
+import { profileService } from '@/services/profileService'
+import { useAuth, isPostSaved } from '@/contexts/AuthContext'
+import toast from 'react-hot-toast'
 
 interface ProductCardProps {
   item: any
   type: string // 'sell' | 'found' | 'ticket' | 'pass'
   tabLabel: string
+  /** If specified, overrides automatic saved check from AuthContext */
+  initialSaved?: boolean
 }
 
 function getItemTitle(item: any): string {
@@ -53,16 +58,43 @@ function getStatusBadge(item: any, type?: string, tabLabel?: string) {
   return null
 }
 
-export default function ProductCard({ item, type, tabLabel }: ProductCardProps) {
+export default function ProductCard({ item, type, tabLabel, initialSaved }: ProductCardProps) {
   const navigate = useNavigate()
+  const { user, refreshUser } = useAuth()
   const [imgError, setImgError] = useState(false)
   const [imgLoaded, setImgLoaded] = useState(false)
+  
+  const savedInContext = isPostSaved(user, item._id)
+  const [isSaved, setIsSaved] = useState(initialSaved ?? savedInContext)
+  const [savingBookmark, setSavingBookmark] = useState(false)
+
+  useEffect(() => {
+    if (initialSaved === undefined) {
+      setIsSaved(savedInContext)
+    }
+  }, [savedInContext, initialSaved])
 
   const imageUrl = getItemImage(item)
   const title = getItemTitle(item)
   const price = getItemPrice(item, tabLabel)
   const statusBadge = getStatusBadge(item, type, tabLabel)
   const showImage = imageUrl && !imgError
+
+  const handleBookmark = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation() // prevent card navigation
+    if (savingBookmark) return
+    setSavingBookmark(true)
+    try {
+      const res = await profileService.toggleSavedPost(item._id, type)
+      setIsSaved(res.saved)
+      await refreshUser()
+      toast.success(res.saved ? 'Post saved!' : 'Post removed from saved')
+    } catch {
+      toast.error('Failed to save post')
+    } finally {
+      setSavingBookmark(false)
+    }
+  }, [item._id, type, savingBookmark, refreshUser])
 
   return (
     <motion.article
@@ -122,6 +154,29 @@ export default function ProductCard({ item, type, tabLabel }: ProductCardProps) 
             </Badge>
           </div>
         )}
+
+        {/* ── Bookmark / Save Button (appears on card hover or when saved) ── */}
+        <button
+          type="button"
+          onClick={handleBookmark}
+          disabled={savingBookmark}
+          aria-label={isSaved ? 'Remove from saved' : 'Save post'}
+          title={isSaved ? 'Remove from saved' : 'Save post'}
+          className={clsx(
+            'absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full flex items-center justify-center',
+            'backdrop-blur-md transition-all duration-200 cursor-pointer shadow-md',
+            isSaved
+              ? 'bg-[var(--color-primary-500)] text-white opacity-100 scale-100'
+              : 'bg-black/50 text-white hover:bg-black/75 hover:scale-110 opacity-0 group-hover:opacity-100',
+            savingBookmark && 'pointer-events-none opacity-60',
+          )}
+        >
+          {isSaved ? (
+            <BookmarkCheck size={15} strokeWidth={2.5} />
+          ) : (
+            <Bookmark size={15} strokeWidth={2.5} />
+          )}
+        </button>
       </div>
 
       {/* ── Content ── */}
@@ -141,13 +196,29 @@ export default function ProductCard({ item, type, tabLabel }: ProductCardProps) 
             </span>
           )}
 
-          {item.user?.avatar && (
+          {item.user?._id && item.user?.avatar ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/user/${item.user._id}`)
+              }}
+              title={`View ${item.user.name || 'user'}'s profile`}
+              className="hover:scale-110 transition-transform cursor-pointer"
+            >
+              <img
+                src={item.user.avatar}
+                alt={item.user.name || ''}
+                className="w-6 h-6 rounded-full object-cover ring-2 ring-[var(--bg-primary)]"
+              />
+            </button>
+          ) : item.user?.avatar ? (
             <img
               src={item.user.avatar}
               alt=""
               className="w-6 h-6 rounded-full object-cover ring-2 ring-[var(--bg-primary)]"
             />
-          )}
+          ) : null}
         </div>
 
         {/* Extra info for specific types */}

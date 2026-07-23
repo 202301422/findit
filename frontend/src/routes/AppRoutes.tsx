@@ -12,6 +12,7 @@ const Login = lazy(() => import('../pages/Login/Login'))
 const Home = lazy(() => import('../pages/Home/Home'))
 const AddItem = lazy(() => import('../pages/AddItem/AddItem'))
 const Profile = lazy(() => import('../pages/Profile/Profile'))
+const UserProfile = lazy(() => import('../pages/Profile/UserProfile'))
 const ProductDetail = lazy(() => import('../pages/ProductDetail/ProductDetail'))
 const Messages = lazy(() => import('../pages/Messages/Messages'))
 const ChatDetail = lazy(() => import('../pages/Messages/ChatDetail'))
@@ -83,6 +84,7 @@ export default function AppRoutes() {
         <Route path="/home" element={<AppPage><Home /></AppPage>} />
         <Route path="/add-item" element={<AppPage><AddItem /></AppPage>} />
         <Route path="/profile" element={<AppPage><Profile /></AppPage>} />
+        <Route path="/user/:id" element={<AppPage><UserProfile /></AppPage>} />
         <Route path="/product/:id" element={<AppPage><ProductDetail /></AppPage>} />
         <Route path="/messages" element={<AppPage><Messages /></AppPage>} />
         <Route path="/messages/:id" element={<AppPage><ChatDetail /></AppPage>} />

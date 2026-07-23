@@ -15,6 +15,7 @@ import {
   User,
   ShieldCheck,
   Bell,
+  Bookmark,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/contexts/AuthContext'
@@ -32,6 +33,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/DropdownMenu'
 import BrandLogo from '@/components/BrandLogo'
+import UserSearchBar from '@/components/ui/UserSearchBar'
 
 const NAV_TABS = [
   { id: 'Buy & Sell', label: 'Buy & Sell', icon: ShoppingBag },
@@ -152,38 +154,45 @@ export default function Navbar() {
               <BrandLogo to="/home" variant="compact" className="!gap-2" />
             </div>
 
-            {/* Center: Nav tabs (desktop only) */}
-            {isHomePage && (
-              <nav className="hidden lg:flex items-center gap-1">
-                {NAV_TABS.map((tab) => {
-                  const Icon = tab.icon
-                  const isActive = selectedTab === tab.id
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => handleTabClick(tab.id)}
-                      className={clsx(
-                        'relative flex items-center gap-2 px-3.5 py-2 rounded-[var(--radius-md)] text-sm font-medium',
-                        'transition-all duration-200 cursor-pointer',
-                        isActive
-                          ? 'text-[var(--color-primary-500)] bg-[var(--color-primary-500)]/8'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]',
-                      )}
-                    >
-                      <Icon size={16} />
-                      <span className="hidden xl:inline">{tab.label}</span>
-                      {isActive && (
-                        <motion.div
-                          layoutId="navbar-indicator"
-                          className="absolute -bottom-[17px] left-2 right-2 h-0.5 bg-[var(--color-primary-500)] rounded-full"
-                          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                        />
-                      )}
-                    </button>
-                  )
-                })}
-              </nav>
-            )}
+            {/* Center: Nav tabs + User Search Bar */}
+            <div className="flex items-center gap-3">
+              {isHomePage && (
+                <nav className="hidden lg:flex items-center gap-1">
+                  {NAV_TABS.map((tab) => {
+                    const Icon = tab.icon
+                    const isActive = selectedTab === tab.id
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabClick(tab.id)}
+                        className={clsx(
+                          'relative flex items-center gap-2 px-3.5 py-2 rounded-[var(--radius-md)] text-sm font-medium',
+                          'transition-all duration-200 cursor-pointer',
+                          isActive
+                            ? 'text-[var(--color-primary-500)] bg-[var(--color-primary-500)]/8'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]',
+                        )}
+                      >
+                        <Icon size={16} />
+                        <span className="hidden xl:inline">{tab.label}</span>
+                        {isActive && (
+                          <motion.div
+                            layoutId="navbar-indicator"
+                            className="absolute -bottom-[17px] left-2 right-2 h-0.5 bg-[var(--color-primary-500)] rounded-full"
+                            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                          />
+                        )}
+                      </button>
+                    )
+                  })}
+                </nav>
+              )}
+
+              {/* User Search Bar */}
+              <div className="hidden sm:block w-48 md:w-56 lg:w-64">
+                <UserSearchBar />
+              </div>
+            </div>
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -260,6 +269,12 @@ export default function Navbar() {
                   >
                     Profile
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    icon={<Bookmark size={16} />}
+                    onSelect={() => navigate('/profile?tab=saved-posts')}
+                  >
+                    Saved Posts
+                  </DropdownMenuItem>
                   {user?.role === 'admin' && (
                     <DropdownMenuItem
                       icon={<ShieldCheck size={16} />}
@@ -320,6 +335,9 @@ export default function Navbar() {
                 'shadow-xl',
               )}
             >
+              <div className="mb-3 px-1">
+                <UserSearchBar onSelectUser={() => setMobileOpen(false)} />
+              </div>
               <div className="flex flex-col gap-1">
                 {NAV_TABS.map((tab) => {
                   const Icon = tab.icon

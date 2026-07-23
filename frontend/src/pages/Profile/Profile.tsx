@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 
 import { useProfile } from '@/hooks/useProfile'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import type { ListingCategory } from '@/types/profile.types'
 
 import ProfileHeader from '@/components/profile/ProfileHeader'
@@ -16,8 +17,18 @@ import DeleteAccountModal from '@/components/profile/DeleteAccountModal'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
+import { SkeletonCard } from '@/components/ui/Skeleton'
 
-const CATEGORIES: ListingCategory[] = ['Lost & Found', 'Event Passes', 'Travelling Tickets', 'Buy & Sell']
+const CATEGORIES: ListingCategory[] = ['Lost & Found', 'Event Passes', 'Travelling Tickets', 'Buy & Sell', 'Saved Posts']
+
+function getApiCategory(tab: ListingCategory): string {
+  if (tab === 'Lost & Found') return 'lost-found'
+  if (tab === 'Event Passes') return 'event-passes'
+  if (tab === 'Buy & Sell') return 'buy-sell'
+  if (tab === 'Travelling Tickets') return 'travelling-tickets'
+  if (tab === 'Saved Posts') return 'saved-posts'
+  return ''
+}
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState<ListingCategory>('Lost & Found')
@@ -29,6 +40,13 @@ export default function Profile() {
 
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam === 'saved' || tabParam === 'saved-posts') {
+      setActiveTab('Saved Posts')
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (searchParams.get('edit') === 'true' || searchParams.get('settings') === 'true') {
@@ -48,9 +66,12 @@ export default function Profile() {
     stats, 
     loadingProfile, 
     loadingListings,
+    loadingMoreListings,
     loadingUpdate,
+    hasMoreListings,
     fetchProfile, 
-    fetchListings, 
+    fetchListings,
+    fetchMoreListings,
     fetchStats,
     updateProfile,
     uploadAvatar,
@@ -62,18 +83,26 @@ export default function Profile() {
     fetchStats()
   }, [fetchProfile, fetchStats])
 
+  // Reset + fetch first page on tab change
   useEffect(() => {
-    let apiCategory = ''
-    if (activeTab === 'Lost & Found') apiCategory = 'lost-found'
-    if (activeTab === 'Event Passes') apiCategory = 'event-passes'
-    if (activeTab === 'Buy & Sell') apiCategory = 'buy-sell'
-    if (activeTab === 'Travelling Tickets') apiCategory = 'travelling-tickets'
-    
-    fetchListings(apiCategory)
+    fetchListings(getApiCategory(activeTab))
   }, [activeTab, fetchListings])
 
+  // Load more when sentinel is reached
+  const handleLoadMore = useCallback(() => {
+    fetchMoreListings(getApiCategory(activeTab))
+  }, [activeTab, fetchMoreListings])
+
+  const sentinelRef = useInfiniteScroll({
+    hasMore: hasMoreListings,
+    loading: loadingMoreListings,
+    onLoadMore: handleLoadMore,
+  })
+
   // Filter listings by the active category tab
-  const filteredListings = listings.filter(listing => listing.category === activeTab)
+  const filteredListings = activeTab === 'Saved Posts'
+    ? listings
+    : listings.filter(listing => listing.category === activeTab)
 
   if (loadingProfile && !profile) {
     return (
@@ -121,23 +150,48 @@ export default function Profile() {
           {loadingListings ? (
             <div className="grid grid-cols-2 gap-4">
               {Array.from({ length: 4 }).map((_, idx) => (
-                <div key={idx} className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] overflow-hidden h-60 animate-shimmer" />
+                <SkeletonCard key={idx} />
               ))}
             </div>
           ) : filteredListings.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4">
-              {filteredListings.map((listing) => (
-                <ListingCard key={listing._id} listing={listing} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                {filteredListings.map((listing) => (
+                  <ListingCard key={listing._id} listing={listing} />
+                ))}
+              </div>
+
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} />
+
+              {/* Loading more skeletons */}
+              {loadingMoreListings && (
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  {Array.from({ length: 2 }).map((_, idx) => (
+                    <div key={idx} className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] overflow-hidden h-60 animate-shimmer" />
+                  ))}
+                </div>
+              )}
+
+              {/* All loaded indicator */}
+              {!hasMoreListings && !loadingMoreListings && filteredListings.length > 0 && (
+                <p className="text-center text-xs text-[var(--text-tertiary)] font-medium pt-2">
+                  ✓ All listings loaded
+                </p>
+              )}
+            </>
           ) : (
             <EmptyState
-              icon="🔍"
-              title={`No ${activeTab} listings`}
-              description="You have not posted any listings under this tab yet."
+              icon={activeTab === 'Saved Posts' ? '🔖' : '🔍'}
+              title={activeTab === 'Saved Posts' ? 'No saved posts yet' : `No ${activeTab} listings`}
+              description={
+                activeTab === 'Saved Posts'
+                  ? 'Bookmark items while browsing to save them for later.'
+                  : 'You have not posted any listings under this tab yet.'
+              }
               action={
-                <Button variant="primary" onClick={() => navigate('/add-item')}>
-                  Post an Item
+                <Button variant="primary" onClick={() => navigate(activeTab === 'Saved Posts' ? '/home' : '/add-item')}>
+                  {activeTab === 'Saved Posts' ? 'Browse Marketplace' : 'Post an Item'}
                 </Button>
               }
               className="bg-[var(--surface-card)] rounded-[var(--radius-lg)] border border-[var(--border-secondary)] shadow-sm"

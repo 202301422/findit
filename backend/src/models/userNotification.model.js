@@ -20,7 +20,7 @@ const userNotificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["broadcast", "emergency", "listing_update", "admin_message", "system"],
+      enum: ["broadcast", "emergency", "listing_update", "admin_message", "system", "chat_inquiry"],
       default: "system",
     },
     relatedEntityId: {
