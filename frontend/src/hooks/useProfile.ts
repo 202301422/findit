@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { profileService } from '../services/profileService';
 import type { ProfileData, UpdateProfileData, Listing, ProfileStats } from '../types/profile.types';
 import toast from 'react-hot-toast';
@@ -22,6 +22,8 @@ export function useProfile() {
   const [hasMoreListings, setHasMoreListings] = useState(false);
   const [totalListings, setTotalListings] = useState(0);
 
+  const activeReqRef = useRef<string>('');
+
   const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
     try {
@@ -39,25 +41,36 @@ export function useProfile() {
    * Resets pagination state for a fresh load (e.g. when switching tabs).
    */
   const fetchListings = useCallback(async (category?: string) => {
+    const reqId = `${category || 'all'}-${Date.now()}`;
+    activeReqRef.current = reqId;
+
     setLoadingListings(true);
     setListingsPage(1);
     setListings([]);
     try {
       if (category === 'saved-posts') {
         const data = await profileService.getSavedPosts(1, 12);
-        setListings(data.savedPosts as Listing[]);
-        setHasMoreListings(data.hasNextPage);
-        setTotalListings(data.total);
+        if (activeReqRef.current === reqId) {
+          setListings(data.savedPosts as Listing[]);
+          setHasMoreListings(data.hasNextPage);
+          setTotalListings(data.total);
+        }
       } else {
         const data = await profileService.getMyListings(category, 1, 12);
-        setListings(data.listings as Listing[]);
-        setHasMoreListings(data.hasNextPage);
-        setTotalListings(data.total);
+        if (activeReqRef.current === reqId) {
+          setListings(data.listings as Listing[]);
+          setHasMoreListings(data.hasNextPage);
+          setTotalListings(data.total);
+        }
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to fetch listings');
+      if (activeReqRef.current === reqId) {
+        toast.error(err.message || 'Failed to fetch listings');
+      }
     } finally {
-      setLoadingListings(false);
+      if (activeReqRef.current === reqId) {
+        setLoadingListings(false);
+      }
     }
   }, []);
 

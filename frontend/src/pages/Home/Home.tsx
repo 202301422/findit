@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { clsx } from 'clsx'
 
 import api from '@/utils/api'
+import { profileService } from '@/services/profileService'
 import ProductGrid from '@/components/product/ProductGrid'
 import Button from '@/components/ui/Button'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
@@ -118,12 +119,21 @@ export default function Home() {
       setPage(1)
       setHasMore(false)
       try {
-        const params = buildParams(1)
-        const response = await api.get(`/feed/list?${params.toString()}`)
-        if (!cancelled && response.data.success) {
-          setItems(response.data.data.items)
-          setHasMore(response.data.data.hasNextPage)
-          setPage(1)
+        if (selected === 'Following') {
+          const data = await profileService.getFollowingFeed(1, LIMIT)
+          if (!cancelled) {
+            setItems(data.listings)
+            setHasMore(data.hasNextPage)
+            setPage(1)
+          }
+        } else {
+          const params = buildParams(1)
+          const response = await api.get(`/feed/list?${params.toString()}`)
+          if (!cancelled && response.data.success) {
+            setItems(response.data.data.items)
+            setHasMore(response.data.data.hasNextPage)
+            setPage(1)
+          }
         }
       } catch (error) {
         console.error(`Failed to fetch ${selected} data:`, error)
@@ -145,19 +155,26 @@ export default function Home() {
     setLoadingMore(true)
     const nextPage = page + 1
     try {
-      const params = buildParams(nextPage)
-      const response = await api.get(`/feed/list?${params.toString()}`)
-      if (response.data.success) {
-        setItems((prev) => [...prev, ...response.data.data.items])
-        setHasMore(response.data.data.hasNextPage)
+      if (selected === 'Following') {
+        const data = await profileService.getFollowingFeed(nextPage, LIMIT)
+        setItems((prev) => [...prev, ...data.listings])
+        setHasMore(data.hasNextPage)
         setPage(nextPage)
+      } else {
+        const params = buildParams(nextPage)
+        const response = await api.get(`/feed/list?${params.toString()}`)
+        if (response.data.success) {
+          setItems((prev) => [...prev, ...response.data.data.items])
+          setHasMore(response.data.data.hasNextPage)
+          setPage(nextPage)
+        }
       }
     } catch (error) {
       console.error('Failed to load more items:', error)
     } finally {
       setLoadingMore(false)
     }
-  }, [page, hasMore, loadingMore, buildParams])
+  }, [page, hasMore, loadingMore, buildParams, selected])
 
   const sentinelRef = useInfiniteScroll({ hasMore, loading: loadingMore, onLoadMore: loadMore })
 

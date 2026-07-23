@@ -18,38 +18,57 @@ interface ProductCardProps {
   initialSaved?: boolean
 }
 
+function getResolvedItemType(item: any, defaultType: string): string {
+  if (item.type) return item.type
+  if (item.itemType) return item.itemType
+  if (item.category === 'Travelling Tickets' || item.ticketType || item.origin) return 'ticket'
+  if (item.category === 'Event Passes') return 'pass'
+  if (item.category === 'Lost & Found') return 'found'
+  return defaultType || 'sell'
+}
+
+function getResolvedCategoryLabel(item: any, defaultTabLabel: string): string {
+  if (item.category) return item.category
+  const resolvedType = getResolvedItemType(item, defaultTabLabel)
+  if (resolvedType === 'ticket') return 'Travelling Tickets'
+  if (resolvedType === 'pass') return 'Event Passes'
+  if (resolvedType === 'found') return 'Lost & Found'
+  return 'Buy & Sell'
+}
+
 function getItemTitle(item: any): string {
+  if (item.title) return item.title
   if (item.name) return item.name
   if (item.origin?.city && item.destination?.city) {
     return `${item.origin.city} → ${item.destination.city}`
   }
-  return item.ticketType || 'Untitled'
+  return item.ticketType ? `${item.ticketType} Ticket` : 'Untitled'
 }
 
-function getItemPrice(item: any, tabLabel: string): string | null {
-  if (tabLabel === 'Lost & Found') return null
-  const price = item.sellingPrice || item.price
-  return price ? `₹${price.toLocaleString('en-IN')}` : null
+function getItemPrice(item: any, resolvedCategory: string): string | null {
+  if (resolvedCategory === 'Lost & Found') return null
+  const price = item.sellingPrice ?? item.price
+  return price !== undefined && price !== null ? `₹${Number(price).toLocaleString('en-IN')}` : null
 }
 
 function getItemImage(item: any): string | null {
   return item.images?.[0]?.url || item.imageUrl || null
 }
 
-function renderPlaceholderIcon(tabLabel: string, item: any) {
-  if (tabLabel === 'Travelling Tickets') {
+function renderPlaceholderIcon(item: any, resolvedCategory: string) {
+  if (resolvedCategory === 'Travelling Tickets' || item.ticketType) {
     if (item.ticketType === 'Bus') return <Bus className="w-8 h-8 text-[var(--color-primary-500)]" />
     if (item.ticketType === 'Train') return <Train className="w-8 h-8 text-[var(--color-primary-500)]" />
     return <Plane className="w-8 h-8 text-[var(--color-primary-500)]" />
   }
-  if (tabLabel === 'Event Passes') return <Ticket className="w-8 h-8 text-[var(--color-primary-500)]" />
-  if (tabLabel === 'Lost & Found') return <Search className="w-8 h-8 text-[var(--color-primary-500)]" />
+  if (resolvedCategory === 'Event Passes') return <Ticket className="w-8 h-8 text-[var(--color-primary-500)]" />
+  if (resolvedCategory === 'Lost & Found') return <Search className="w-8 h-8 text-[var(--color-primary-500)]" />
   return <ShoppingBag className="w-8 h-8 text-[var(--color-primary-500)]" />
 }
 
-function getStatusBadge(item: any, type?: string, tabLabel?: string) {
+function getStatusBadge(item: any, resolvedType: string, resolvedCategory: string) {
   if (item.status === 'sold' || item.status === 'closed') {
-    if (type === 'found' || tabLabel === 'Lost & Found') {
+    if (resolvedType === 'found' || resolvedCategory === 'Lost & Found') {
       return { label: 'Returned', variant: 'success' as const }
     }
     return { label: 'Sold', variant: 'error' as const }
@@ -63,7 +82,10 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
   const { user, refreshUser } = useAuth()
   const [imgError, setImgError] = useState(false)
   const [imgLoaded, setImgLoaded] = useState(false)
-  
+
+  const resolvedType = getResolvedItemType(item, type)
+  const resolvedCategory = getResolvedCategoryLabel(item, tabLabel)
+
   const savedInContext = isPostSaved(user, item._id)
   const [isSaved, setIsSaved] = useState(initialSaved ?? savedInContext)
   const [savingBookmark, setSavingBookmark] = useState(false)
@@ -76,8 +98,8 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
 
   const imageUrl = getItemImage(item)
   const title = getItemTitle(item)
-  const price = getItemPrice(item, tabLabel)
-  const statusBadge = getStatusBadge(item, type, tabLabel)
+  const price = getItemPrice(item, resolvedCategory)
+  const statusBadge = getStatusBadge(item, resolvedType, resolvedCategory)
   const showImage = imageUrl && !imgError
 
   const handleBookmark = useCallback(async (e: React.MouseEvent) => {
@@ -85,7 +107,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
     if (savingBookmark) return
     setSavingBookmark(true)
     try {
-      const res = await profileService.toggleSavedPost(item._id, type)
+      const res = await profileService.toggleSavedPost(item._id, resolvedType)
       setIsSaved(res.saved)
       await refreshUser()
       toast.success(res.saved ? 'Post saved!' : 'Post removed from saved')
@@ -94,13 +116,13 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
     } finally {
       setSavingBookmark(false)
     }
-  }, [item._id, type, savingBookmark, refreshUser])
+  }, [item._id, resolvedType, savingBookmark, refreshUser])
 
   return (
     <motion.article
       whileHover={{ y: -4 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      onClick={() => navigate(`/product/${item._id}?type=${type}`)}
+      onClick={() => navigate(`/product/${item._id}?type=${resolvedType}`)}
       className={clsx(
         'group relative bg-[var(--surface-card)] rounded-[var(--radius-lg)]',
         'border border-[var(--border-secondary)] overflow-hidden cursor-pointer',
@@ -111,7 +133,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
       tabIndex={0}
       aria-label={`View ${title}`}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') navigate(`/product/${item._id}?type=${type}`)
+        if (e.key === 'Enter') navigate(`/product/${item._id}?type=${resolvedType}`)
       }}
     >
       {/* ── Image / Fallback Placeholder ── */}
@@ -141,7 +163,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
 
             {/* Premium Icon Badge Container */}
             <div className="relative p-3.5 rounded-2xl bg-[var(--surface-card)] border border-[var(--border-secondary)] shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all duration-300 flex items-center justify-center">
-              {renderPlaceholderIcon(tabLabel, item)}
+              {renderPlaceholderIcon(item, resolvedCategory)}
             </div>
           </div>
         )}
@@ -192,7 +214,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
             </span>
           ) : (
             <span className="text-xs font-medium text-[var(--text-tertiary)]">
-              {tabLabel === 'Lost & Found' ? 'Found item' : '—'}
+              {resolvedCategory === 'Lost & Found' ? 'Found item' : '—'}
             </span>
           )}
 
@@ -222,7 +244,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
         </div>
 
         {/* Extra info for specific types */}
-        {tabLabel === 'Travelling Tickets' && item.departureTime && (
+        {(resolvedCategory === 'Travelling Tickets' || resolvedType === 'ticket') && item.departureTime && (
           <p className="text-xs text-[var(--text-tertiary)] mt-1.5 truncate">
             {new Date(item.departureTime).toLocaleDateString('en-IN', {
               day: 'numeric',
@@ -232,7 +254,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
             })}
           </p>
         )}
-        {tabLabel === 'Event Passes' && item.dateTime && (
+        {(resolvedCategory === 'Event Passes' || resolvedType === 'pass') && item.dateTime && (
           <p className="text-xs text-[var(--text-tertiary)] mt-1.5 truncate">
             {new Date(item.dateTime).toLocaleDateString('en-IN', {
               day: 'numeric',

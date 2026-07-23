@@ -28,6 +28,16 @@ export const serializeUser = (user) => {
       itemType: sp.itemType ?? "",
       savedAt: sp.savedAt ?? undefined,
     })),
+    following: (plainUser.following || []).map((f) => ({
+      user: f.user?._id?.toString?.() ?? f.user?.toString?.() ?? String(f.user ?? f),
+      notifyOnPost: f.notifyOnPost !== false,
+      followedAt: f.followedAt ?? undefined,
+    })),
+    followers: (plainUser.followers || []).map((f) => ({
+      user: f.user?._id?.toString?.() ?? f.user?.toString?.() ?? String(f.user ?? f),
+      notifyOnPost: f.notifyOnPost !== false,
+      followedAt: f.followedAt ?? undefined,
+    })),
     createdAt: plainUser.createdAt ?? undefined,
     updatedAt: plainUser.updatedAt ?? undefined,
   };

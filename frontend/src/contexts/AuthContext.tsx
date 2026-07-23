@@ -10,6 +10,12 @@ export interface SavedPostRef {
   savedAt: string;
 }
 
+export interface FollowRef {
+  user: string;
+  notifyOnPost: boolean;
+  followedAt?: string;
+}
+
 export interface User {
   _id: string;
   name: string;
@@ -27,6 +33,8 @@ export interface User {
   role?: 'user' | 'admin';
   accountStatus?: string;
   savedPosts?: SavedPostRef[];
+  following?: FollowRef[];
+  followers?: FollowRef[];
 }
 
 export function isPostSaved(user: User | null | undefined, itemId?: string): boolean {
@@ -36,6 +44,25 @@ export function isPostSaved(user: User | null | undefined, itemId?: string): boo
     const rawId = sp?.itemId?._id || sp?.itemId || sp?._id || sp;
     return String(rawId).trim() === targetId;
   });
+}
+
+export function isFollowingUser(user: User | null | undefined, targetUserId?: string): boolean {
+  if (!user || !user.following || !targetUserId) return false;
+  const targetId = String(targetUserId).trim();
+  return user.following.some((f: any) => {
+    const uid = f?.user?._id || f?.user || f;
+    return String(uid).trim() === targetId;
+  });
+}
+
+export function isNotifyOnPostEnabled(user: User | null | undefined, targetUserId?: string): boolean {
+  if (!user || !user.following || !targetUserId) return false;
+  const targetId = String(targetUserId).trim();
+  const found = user.following.find((f: any) => {
+    const uid = f?.user?._id || f?.user || f;
+    return String(uid).trim() === targetId;
+  });
+  return found ? found.notifyOnPost !== false : false;
 }
 
 interface AuthContextType {

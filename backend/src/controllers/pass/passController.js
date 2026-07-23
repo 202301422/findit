@@ -3,6 +3,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import { uploadImages, deleteImages } from "../../utils/cloudinary.js";
+import { notifyFollowersOnNewPost } from "../../utils/followerNotifier.js";
 
 function parseBoolean(value) {
     if (typeof value === "boolean") return value;
@@ -62,6 +63,14 @@ export const addPass = asyncHandler(async (req, res) => {
         });
 
         const populated = await pass.findById(newPass._id).populate("user", "name email avatar createdAt");
+
+        void notifyFollowersOnNewPost({
+            sellerId: req.user._id,
+            sellerName: req.user.name,
+            itemTitle: newPass.name,
+            itemType: "pass",
+            itemId: newPass._id,
+        });
 
         return res.status(201).json(new ApiResponse(201, populated, "Pass created successfully"));
     } catch (error) {

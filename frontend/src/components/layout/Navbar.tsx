@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Bell,
   Bookmark,
+  Users,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/contexts/AuthContext'
@@ -40,6 +41,7 @@ const NAV_TABS = [
   { id: 'Lost & Found', label: 'Lost & Found', icon: MapPin },
   { id: 'Travelling Tickets', label: 'Tickets', icon: Ticket },
   { id: 'Event Passes', label: 'Passes', icon: CalendarDays },
+  { id: 'Following', label: 'Following', icon: Users },
 ] as const
 
 function getResolvedTab(pathname: string, search: string): string {

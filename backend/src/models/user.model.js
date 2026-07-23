@@ -135,7 +135,43 @@ const userSchema = new mongoose.Schema({
         default: Date.now
       }
     }
-  ]
+  ],
+
+  following: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      notifyOnPost: {
+        type: Boolean,
+        default: true,
+      },
+      followedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+
+  followers: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      notifyOnPost: {
+        type: Boolean,
+        default: true,
+      },
+      followedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 
 }, { timestamps: true });
 

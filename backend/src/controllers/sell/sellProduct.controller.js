@@ -3,6 +3,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import { uploadImages, deleteImages } from "../../utils/cloudinary.js";
+import { notifyFollowersOnNewPost } from "../../utils/followerNotifier.js";
 
 function parseUsageTime(value) {
     if (!value) return { years: 0, months: 0, days: 0 };
@@ -148,6 +149,15 @@ export const createSellProduct = asyncHandler(async (req, res) => {
 
         const product = await sellProduct.create(productData);
         console.log("[SELL CREATE] product.images:", product.images);
+
+        // Notify followers who have notifyOnPost enabled
+        void notifyFollowersOnNewPost({
+            sellerId: req.user._id,
+            sellerName: req.user.name,
+            itemTitle: product.name,
+            itemType: "sell",
+            itemId: product._id,
+        });
 
         return res.status(201).json(new ApiResponse(201, product, "Product created successfully"));
     } catch (error) {

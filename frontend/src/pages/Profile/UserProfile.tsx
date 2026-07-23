@@ -2,15 +2,18 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, Calendar, MapPin, GraduationCap, 
-  ShieldCheck, ShoppingBag, Search, Ticket, CalendarDays 
+  ShieldCheck, ShoppingBag, Search, Ticket, CalendarDays,
+  UserCheck, UserPlus, Bell, BellOff 
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import toast from 'react-hot-toast'
 import { profileService } from '@/services/profileService'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, isFollowingUser, isNotifyOnPostEnabled } from '@/contexts/AuthContext'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
+import Button from '@/components/ui/Button'
 import ProductGrid from '@/components/product/ProductGrid'
+import FollowersModal from '@/components/profile/FollowersModal'
 
 function memberSince(d?: string) {
   if (!d) return ''
@@ -25,7 +28,7 @@ function getEmailPrefix(email?: string) {
 export default function UserProfile() {
   const { id: targetUserId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, refreshUser } = useAuth()
 
   const [user, setUser] = useState<any>(null)
   const [listings, setListings] = useState<any[]>([])
@@ -33,7 +36,15 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<string>('All')
 
+  const [followersCount, setFollowersCount] = useState(0)
+  const [followingCount, setFollowingCount] = useState(0)
+  const [followLoading, setFollowLoading] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalTab, setModalTab] = useState<'followers' | 'following'>('followers')
+
   const isSelf = Boolean(currentUser && targetUserId && currentUser._id === targetUserId)
+  const isFollowing = isFollowingUser(currentUser, targetUserId)
+  const notifyEnabled = isNotifyOnPostEnabled(currentUser, targetUserId)
 
   useEffect(() => {
     if (isSelf) {
@@ -52,6 +63,8 @@ export default function UserProfile() {
           setUser(data.user)
           setListings(data.listings)
           setStats(data.stats)
+          setFollowersCount(data.stats?.followersCount || (data.user.followers || []).length || 0)
+          setFollowingCount(data.stats?.followingCount || (data.user.following || []).length || 0)
         }
       } catch (err: any) {
         if (!cancelled) {
@@ -66,6 +79,36 @@ export default function UserProfile() {
     fetchTargetUser()
     return () => { cancelled = true }
   }, [targetUserId, isSelf, navigate])
+
+  const handleToggleFollow = async () => {
+    if (!targetUserId || followLoading) return
+    setFollowLoading(true)
+    try {
+      const res = await profileService.toggleFollowUser(targetUserId, true)
+      await refreshUser()
+      setFollowersCount(res.followersCount)
+      toast.success(res.isFollowing ? `Following ${user.name}!` : `Unfollowed ${user.name}`)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update follow status')
+    } finally {
+      setFollowLoading(false)
+    }
+  }
+
+  const handleToggleBell = async () => {
+    if (!targetUserId || followLoading) return
+    setFollowLoading(true)
+    try {
+      const nextNotify = !notifyEnabled
+      await profileService.toggleFollowNotifications(targetUserId, nextNotify)
+      await refreshUser()
+      toast.success(nextNotify ? 'Post notifications enabled 🔔' : 'Post notifications muted 🔕')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update notification settings')
+    } finally {
+      setFollowLoading(false)
+    }
+  }
 
   const emailPrefix = user ? getEmailPrefix(user.email) : null
 
@@ -151,26 +194,80 @@ export default function UserProfile() {
                 </div>
               </div>
             </div>
+
+            {/* Follow & Notification Bell Action Buttons */}
+            {!isSelf && (
+              <div className="flex items-center gap-2 mb-1">
+                {isFollowing && (
+                  <button
+                    type="button"
+                    onClick={handleToggleBell}
+                    disabled={followLoading}
+                    title={notifyEnabled ? 'Post notifications ON (Click to Mute)' : 'Post notifications OFF (Click to Notify)'}
+                    className={clsx(
+                      'h-9 px-3.5 rounded-[var(--radius-md)] border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md',
+                      notifyEnabled
+                        ? 'bg-emerald-600 border-emerald-500 text-white hover:bg-emerald-700'
+                        : 'bg-[var(--surface-card)] border-[var(--border-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]',
+                    )}
+                  >
+                    {notifyEnabled ? <Bell size={15} className="fill-current" /> : <BellOff size={15} />}
+                    <span>{notifyEnabled ? 'Notifying' : 'Muted'}</span>
+                  </button>
+                )}
+
+                <Button
+                  variant={isFollowing ? 'secondary' : 'primary'}
+                  onClick={handleToggleFollow}
+                  loading={followLoading}
+                  iconLeft={isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />}
+                  className="h-9 px-4 text-xs font-semibold shadow-xs cursor-pointer"
+                >
+                  {isFollowing ? 'Following' : 'Follow'}
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* User Details / Meta */}
-          <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-secondary)] border-t border-[var(--border-secondary)] pt-4 mt-2">
-            {user.college && (
+          {/* User Details / Meta + Connections stats */}
+          <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-[var(--text-secondary)] border-t border-[var(--border-secondary)] pt-4 mt-2">
+            <div className="flex flex-wrap items-center gap-4">
+              {user.college && (
+                <span className="flex items-center gap-1.5">
+                  <GraduationCap size={14} className="text-[var(--color-primary-500)]" />
+                  {user.college}
+                </span>
+              )}
+              {(user.city || user.state || user.country) && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={14} className="text-[var(--color-primary-500)]" />
+                  {[user.city, user.state, user.country].filter(Boolean).join(', ')}
+                </span>
+              )}
               <span className="flex items-center gap-1.5">
-                <GraduationCap size={14} className="text-[var(--color-primary-500)]" />
-                {user.college}
+                <Calendar size={14} className="text-[var(--color-primary-500)]" />
+                Member since {memberSince(user.createdAt)}
               </span>
-            )}
-            {(user.city || user.state || user.country) && (
-              <span className="flex items-center gap-1.5">
-                <MapPin size={14} className="text-[var(--color-primary-500)]" />
-                {[user.city, user.state, user.country].filter(Boolean).join(', ')}
-              </span>
-            )}
-            <span className="flex items-center gap-1.5">
-              <Calendar size={14} className="text-[var(--color-primary-500)]" />
-              Member since {memberSince(user.createdAt)}
-            </span>
+            </div>
+
+            {/* Followers & Following Counts */}
+            <div className="flex items-center gap-3 font-semibold text-xs">
+              <button
+                type="button"
+                onClick={() => { setModalTab('followers'); setIsModalOpen(true) }}
+                className="hover:text-[var(--color-primary-500)] transition-colors cursor-pointer bg-[var(--bg-tertiary)] px-2.5 py-1 rounded-[var(--radius-sm)] border border-[var(--border-secondary)]"
+              >
+                <span className="text-[var(--text-primary)] font-bold mr-1">{followersCount}</span> Followers
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setModalTab('following'); setIsModalOpen(true) }}
+                className="hover:text-[var(--color-primary-500)] transition-colors cursor-pointer bg-[var(--bg-tertiary)] px-2.5 py-1 rounded-[var(--radius-sm)] border border-[var(--border-secondary)]"
+              >
+                <span className="text-[var(--text-primary)] font-bold mr-1">{followingCount}</span> Following
+              </button>
+            </div>
           </div>
 
           {/* Bio */}
@@ -221,6 +318,15 @@ export default function UserProfile() {
           emptyDescription={`${user.name} does not have any active listings under this section currently.`}
         />
       </div>
+
+      {/* Followers & Following Connections Modal */}
+      <FollowersModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        userId={user._id}
+        userName={user.name}
+        initialTab={modalTab}
+      />
     </div>
   )
 }

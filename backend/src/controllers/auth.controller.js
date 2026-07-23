@@ -209,7 +209,7 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select("_id name email phone username avatar avatarPublicId bio college city state country isVerified authProvider accountStatus role savedPosts createdAt updatedAt");
+  const user = await User.findById(req.user._id).select("_id name email phone username avatar avatarPublicId bio college city state country isVerified authProvider accountStatus role savedPosts following followers createdAt updatedAt");
 
   if (!user) {
     throw new ApiError(404, "User not found");

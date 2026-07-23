@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import type { ProfileData, UpdateProfileData, Listing, ProfileStats } from '../types/profile.types';
+import type { ProfileData, UpdateProfileData, ProfileStats } from '../types/profile.types';
 
 export const profileService = {
   getProfile: async (): Promise<ProfileData> => {
@@ -79,5 +79,48 @@ export const profileService = {
   getPublicProfile: async (userId: string): Promise<{ user: any; listings: any[]; stats: any }> => {
     const res = await api.get(`/profile/user/${userId}`);
     return res.data.data;
+  },
+
+  toggleFollowUser: async (
+    targetUserId: string,
+    notifyOnPost = true
+  ): Promise<{ isFollowing: boolean; notifyOnPost: boolean; followersCount: number; followingCount: number }> => {
+    const res = await api.post(`/profile/follow/${targetUserId}`, { notifyOnPost });
+    return res.data.data;
+  },
+
+  toggleFollowNotifications: async (
+    targetUserId: string,
+    notifyOnPost: boolean
+  ): Promise<{ notifyOnPost: boolean }> => {
+    const res = await api.patch(`/profile/follow-notifications/${targetUserId}`, { notifyOnPost });
+    return res.data.data;
+  },
+
+  getUserFollowers: async (userId: string): Promise<any[]> => {
+    const res = await api.get(`/profile/followers/${userId}`);
+    return res.data.data.followers || [];
+  },
+
+  removeFollower: async (followerUserId: string): Promise<{ followersCount: number }> => {
+    const res = await api.delete(`/profile/followers/${followerUserId}`);
+    return res.data.data;
+  },
+
+  getUserFollowing: async (userId: string): Promise<any[]> => {
+    const res = await api.get(`/profile/following/${userId}`);
+    return res.data.data.following || [];
+  },
+
+  getFollowingFeed: async (
+    page = 1,
+    limit = 12
+  ): Promise<{ listings: any[]; hasNextPage: boolean; total: number }> => {
+    const res = await api.get('/profile/feed/following', { params: { page, limit } });
+    return {
+      listings: res.data.data.listings || [],
+      hasNextPage: res.data.data.hasNextPage,
+      total: res.data.data.total || 0,
+    };
   },
 };

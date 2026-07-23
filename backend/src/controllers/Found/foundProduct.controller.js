@@ -3,6 +3,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import { uploadImages, deleteImages } from "../../utils/cloudinary.js";
+import { notifyFollowersOnNewPost } from "../../utils/followerNotifier.js";
 import { UPLOAD_CONFIG } from "../../config/uploadConfig.js";
 
 function parseBoolean(value) {
@@ -59,6 +60,14 @@ export const createFoundProduct = asyncHandler(async (req, res) => {
             user: req.user._id
         });
         console.log("[FOUND CREATE] product.images:", product.images);
+
+        void notifyFollowersOnNewPost({
+            sellerId: req.user._id,
+            sellerName: req.user.name,
+            itemTitle: product.name,
+            itemType: "found",
+            itemId: product._id,
+        });
 
         return res
             .status(201)

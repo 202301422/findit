@@ -2,6 +2,7 @@ import ticketModel from "../../models/expirable_item/ticketModel.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
+import { notifyFollowersOnNewPost } from "../../utils/followerNotifier.js";
 
 function parseLocation(value) {
     if (!value) return null;
@@ -81,6 +82,14 @@ export const createTicket = asyncHandler(async (req, res) => {
         quantity: parsedQuantity,
         description,
         user: req.user._id,
+    });
+
+    void notifyFollowersOnNewPost({
+        sellerId: req.user._id,
+        sellerName: req.user.name,
+        itemTitle: `${ticket.ticketType} Ticket (${ticket.origin?.city || ''} → ${ticket.destination?.city || ''})`,
+        itemType: "ticket",
+        itemId: ticket._id,
     });
 
     return res.status(201).json(new ApiResponse(201, ticket, "Ticket created successfully"));

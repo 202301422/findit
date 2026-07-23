@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import UserNotification from "../models/userNotification.model.js";
 import FoundProduct from "../models/foundProductModel.js";
 import Pass from "../models/expirable_item/passModel.js";
 import SellProduct from "../models/SellProduct.js";
@@ -572,7 +573,7 @@ export const searchUsers = asyncHandler(async (req, res) => {
       { email: regex },
     ],
   })
-    .select("_id name username email avatar college bio createdAt")
+    .select("_id name username email avatar college bio followers following createdAt")
     .limit(10)
     .lean();
 
@@ -587,7 +588,7 @@ export const getPublicUserProfile = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   const targetUser = await User.findById(userId).select(
-    "_id name username avatar bio college city state country createdAt authProvider accountStatus"
+    "_id name username avatar bio college city state country createdAt authProvider accountStatus following followers"
   );
 
   if (!targetUser || targetUser.accountStatus === "deleted" || targetUser.accountStatus === "banned") {
@@ -638,11 +639,17 @@ export const getPublicUserProfile = asyncHandler(async (req, res) => {
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
+  const targetUserObj = targetUser.toObject ? targetUser.toObject() : targetUser;
+
   return res.json(
     new ApiResponse(
       200,
       {
-        user: targetUser,
+        user: {
+          ...targetUserObj,
+          followersCount: (targetUser.followers || []).length,
+          followingCount: (targetUser.following || []).length,
+        },
         listings: allListings,
         stats: {
           totalActiveListings: allListings.length,
@@ -650,12 +657,318 @@ export const getPublicUserProfile = asyncHandler(async (req, res) => {
           foundCount: mappedFound.length,
           passCount: mappedPasses.length,
           ticketCount: mappedTickets.length,
+          followersCount: (targetUser.followers || []).length,
+          followingCount: (targetUser.following || []).length,
         },
       },
       "Public profile fetched successfully"
     )
   );
 });
+
+/**
+ * POST /api/profile/follow/:targetUserId
+ * Toggles follow / unfollow for a target user.
+ * Body: { notifyOnPost?: boolean }
+ */
+export const toggleFollowUser = asyncHandler(async (req, res) => {
+  const { targetUserId } = req.params;
+  const currentUserId = req.user._id.toString();
+
+  if (currentUserId === targetUserId) {
+    throw new ApiError(400, "You cannot follow yourself");
+  }
+
+  const [currentUser, targetUser] = await Promise.all([
+    User.findById(currentUserId),
+    User.findById(targetUserId),
+  ]);
+
+  if (!targetUser || targetUser.accountStatus !== "active") {
+    throw new ApiError(404, "User not found");
+  }
+
+  const existingFollowingIdx = (currentUser.following || []).findIndex(
+    (f) => f.user.toString() === targetUserId
+  );
+
+  let isFollowing;
+  let notifyOnPost = req.body.notifyOnPost !== false;
+
+  if (existingFollowingIdx !== -1) {
+    // Unfollow
+    currentUser.following.splice(existingFollowingIdx, 1);
+    const followerIdx = (targetUser.followers || []).findIndex(
+      (f) => f.user.toString() === currentUserId
+    );
+    if (followerIdx !== -1) {
+      targetUser.followers.splice(followerIdx, 1);
+    }
+    isFollowing = false;
+  } else {
+    // Follow
+    if (!currentUser.following) currentUser.following = [];
+    if (!targetUser.followers) targetUser.followers = [];
+
+    currentUser.following.push({ user: targetUserId, notifyOnPost });
+    targetUser.followers.push({ user: currentUserId, notifyOnPost });
+    isFollowing = true;
+
+    // Drop notification for targetUser
+    try {
+      await UserNotification.create({
+        recipient: targetUserId,
+        title: "New Follower! 👋",
+        message: `${currentUser.name} (@${currentUser.username || 'user'}) started following you.`,
+        type: "system",
+        relatedEntityId: currentUserId,
+        relatedEntityType: "User",
+      });
+
+      const io = req.app?.get?.("io");
+      if (io) {
+        io.to(targetUserId).emit("new_user_notification", {
+          title: "New Follower! 👋",
+          message: `${currentUser.name} started following you.`,
+        });
+      }
+    } catch (nErr) {
+      console.error("Failed to notify follow:", nErr);
+    }
+  }
+
+  await Promise.all([currentUser.save(), targetUser.save()]);
+
+  return res.json(
+    new ApiResponse(
+      200,
+      {
+        isFollowing,
+        notifyOnPost: isFollowing ? notifyOnPost : false,
+        followersCount: targetUser.followers.length,
+        followingCount: currentUser.following.length,
+      },
+      isFollowing ? "User followed successfully" : "User unfollowed successfully"
+    )
+  );
+});
+
+/**
+ * PATCH /api/profile/follow-notifications/:targetUserId
+ * Toggles notifyOnPost setting for a followed user.
+ * Body: { notifyOnPost: boolean }
+ */
+export const toggleFollowNotifications = asyncHandler(async (req, res) => {
+  const { targetUserId } = req.params;
+  const currentUserId = req.user._id.toString();
+  const notifyOnPost = Boolean(req.body.notifyOnPost);
+
+  const [currentUser, targetUser] = await Promise.all([
+    User.findById(currentUserId),
+    User.findById(targetUserId),
+  ]);
+
+  if (!currentUser || !targetUser) throw new ApiError(404, "User not found");
+
+  const followingItem = (currentUser.following || []).find(
+    (f) => f.user.toString() === targetUserId
+  );
+  if (!followingItem) {
+    throw new ApiError(400, "You are not following this user");
+  }
+
+  followingItem.notifyOnPost = notifyOnPost;
+
+  const followerItem = (targetUser.followers || []).find(
+    (f) => f.user.toString() === currentUserId
+  );
+  if (followerItem) {
+    followerItem.notifyOnPost = notifyOnPost;
+  }
+
+  await Promise.all([currentUser.save(), targetUser.save()]);
+
+  return res.json(
+    new ApiResponse(
+      200,
+      { notifyOnPost },
+      `Notifications ${notifyOnPost ? "enabled" : "disabled"} for ${targetUser.name}`
+    )
+  );
+});
+
+/**
+ * GET /api/profile/followers/:userId
+ */
+export const getUserFollowers = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await User.findById(userId)
+    .populate("followers.user", "_id name username avatar college bio")
+    .lean();
+
+  if (!user) throw new ApiError(404, "User not found");
+
+  const followers = (user.followers || [])
+    .filter((f) => f.user)
+    .map((f) => ({
+      ...f.user,
+      notifyOnPost: f.notifyOnPost,
+      followedAt: f.followedAt,
+    }));
+
+  return res.json(new ApiResponse(200, { followers }, "Followers fetched"));
+});
+
+/**
+ * GET /api/profile/following/:userId
+ */
+export const getUserFollowing = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await User.findById(userId)
+    .populate("following.user", "_id name username avatar college bio")
+    .lean();
+
+  if (!user) throw new ApiError(404, "User not found");
+
+  const following = (user.following || [])
+    .filter((f) => f.user)
+    .map((f) => ({
+      ...f.user,
+      notifyOnPost: f.notifyOnPost,
+      followedAt: f.followedAt,
+    }));
+
+  return res.json(new ApiResponse(200, { following }, "Following fetched"));
+});
+
+/**
+ * GET /api/profile/feed/following
+ * Returns active listings uploaded by users that current user follows.
+ */
+export const getFollowingFeed = asyncHandler(async (req, res) => {
+  const currentUser = await User.findById(req.user._id).lean();
+  const followedUserIds = (currentUser.following || []).map((f) => f.user);
+
+  if (!followedUserIds || followedUserIds.length === 0) {
+    return res.json(new ApiResponse(200, { listings: [], page: 1, limit: 12, total: 0, hasNextPage: false }, "No followed users"));
+  }
+
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit) || 12);
+
+  const [foundProducts, passes, sellProducts, tickets] = await Promise.all([
+    FoundProduct.find({ user: { $in: followedUserIds }, status: "active" })
+      .populate("user", "name username avatar email college")
+      .sort({ createdAt: -1 })
+      .lean(),
+    Pass.find({ user: { $in: followedUserIds }, status: "active" })
+      .populate("user", "name username avatar email college")
+      .sort({ createdAt: -1 })
+      .lean(),
+    SellProduct.find({ user: { $in: followedUserIds }, status: "active" })
+      .populate("user", "name username avatar email college")
+      .sort({ createdAt: -1 })
+      .lean(),
+    Ticket.find({ user: { $in: followedUserIds }, status: "active" })
+      .populate("user", "name username avatar email college")
+      .sort({ createdAt: -1 })
+      .lean(),
+  ]);
+
+  const mappedFound = foundProducts.map((item) => ({
+    ...item,
+    title: item.name,
+    image: item.images?.[0]?.url || "",
+    category: "Lost & Found",
+    type: "found",
+  }));
+
+  const mappedPasses = passes.map((item) => ({
+    ...item,
+    title: item.name,
+    image: item.imageUrl,
+    category: "Event Passes",
+    type: "pass",
+  }));
+
+  const mappedSell = sellProducts.map((item) => ({
+    ...item,
+    title: item.name,
+    image: item.images?.[0]?.url || "",
+    price: item.sellingPrice,
+    category: "Buy & Sell",
+    type: "sell",
+  }));
+
+  const mappedTickets = tickets.map((item) => ({
+    ...item,
+    title: `${item.ticketType} Ticket (${item.origin?.city || ''} → ${item.destination?.city || ''})`,
+    category: "Travelling Tickets",
+    type: "ticket",
+  }));
+
+  const allListings = [...mappedSell, ...mappedFound, ...mappedPasses, ...mappedTickets].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  const total = allListings.length;
+  const paginated = allListings.slice((page - 1) * limit, page * limit);
+
+  return res.json(
+    new ApiResponse(
+      200,
+      {
+        listings: paginated,
+        page,
+        limit,
+        total,
+        hasNextPage: page * limit < total,
+      },
+      "Following feed fetched successfully"
+    )
+  );
+});
+
+/**
+ * DELETE /api/profile/followers/:followerUserId
+ * Removes a follower from the current user's followers list.
+ */
+export const removeFollower = asyncHandler(async (req, res) => {
+  const { followerUserId } = req.params;
+  const currentUserId = req.user._id.toString();
+
+  const [currentUser, followerUser] = await Promise.all([
+    User.findById(currentUserId),
+    User.findById(followerUserId),
+  ]);
+
+  if (!currentUser || !followerUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Remove followerUserId from currentUser.followers
+  currentUser.followers = (currentUser.followers || []).filter(
+    (f) => f.user.toString() !== followerUserId
+  );
+
+  // Remove currentUserId from followerUser.following
+  followerUser.following = (followerUser.following || []).filter(
+    (f) => f.user.toString() !== currentUserId
+  );
+
+  await Promise.all([currentUser.save(), followerUser.save()]);
+
+  return res.json(
+    new ApiResponse(
+      200,
+      {
+        followersCount: currentUser.followers.length,
+      },
+      "Follower removed successfully"
+    )
+  );
+});
+
 
 
 

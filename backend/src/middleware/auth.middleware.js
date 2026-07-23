@@ -26,7 +26,7 @@ export const authenticate = async (req, res, next) => {
     try {
         const token = extractBearerToken(req.headers.authorization);
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select("_id name email phone username avatar bio college city state country isVerified authProvider accountStatus role savedPosts");
+        const user = await User.findById(decoded.id).select("_id name email phone username avatar bio college city state country isVerified authProvider accountStatus role savedPosts following followers");
 
         if (!user) {
             return res.status(401).json({ success: false, message: "User not found" });
@@ -54,6 +54,8 @@ export const authenticate = async (req, res, next) => {
             accountStatus: user.accountStatus,
             role: user.role || "user",
             savedPosts: user.savedPosts || [],
+            following: user.following || [],
+            followers: user.followers || [],
         };
 
         return next();

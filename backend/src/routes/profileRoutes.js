@@ -8,10 +8,16 @@ import {
   deleteAccount,
   getMyListings,
   getProfileStats,
-  toggleSavedPost,
   getSavedPosts,
+  toggleSavedPost,
   searchUsers,
-  getPublicUserProfile
+  getPublicUserProfile,
+  toggleFollowUser,
+  toggleFollowNotifications,
+  getUserFollowers,
+  getUserFollowing,
+  getFollowingFeed,
+  removeFollower
 } from "../controllers/profile.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
@@ -38,5 +44,12 @@ router.post("/saved", toggleSavedPost);
 
 router.get("/search-users", searchUsers);
 router.get("/user/:userId", getPublicUserProfile);
+
+router.post("/follow/:targetUserId", toggleFollowUser);
+router.patch("/follow-notifications/:targetUserId", toggleFollowNotifications);
+router.get("/followers/:userId", getUserFollowers);
+router.delete("/followers/:followerUserId", removeFollower);
+router.get("/following/:userId", getUserFollowing);
+router.get("/feed/following", getFollowingFeed);
 
 export default router;

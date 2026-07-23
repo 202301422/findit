@@ -31,20 +31,35 @@ function getApiCategory(tab: ListingCategory): string {
 }
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState<ListingCategory>('Lost & Found')
-  
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const [activeTab, setActiveTab] = useState<ListingCategory>(() => {
+    const tabParam = new URLSearchParams(window.location.search).get('tab')
+    if (tabParam === 'saved' || tabParam === 'saved-posts') return 'Saved Posts'
+    if (tabParam === 'buy-sell') return 'Buy & Sell'
+    if (tabParam === 'event-passes') return 'Event Passes'
+    if (tabParam === 'travelling-tickets') return 'Travelling Tickets'
+    return 'Lost & Found'
+  })
+
   // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-
   useEffect(() => {
     const tabParam = searchParams.get('tab')
     if (tabParam === 'saved' || tabParam === 'saved-posts') {
       setActiveTab('Saved Posts')
+    } else if (tabParam === 'buy-sell') {
+      setActiveTab('Buy & Sell')
+    } else if (tabParam === 'event-passes') {
+      setActiveTab('Event Passes')
+    } else if (tabParam === 'travelling-tickets') {
+      setActiveTab('Travelling Tickets')
+    } else if (tabParam === 'lost-found') {
+      setActiveTab('Lost & Found')
     }
   }, [searchParams])
 
