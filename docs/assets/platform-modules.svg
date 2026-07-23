@@ -1,0 +1,65 @@
+<svg width="1500" height="650" viewBox="0 0 1500 650" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">FindIt platform modules</title>
+  <desc id="desc">Four listing modules and the secure real-time chat that connects them.</desc>
+  <defs>
+    <filter id="shadow"><feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#111827" flood-opacity="0.08"/></filter>
+    <linearGradient id="brand" x1="600" y1="200" x2="900" y2="480" gradientUnits="userSpaceOnUse"><stop stop-color="#FF9B57"/><stop offset="1" stop-color="#EA580C"/></linearGradient>
+  </defs>
+  <rect width="1500" height="650" rx="32" fill="#FFFFFF"/>
+  <text x="750" y="62" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="36" font-weight="800" fill="#111827">Everything your campus shares — in one place</text>
+  <text x="750" y="101" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" fill="#6B7280">Four structured listing workflows connected through one identity, one feed and one secure messaging layer.</text>
+
+  <path d="M750 320L318 218M750 320L1182 218M750 320L318 490M750 320L1182 490" stroke="#FED7AA" stroke-width="5" stroke-linecap="round"/>
+
+  <g transform="translate(590 205)">
+    <circle cx="160" cy="115" r="112" fill="url(#brand)"/>
+    <circle cx="160" cy="115" r="83" fill="#FFFFFF" fill-opacity="0.14"/>
+    <path d="M123 81H180L167 99H143L139 116H171L159 134H135L124 170H99L123 81Z" fill="#FFFFFF"/>
+    <path d="M188 151L219 182" stroke="#FFFFFF" stroke-width="17" stroke-linecap="round"/>
+    <text x="160" y="255" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="24" font-weight="800" fill="#111827">FindIt Core</text>
+    <text x="160" y="281" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="650" fill="#6B7280">Identity · Feed · Profiles · Chat</text>
+  </g>
+
+  <g transform="translate(105 140)">
+    <rect width="390" height="170" rx="26" fill="#FFF7ED"/>
+    <circle cx="70" cy="62" r="34" fill="#FF7A30" fill-opacity="0.14"/>
+    <path d="M49 62H91M70 41V83" stroke="#EA580C" stroke-width="6" stroke-linecap="round"/>
+    <text x="122" y="58" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="23" font-weight="800" fill="#111827">Buy &amp; Sell</text>
+    <text x="122" y="87" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Price, condition, quantity, warranty</text>
+    <rect x="30" y="119" width="330" height="30" rx="15" fill="#FFFFFF"/>
+    <text x="54" y="140" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#9A3412">Multi-image listings · Negotiable pricing</text>
+  </g>
+
+  <g transform="translate(1005 140)">
+    <rect width="390" height="170" rx="26" fill="#EFF6FF"/>
+    <circle cx="70" cy="62" r="34" fill="#3B82F6" fill-opacity="0.14"/>
+    <path d="M70 37C52 37 41 50 41 65C41 88 70 102 70 102C70 102 99 88 99 65C99 50 88 37 70 37Z" stroke="#2563EB" stroke-width="5"/>
+    <circle cx="70" cy="64" r="7" fill="#2563EB"/>
+    <text x="122" y="58" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="23" font-weight="800" fill="#111827">Lost &amp; Found</text>
+    <text x="122" y="87" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Location, date, category, status</text>
+    <rect x="30" y="119" width="330" height="30" rx="15" fill="#FFFFFF"/>
+    <text x="57" y="140" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#1D4ED8">Open cases · Claim-oriented discovery</text>
+  </g>
+
+  <g transform="translate(105 408)">
+    <rect width="390" height="170" rx="26" fill="#F5F3FF"/>
+    <circle cx="70" cy="62" r="34" fill="#8B5CF6" fill-opacity="0.14"/>
+    <path d="M40 49H100V80H40V49Z" stroke="#7C3AED" stroke-width="5"/>
+    <path d="M52 49V80M88 49V80" stroke="#7C3AED" stroke-width="3" stroke-dasharray="4 4"/>
+    <text x="122" y="58" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="23" font-weight="800" fill="#111827">Event Passes</text>
+    <text x="122" y="87" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Venue, event date, seats, restrictions</text>
+    <rect x="30" y="119" width="330" height="30" rx="15" fill="#FFFFFF"/>
+    <text x="52" y="140" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#6D28D9">Availability · Expiry-aware visibility</text>
+  </g>
+
+  <g transform="translate(1005 408)">
+    <rect width="390" height="170" rx="26" fill="#ECFDF5"/>
+    <circle cx="70" cy="62" r="34" fill="#22C55E" fill-opacity="0.14"/>
+    <path d="M38 70H102M50 70L59 47H82L91 70M45 80H95" stroke="#16A34A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="54" cy="88" r="7" fill="#16A34A"/><circle cx="86" cy="88" r="7" fill="#16A34A"/>
+    <text x="122" y="58" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="23" font-weight="800" fill="#111827">Travel Tickets</text>
+    <text x="122" y="87" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Origin, destination, timing, quantity</text>
+    <rect x="30" y="119" width="330" height="30" rx="15" fill="#FFFFFF"/>
+    <text x="52" y="140" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="650" fill="#15803D">Route details · Departure-aware status</text>
+  </g>
+</svg>

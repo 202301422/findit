@@ -1,0 +1,103 @@
+<svg width="1600" height="640" viewBox="0 0 1600 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">FindIt campus marketplace</title>
+  <desc id="desc">A minimalist orange and charcoal banner for FindIt showing organised campus listings and chat.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="30" x2="1510" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8F2"/>
+      <stop offset="1" stop-color="#FFF1E7"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="188" y1="146" x2="334" y2="325" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF9B57"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#7C2D12" flood-opacity="0.10"/>
+    </filter>
+    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.7" fill="#FDBA74" fill-opacity="0.32"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="640" rx="36" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1600" height="640" rx="36" fill="url(#dots)"/>
+  <circle cx="1460" cy="90" r="210" fill="#FF7A30" fill-opacity="0.07"/>
+  <circle cx="1320" cy="610" r="240" fill="#EA580C" fill-opacity="0.05"/>
+
+  <g transform="translate(100 88)">
+    <g>
+      <rect width="114" height="114" rx="30" fill="#FFFFFF"/>
+    </g>
+    <circle cx="51" cy="49" r="31" stroke="url(#brand)" stroke-width="10"/>
+    <path d="M45 31H70L64 39H53L51 46H64L58 54H49L45 71H35L45 31Z" fill="url(#brand)"/>
+    <path d="M72 71L91 90" stroke="url(#brand)" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <text x="100" y="264" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-4" fill="#111827">Find</text>
+  <text x="278" y="264" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-4" fill="#FF7A30">It</text>
+  <text x="100" y="324" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="28" font-weight="650" fill="#374151">One campus. Every listing. Zero WhatsApp chaos.</text>
+  <text x="100" y="372" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="21" fill="#6B7280">Buy and sell items, recover lost belongings, exchange tickets and passes,</text>
+  <text x="100" y="404" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="21" fill="#6B7280">and connect safely through real-time conversations.</text>
+
+  <g transform="translate(100 458)">
+    <rect width="600" height="62" rx="31" fill="#FFFFFF" stroke="#FED7AA"/>
+    <circle cx="31" cy="31" r="9" fill="#22C55E"/>
+    <text x="52" y="39" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="650" fill="#374151">React · TypeScript · Express · MongoDB · Socket.IO</text>
+  </g>
+
+  <g transform="translate(830 84)">
+    <rect width="650" height="472" rx="34" fill="#FFFFFF"/>
+    <rect x="0.5" y="0.5" width="649" height="471" rx="33.5" stroke="#F3F4F6"/>
+    <rect x="28" y="28" width="594" height="58" rx="18" fill="#F9FAFB"/>
+    <circle cx="58" cy="57" r="15" fill="#FF7A30"/>
+    <path d="M53 50H64L61 54H57L56 58H62L59 62H55L53 68H48L53 50Z" fill="#FFFFFF"/>
+    <text x="84" y="64" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="750" fill="#111827">Discover on FindIt</text>
+    <rect x="432" y="42" width="162" height="30" rx="15" fill="#FFF1E7"/>
+    <text x="461" y="63" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="650" fill="#C2410C">Search campus</text>
+
+    <g transform="translate(28 112)">
+      <rect width="280" height="144" rx="22" fill="#FFF7ED"/>
+      <circle cx="50" cy="48" r="23" fill="#FF7A30" fill-opacity="0.14"/>
+      <path d="M38 47H62M50 35V59" stroke="#EA580C" stroke-width="4" stroke-linecap="round"/>
+      <text x="86" y="48" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Buy &amp; Sell</text>
+      <text x="86" y="75" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Structured product listings</text>
+      <rect x="28" y="102" width="103" height="24" rx="12" fill="#FFFFFF"/>
+      <text x="46" y="119" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="650" fill="#C2410C">Negotiable</text>
+      <text x="196" y="121" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="22" font-weight="800" fill="#111827">₹1,299</text>
+    </g>
+
+    <g transform="translate(342 112)">
+      <rect width="280" height="144" rx="22" fill="#EFF6FF"/>
+      <circle cx="50" cy="48" r="23" fill="#3B82F6" fill-opacity="0.14"/>
+      <path d="M50 34C42 34 36 40 36 48C36 60 50 68 50 68C50 68 64 60 64 48C64 40 58 34 50 34Z" stroke="#2563EB" stroke-width="3"/>
+      <circle cx="50" cy="48" r="4" fill="#2563EB"/>
+      <text x="86" y="48" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Lost &amp; Found</text>
+      <text x="86" y="75" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Location-aware discovery</text>
+      <rect x="28" y="102" width="98" height="24" rx="12" fill="#FFFFFF"/>
+      <text x="47" y="119" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="650" fill="#1D4ED8">Found today</text>
+    </g>
+
+    <g transform="translate(28 278)">
+      <rect width="280" height="144" rx="22" fill="#F5F3FF"/>
+      <circle cx="50" cy="48" r="23" fill="#8B5CF6" fill-opacity="0.14"/>
+      <path d="M37 41H63V57H37V41Z" stroke="#7C3AED" stroke-width="3"/>
+      <path d="M43 41V57M57 41V57" stroke="#7C3AED" stroke-width="2" stroke-dasharray="3 3"/>
+      <text x="86" y="48" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Tickets &amp; Passes</text>
+      <text x="86" y="75" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Dates, routes and venues</text>
+      <rect x="28" y="102" width="104" height="24" rx="12" fill="#FFFFFF"/>
+      <text x="48" y="119" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="650" fill="#6D28D9">2 seats left</text>
+    </g>
+
+    <g transform="translate(342 278)">
+      <rect width="280" height="144" rx="22" fill="#ECFDF5"/>
+      <circle cx="50" cy="48" r="23" fill="#22C55E" fill-opacity="0.14"/>
+      <path d="M36 38H64V57H49L41 64V57H36V38Z" stroke="#16A34A" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="44" cy="48" r="2" fill="#16A34A"/>
+      <circle cx="50" cy="48" r="2" fill="#16A34A"/>
+      <circle cx="56" cy="48" r="2" fill="#16A34A"/>
+      <text x="86" y="48" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Real-time Chat</text>
+      <text x="86" y="75" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" fill="#6B7280">Authorised conversations</text>
+      <circle cx="40" cy="114" r="6" fill="#22C55E"/>
+      <text x="54" y="119" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="650" fill="#15803D">Secure room joined</text>
+    </g>
+  </g>
+</svg>
