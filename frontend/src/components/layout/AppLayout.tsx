@@ -4,6 +4,7 @@ import Navbar from './Navbar'
 import MobileNav from './MobileNav'
 import EmergencyBanner from '../notifications/EmergencyBanner'
 import EmergencyModal from '../notifications/EmergencyModal'
+import ErrorBoundary from '../ErrorBoundary'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -51,14 +52,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[var(--bg-secondary)]">
+      {/* Accessible skip link */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <EmergencyBanner />
       <EmergencyModal />
       <Navbar />
 
       {/* Main content area — below navbar, above mobile nav */}
-      <main className="pt-16 pb-20 lg:pb-0">
+      <main id="main-content" tabIndex={-1} className="pt-16 pb-20 lg:pb-0 focus:outline-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
       </main>
 

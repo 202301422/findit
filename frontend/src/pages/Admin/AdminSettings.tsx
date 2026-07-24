@@ -21,7 +21,7 @@ export default function AdminSettings() {
       if (res.data.success && res.data.data) {
         setSettings((prev) => ({ ...prev, ...res.data.data }));
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to load settings');
     } finally {
       setIsLoading(false);
@@ -40,7 +40,7 @@ export default function AdminSettings() {
       if (res.data.success) {
         toast.success('System settings saved successfully');
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to save settings');
     } finally {
       setIsSaving(false);

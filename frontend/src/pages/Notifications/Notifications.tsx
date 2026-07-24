@@ -38,7 +38,7 @@ export default function Notifications() {
         setTotalPages(res.data.data.pagination.totalPages);
         setTotalItems(res.data.data.pagination.total);
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to load notification center');
     } finally {
       setIsLoading(false);
@@ -62,7 +62,7 @@ export default function Notifications() {
         prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
       );
       void refreshNotifications();
-    } catch (err) {
+    } catch {
       // ignore
     }
   };
@@ -73,7 +73,7 @@ export default function Notifications() {
       toast.success('Notification removed');
       setNotifications((prev) => prev.filter((n) => n._id !== id));
       void refreshNotifications();
-    } catch (err) {
+    } catch {
       toast.error('Failed to remove notification');
     }
   };
@@ -210,7 +210,8 @@ export default function Notifications() {
                     e.stopPropagation();
                     void handleDelete(n._id);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
+                  aria-label="Remove notification"
+                  className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-[var(--radius-sm)] text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
                   title="Remove Notification"
                 >
                   <Trash2 className="w-4 h-4" />

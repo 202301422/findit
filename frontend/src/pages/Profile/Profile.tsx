@@ -18,6 +18,7 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import { SkeletonCard } from '@/components/ui/Skeleton'
+import { useScrollRestoration } from '@/hooks/useScrollRestoration'
 
 const CATEGORIES: ListingCategory[] = ['Lost & Found', 'Event Passes', 'Travelling Tickets', 'Buy & Sell', 'Saved Posts']
 
@@ -92,6 +93,8 @@ export default function Profile() {
     uploadAvatar,
     deleteAvatar,
   } = useProfile()
+
+  useScrollRestoration(`profile_${activeTab}`, listings.length > 0)
 
   useEffect(() => {
     fetchProfile()

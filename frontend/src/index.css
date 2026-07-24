@@ -106,6 +106,16 @@
   --surface-card: #FFFFFF;
   --surface-elevated: #FFFFFF;
   --surface-sunken: #F9FAFB;
+
+  /* ── Following Theme (Electric Cyan - Teal) ── */
+  --following-primary: #0891B2;
+  --following-primary-hover: #0E7490;
+  --following-primary-active: #155E75;
+  --following-soft: #ECFEFF;
+  --following-soft-hover: #CFFAFE;
+  --following-border: #A5F3FC;
+  --following-text: #0E7490;
+  --following-focus: #06B6D4;
 }
 
 /* ============================================================
@@ -133,6 +143,16 @@
   --surface-card: #161922;
   --surface-elevated: #1E2130;
   --surface-sunken: #0B0D14;
+
+  /* ── Following Theme Dark Tokens ── */
+  --following-primary: #06B6D4;
+  --following-primary-hover: #22D3EE;
+  --following-primary-active: #67E8F9;
+  --following-soft: rgba(8, 145, 178, 0.2);
+  --following-soft-hover: rgba(8, 145, 178, 0.3);
+  --following-border: #0E7490;
+  --following-text: #CFFAFE;
+  --following-focus: #06B6D4;
 }
 
 /* ============================================================
@@ -173,6 +193,39 @@ body {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* ── Skip to Main Content Link ── */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 9999;
+  background-color: var(--color-primary-500);
+  color: #FFFFFF;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-md);
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid white;
+}
+
+/* ── Reduced Motion Preference ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Selection ── */
@@ -325,4 +378,23 @@ body {
 :root.dark[data-theme-category="Event Passes"] {
   --text-brand: #C084FC;
   --border-focus: #C084FC;
+}
+
+:root[data-theme-category="Following"] {
+  --color-primary-50: #ECFEFF;
+  --color-primary-100: #CFFAFE;
+  --color-primary-200: #A5F3FC;
+  --color-primary-300: #67E8F9;
+  --color-primary-400: #22D3EE;
+  --color-primary-500: #0891B2;
+  --color-primary-600: #0E7490;
+  --color-primary-700: #155E75;
+  --color-primary-800: #164E63;
+  --color-primary-900: #083344;
+  --text-brand: #0891B2;
+  --border-focus: #06B6D4;
+}
+:root.dark[data-theme-category="Following"] {
+  --text-brand: #22D3EE;
+  --border-focus: #22D3EE;
 }

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { 
@@ -335,6 +335,86 @@ export default function AddItem() {
   const [photos, setPhotos] = useState<Photo[]>([])
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [hasDraft, setHasDraft] = useState(false)
+
+  // Check for saved draft on mount
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem('findit_item_draft')
+      if (savedDraft) {
+        setHasDraft(true)
+      }
+    } catch {}
+  }, [])
+
+  // Restore draft handler
+  const restoreDraft = () => {
+    try {
+      const savedDraft = localStorage.getItem('findit_item_draft')
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft)
+        if (parsed.form) setForm(parsed.form)
+        if (parsed.listingType) setListingType(parsed.listingType)
+        if (parsed.productType) setProductType(parsed.productType)
+        if (parsed.ticketType) setTicketType(parsed.ticketType)
+        if (parsed.hasWarranty !== undefined) setHasWarranty(parsed.hasWarranty)
+        if (parsed.isNegotiable !== undefined) setIsNegotiable(parsed.isNegotiable)
+        if (parsed.price) setPrice(parsed.price)
+        if (parsed.quantity) setQuantity(parsed.quantity)
+        if (parsed.originalPrice) setOriginalPrice(parsed.originalPrice)
+        if (parsed.step) setStep(parsed.step)
+        toast.success('Draft restored successfully!')
+      }
+    } catch {
+      toast.error('Failed to restore draft')
+    } finally {
+      setHasDraft(false)
+    }
+  }
+
+  // Discard draft handler
+  const discardDraft = () => {
+    localStorage.removeItem('findit_item_draft')
+    setHasDraft(false)
+    toast.success('Draft discarded')
+  }
+
+  // Auto-save draft on form change
+  useEffect(() => {
+    if (!form.name && !form.description && !price && !listingType) return
+    const timer = setTimeout(() => {
+      try {
+        const draftData = {
+          form,
+          listingType,
+          productType,
+          ticketType,
+          hasWarranty,
+          isNegotiable,
+          price,
+          quantity,
+          originalPrice,
+          step,
+          updatedAt: new Date().toISOString(),
+        }
+        localStorage.setItem('findit_item_draft', JSON.stringify(draftData))
+      } catch {}
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [form, listingType, productType, ticketType, hasWarranty, isNegotiable, price, quantity, originalPrice, step])
+
+  // Warn before unload if form is partially filled
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (form.name || form.description || price || photos.length > 0) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [form.name, form.description, price, photos.length])
 
   function setFormField<K extends keyof WizardForm>(key: K, value: WizardForm[K]) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -454,6 +534,7 @@ export default function AddItem() {
         throw new Error('Unsupported item type')
       }
       navigate('/home')
+      localStorage.removeItem('findit_item_draft')
     } catch (error: any) {
       toast.error(error?.response?.data?.message || error?.message || 'Failed to submit listing')
     } finally {
@@ -589,6 +670,24 @@ export default function AddItem() {
           {step === 1 ? 'Back to Home' : 'Back'}
         </Button>
       </div>
+
+      {/* Draft restoration banner */}
+      {hasDraft && (
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-[var(--radius-lg)] bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)]/30 border border-[var(--color-primary-300)] dark:border-[var(--color-primary-700)] text-xs gap-3">
+          <div className="flex items-center gap-2 text-[var(--text-primary)]">
+            <BadgeInfo size={18} className="text-[var(--color-primary-500)] shrink-0" />
+            <span>You have an unsaved draft listing from a previous session.</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button type="button" size="sm" variant="primary" onClick={restoreDraft}>
+              Resume Draft
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onClick={discardDraft}>
+              Discard
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Stepper bar */}
       <div className="flex items-center justify-between bg-[var(--surface-card)] border border-[var(--border-secondary)] rounded-[var(--radius-lg)] p-3 sm:px-6 shadow-[var(--shadow-card)]">

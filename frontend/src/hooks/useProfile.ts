@@ -51,7 +51,7 @@ export function useProfile() {
       if (category === 'saved-posts') {
         const data = await profileService.getSavedPosts(1, 12);
         if (activeReqRef.current === reqId) {
-          setListings(data.savedPosts as Listing[]);
+          setListings(data.savedPosts as unknown as Listing[]);
           setHasMoreListings(data.hasNextPage);
           setTotalListings(data.total);
         }
@@ -84,7 +84,7 @@ export function useProfile() {
     try {
       if (category === 'saved-posts') {
         const data = await profileService.getSavedPosts(nextPage, 12);
-        setListings((prev) => [...prev, ...(data.savedPosts as Listing[])]);
+        setListings((prev) => [...prev, ...(data.savedPosts as unknown as Listing[])]);
         setHasMoreListings(data.hasNextPage);
         setListingsPage(nextPage);
       } else {

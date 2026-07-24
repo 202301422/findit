@@ -141,11 +141,12 @@ export default function Navbar() {
             : 'bg-[var(--bg-primary)] border-b border-transparent',
         )}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* ── Main row ── */}
-          <div className="flex items-center justify-between h-16">
-            {/* Left: Logo + Hamburger */}
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between h-16 gap-3 lg:gap-4 xl:gap-6">
+            
+            {/* ── Group A: Brand and Primary Navigation ── */}
+            <div className="flex items-center gap-3 lg:gap-4 xl:gap-5 min-w-0">
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="lg:hidden p-2 -ml-2 rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
@@ -153,34 +154,39 @@ export default function Navbar() {
               >
                 {mobileOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
-              <BrandLogo to="/home" variant="compact" className="!gap-2" />
-            </div>
 
-            {/* Center: Nav tabs + User Search Bar */}
-            <div className="flex items-center gap-3">
+              <BrandLogo to="/home" variant="compact" className="!gap-2 shrink-0" />
+
+              {/* Primary Navigation Tabs */}
               {isHomePage && (
-                <nav className="hidden lg:flex items-center gap-1">
+                <nav className="hidden lg:flex items-center gap-0.5 lg:gap-1 xl:gap-1.5 min-w-0">
                   {NAV_TABS.map((tab) => {
                     const Icon = tab.icon
                     const isActive = selectedTab === tab.id
+                    const isFollowingTab = tab.id === 'Following'
                     return (
                       <button
                         key={tab.id}
                         onClick={() => handleTabClick(tab.id)}
                         className={clsx(
-                          'relative flex items-center gap-2 px-3.5 py-2 rounded-[var(--radius-md)] text-sm font-medium',
+                          'relative flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3.5 py-1.5 rounded-[var(--radius-md)] text-xs xl:text-sm font-medium whitespace-nowrap',
                           'transition-all duration-200 cursor-pointer',
                           isActive
-                            ? 'text-[var(--color-primary-500)] bg-[var(--color-primary-500)]/8'
+                            ? isFollowingTab
+                              ? 'text-[var(--following-primary)] bg-[var(--following-soft)] dark:text-[var(--following-text)] font-semibold'
+                              : 'text-[var(--color-primary-500)] bg-[var(--color-primary-500)]/8 font-semibold'
                             : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]',
                         )}
                       >
-                        <Icon size={16} />
-                        <span className="hidden xl:inline">{tab.label}</span>
+                        <Icon size={16} className="shrink-0" />
+                        <span>{tab.label}</span>
                         {isActive && (
                           <motion.div
                             layoutId="navbar-indicator"
-                            className="absolute -bottom-[17px] left-2 right-2 h-0.5 bg-[var(--color-primary-500)] rounded-full"
+                            className={clsx(
+                              'absolute -bottom-[17px] left-2 right-2 h-0.5 rounded-full',
+                              isFollowingTab ? 'bg-[var(--following-primary)]' : 'bg-[var(--color-primary-500)]',
+                            )}
                             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                           />
                         )}
@@ -189,29 +195,31 @@ export default function Navbar() {
                   })}
                 </nav>
               )}
-
-              {/* User Search Bar */}
-              <div className="hidden sm:block w-48 md:w-56 lg:w-64">
-                <UserSearchBar />
-              </div>
             </div>
 
-            {/* Right: Actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {/* Add Item */}
+            {/* ── Group B: Search, Primary Action & Utilities ── */}
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-3 xl:gap-4 shrink-0 ml-4 lg:ml-6 xl:ml-8">
+              {/* User Search Bar */}
+              <div className="hidden md:block w-24 sm:w-28 lg:w-32 xl:w-44 transition-all duration-200">
+                <UserSearchBar placeholder="Search users..." />
+              </div>
+
+              {/* Add Item Button */}
               <button
                 onClick={() => navigate('/add-item')}
                 className={clsx(
-                  'hidden sm:flex items-center gap-2 h-9 px-3.5 rounded-[var(--radius-md)]',
-                  'bg-[var(--color-primary-500)] text-white text-sm font-medium',
+                  'hidden sm:flex items-center gap-1.5 lg:gap-2 h-9 px-3 lg:px-3.5 rounded-[var(--radius-md)]',
+                  'bg-[var(--color-primary-500)] text-white text-xs lg:text-sm font-semibold whitespace-nowrap',
                   'hover:bg-[var(--color-primary-600)] transition-colors cursor-pointer',
-                  'shadow-sm hover:shadow-md',
+                  'shadow-sm hover:shadow-md shrink-0',
                 )}
               >
                 <Plus size={16} />
-                <span className="hidden md:inline">Add Item</span>
+                <span>Add Item</span>
               </button>
 
+              {/* Account Utilities */}
+              <div className="flex items-center gap-1 sm:gap-1.5 pl-1">
               {/* Messages */}
               <button
                 onClick={() => navigate('/messages')}
@@ -244,6 +252,8 @@ export default function Navbar() {
 
               {/* Theme Toggle */}
               <ThemeToggle size="sm" className="hidden sm:flex" />
+
+              {/* Profile Dropdown */}
 
               {/* Profile Dropdown */}
               <DropdownMenu>
@@ -279,10 +289,10 @@ export default function Navbar() {
                   </DropdownMenuItem>
                   {user?.role === 'admin' && (
                     <DropdownMenuItem
-                      icon={<ShieldCheck size={16} />}
+                      icon={<ShieldCheck size={16} className="text-[var(--color-primary-500)]" />}
                       onSelect={() => navigate('/admin')}
                     >
-                      Admin Panel
+                      <span className="font-semibold text-[var(--color-primary-500)]">Switch to Admin Panel</span>
                     </DropdownMenuItem>
                   )}
                   <div className="sm:hidden px-1 py-1">
@@ -309,6 +319,7 @@ export default function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
@@ -371,10 +382,10 @@ export default function Navbar() {
                       navigate('/admin')
                       setMobileOpen(false)
                     }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium text-[var(--color-primary-500)] hover:bg-[var(--color-primary-500)]/8 transition-all duration-200 cursor-pointer w-full"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-semibold text-[var(--color-primary-500)] hover:bg-[var(--color-primary-500)]/8 transition-all duration-200 cursor-pointer w-full"
                   >
                     <ShieldCheck size={18} />
-                    Admin Panel
+                    Switch to Admin Panel
                   </button>
                 </div>
               )}

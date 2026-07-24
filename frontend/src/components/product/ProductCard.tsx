@@ -118,11 +118,23 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
     }
   }, [item._id, resolvedType, savingBookmark, refreshUser])
 
+  const handleCardClick = () => {
+    try {
+      const activeTab = sessionStorage.getItem('home_tab') || 'Buy & Sell'
+      const currScroll = Math.max(window.scrollY, document.documentElement.scrollTop || 0)
+      sessionStorage.setItem('findit_last_scroll_y', String(currScroll))
+      sessionStorage.setItem(`findit_scroll_${activeTab}`, String(currScroll))
+      sessionStorage.setItem('findit_last_opened_item_id', String(item._id))
+    } catch {}
+    navigate(`/product/${item._id}?type=${resolvedType}`)
+  }
+
   return (
     <motion.article
+      id={`item-${item._id}`}
       whileHover={{ y: -4 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      onClick={() => navigate(`/product/${item._id}?type=${resolvedType}`)}
+      onClick={handleCardClick}
       className={clsx(
         'group relative bg-[var(--surface-card)] rounded-[var(--radius-lg)]',
         'border border-[var(--border-secondary)] overflow-hidden cursor-pointer',
@@ -133,7 +145,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
       tabIndex={0}
       aria-label={`View ${title}`}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') navigate(`/product/${item._id}?type=${resolvedType}`)
+        if (e.key === 'Enter') handleCardClick()
       }}
     >
       {/* ── Image / Fallback Placeholder ── */}
@@ -189,7 +201,7 @@ export default function ProductCard({ item, type, tabLabel, initialSaved }: Prod
             'backdrop-blur-md transition-all duration-200 cursor-pointer shadow-md',
             isSaved
               ? 'bg-[var(--color-primary-500)] text-white opacity-100 scale-100'
-              : 'bg-black/50 text-white hover:bg-black/75 hover:scale-110 opacity-0 group-hover:opacity-100',
+              : 'bg-black/40 text-white hover:bg-black/75 hover:scale-110 opacity-90 sm:opacity-0 sm:group-hover:opacity-100',
             savingBookmark && 'pointer-events-none opacity-60',
           )}
         >

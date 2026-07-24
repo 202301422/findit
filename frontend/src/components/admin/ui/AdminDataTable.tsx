@@ -342,6 +342,7 @@ export default function AdminDataTable<T extends Record<string, any>>({
             <button
               disabled={pagination.currentPage <= 1}
               onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
+              aria-label="Previous page"
               className="p-1.5 rounded-[var(--radius-sm)] border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--surface-elevated)] text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -349,6 +350,7 @@ export default function AdminDataTable<T extends Record<string, any>>({
             <button
               disabled={pagination.currentPage >= pagination.totalPages}
               onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
+              aria-label="Next page"
               className="p-1.5 rounded-[var(--radius-sm)] border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--surface-elevated)] text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />

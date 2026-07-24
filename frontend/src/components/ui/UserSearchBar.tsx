@@ -1,10 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, X, User as UserIcon, GraduationCap } from 'lucide-react'
+import { Search, X, GraduationCap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { profileService } from '@/services/profileService'
 import Avatar from '@/components/ui/Avatar'
+
+interface UserSearchResult {
+  _id: string
+  name: string
+  username?: string
+  avatar?: string
+  email?: string
+  college?: string
+}
 
 interface UserSearchBarProps {
   placeholder?: string
@@ -14,13 +23,13 @@ interface UserSearchBarProps {
 }
 
 export default function UserSearchBar({
-  placeholder = 'Search users by @username, name, or ID...',
+  placeholder = 'Search users...',
   className,
   autoFocus = false,
   onSelectUser,
 }: UserSearchBarProps) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<UserSearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -56,7 +65,7 @@ export default function UserSearchBar({
     const timer = setTimeout(async () => {
       try {
         const users = await profileService.searchUsers(q)
-        setResults(users)
+        setResults(users || [])
       } catch (err) {
         console.error('Failed to search users:', err)
         setResults([])
@@ -106,7 +115,7 @@ export default function UserSearchBar({
     <div ref={containerRef} className={clsx('relative w-full', className)}>
       {/* Search Input Box */}
       <div className="relative flex items-center">
-        <Search className="absolute left-3 w-4 h-4 text-[var(--text-tertiary)] pointer-events-none" />
+        <Search className="absolute left-2.5 w-3.5 h-3.5 text-[var(--text-tertiary)] pointer-events-none" />
         <input
           type="text"
           value={query}
@@ -115,8 +124,9 @@ export default function UserSearchBar({
           onFocus={() => { if (query.trim()) setOpen(true) }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          aria-label={placeholder}
           className={clsx(
-            'w-full h-9 pl-9 pr-8 rounded-[var(--radius-md)] text-xs sm:text-sm',
+            'w-full h-8 pl-8 pr-6 rounded-full text-xs',
             'bg-[var(--bg-tertiary)] text-[var(--text-primary)] placeholder:[var(--text-tertiary)]',
             'border border-[var(--border-secondary)] focus:border-[var(--color-primary-500)]/60',
             'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/20',
@@ -127,6 +137,7 @@ export default function UserSearchBar({
           <button
             type="button"
             onClick={() => { setQuery(''); setResults([]); setOpen(false) }}
+            aria-label="Clear search query"
             className="absolute right-2.5 p-0.5 rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
           >
             <X size={14} />

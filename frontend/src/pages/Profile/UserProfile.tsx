@@ -14,6 +14,7 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ProductGrid from '@/components/product/ProductGrid'
 import FollowersModal from '@/components/profile/FollowersModal'
+import { useScrollRestoration } from '@/hooks/useScrollRestoration'
 
 function memberSince(d?: string) {
   if (!d) return ''
@@ -35,6 +36,8 @@ export default function UserProfile() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<string>('All')
+
+  useScrollRestoration(`user_${targetUserId}_${activeTab}`, listings.length > 0)
 
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)

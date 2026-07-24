@@ -17,6 +17,7 @@ interface Seller {
   createdAt?: string
   phone?: string
   college?: string
+  isVerified?: boolean
 }
 
 interface SellerCardProps {
@@ -111,9 +112,11 @@ export default function SellerCard({
               <span className="font-semibold text-sm sm:text-base text-[var(--text-primary)] group-hover/seller:text-[var(--color-primary-500)] transition-colors">
                 {seller.name}
               </span>
-              <span title="Verified User">
-                <ShieldCheck className="w-4 h-4 text-[var(--color-primary-500)] shrink-0" />
-              </span>
+              {seller.isVerified && (
+                <span title="Verified User">
+                  <ShieldCheck className="w-4 h-4 text-[var(--color-primary-500)] shrink-0" />
+                </span>
+              )}
             </div>
             <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1 mt-0.5">
               <Calendar size={12} />

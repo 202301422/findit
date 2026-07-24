@@ -1,5 +1,33 @@
 import api from '../utils/api';
-import type { ProfileData, UpdateProfileData, ProfileStats } from '../types/profile.types';
+import type { ProfileData, UpdateProfileData, ProfileStats, Listing } from '../types/profile.types';
+
+export interface PasswordChangeData {
+  currentPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
+export interface UserSummary {
+  _id: string;
+  name: string;
+  username?: string;
+  avatar?: string;
+  email?: string;
+  college?: string;
+  isVerified?: boolean;
+  followers?: any[];
+  following?: any[];
+}
+
+export interface SavedPostItem {
+  _id: string;
+  itemId: string;
+  itemType: string;
+  title?: string;
+  price?: number;
+  image?: string;
+  createdAt: string;
+}
 
 export const profileService = {
   getProfile: async (): Promise<ProfileData> => {
@@ -27,7 +55,7 @@ export const profileService = {
     await api.delete('/profile/avatar');
   },
 
-  changePassword: async (data: any): Promise<void> => {
+  changePassword: async (data: PasswordChangeData): Promise<void> => {
     await api.patch('/profile/change-password', data);
   },
 
@@ -39,12 +67,12 @@ export const profileService = {
     category?: string,
     page = 1,
     limit = 12
-  ): Promise<{ listings: any[]; hasNextPage: boolean; total: number }> => {
+  ): Promise<{ listings: Listing[]; hasNextPage: boolean; total: number }> => {
     const res = await api.get('/profile/listings', { params: { category, page, limit } });
     return {
-      listings: res.data.data.all,
-      hasNextPage: res.data.data.hasNextPage,
-      total: res.data.data.total,
+      listings: res.data.data.all || [],
+      hasNextPage: Boolean(res.data.data.hasNextPage),
+      total: res.data.data.total || 0,
     };
   },
 
@@ -61,22 +89,22 @@ export const profileService = {
   getSavedPosts: async (
     page = 1,
     limit = 20
-  ): Promise<{ savedPosts: any[]; hasNextPage: boolean; total: number }> => {
+  ): Promise<{ savedPosts: SavedPostItem[]; hasNextPage: boolean; total: number }> => {
     const res = await api.get('/profile/saved', { params: { page, limit } });
     return {
-      savedPosts: res.data.data.savedPosts,
-      hasNextPage: res.data.data.hasNextPage,
-      total: res.data.data.total,
+      savedPosts: res.data.data.savedPosts || [],
+      hasNextPage: Boolean(res.data.data.hasNextPage),
+      total: res.data.data.total || 0,
     };
   },
 
-  searchUsers: async (query: string): Promise<any[]> => {
+  searchUsers: async (query: string): Promise<UserSummary[]> => {
     if (!query.trim()) return [];
     const res = await api.get('/profile/search-users', { params: { q: query } });
     return res.data.data.users || [];
   },
 
-  getPublicProfile: async (userId: string): Promise<{ user: any; listings: any[]; stats: any }> => {
+  getPublicProfile: async (userId: string): Promise<{ user: UserSummary; listings: Listing[]; stats: ProfileStats }> => {
     const res = await api.get(`/profile/user/${userId}`);
     return res.data.data;
   },
@@ -97,7 +125,7 @@ export const profileService = {
     return res.data.data;
   },
 
-  getUserFollowers: async (userId: string): Promise<any[]> => {
+  getUserFollowers: async (userId: string): Promise<UserSummary[]> => {
     const res = await api.get(`/profile/followers/${userId}`);
     return res.data.data.followers || [];
   },
@@ -107,7 +135,7 @@ export const profileService = {
     return res.data.data;
   },
 
-  getUserFollowing: async (userId: string): Promise<any[]> => {
+  getUserFollowing: async (userId: string): Promise<UserSummary[]> => {
     const res = await api.get(`/profile/following/${userId}`);
     return res.data.data.following || [];
   },
@@ -115,11 +143,11 @@ export const profileService = {
   getFollowingFeed: async (
     page = 1,
     limit = 12
-  ): Promise<{ listings: any[]; hasNextPage: boolean; total: number }> => {
+  ): Promise<{ listings: Listing[]; hasNextPage: boolean; total: number }> => {
     const res = await api.get('/profile/feed/following', { params: { page, limit } });
     return {
       listings: res.data.data.listings || [],
-      hasNextPage: res.data.data.hasNextPage,
+      hasNextPage: Boolean(res.data.data.hasNextPage),
       total: res.data.data.total || 0,
     };
   },

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 
 import AuthRoute from '../components/AuthRoute'
 import ProtectedRoute from '../components/ProtectedRoute'
@@ -17,6 +17,11 @@ const ProductDetail = lazy(() => import('../pages/ProductDetail/ProductDetail'))
 const Messages = lazy(() => import('../pages/Messages/Messages'))
 const ChatDetail = lazy(() => import('../pages/Messages/ChatDetail'))
 const Notifications = lazy(() => import('../pages/Notifications/Notifications'))
+const SearchPage = lazy(() => import('../pages/Search/SearchPage'))
+const HelpPage = lazy(() => import('../pages/Help/HelpPage'))
+const TermsPage = lazy(() => import('../pages/Legal/TermsPage'))
+const PrivacyPage = lazy(() => import('../pages/Legal/PrivacyPage'))
+const NotFoundPage = lazy(() => import('../pages/NotFound/NotFoundPage'))
 
 /* ── Lazy-loaded Admin pages ── */
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard'))
@@ -82,6 +87,10 @@ export default function AppRoutes() {
 
         {/* App routes — wrapped in AppLayout */}
         <Route path="/home" element={<AppPage><Home /></AppPage>} />
+        <Route path="/search" element={<AppPage><SearchPage /></AppPage>} />
+        <Route path="/help" element={<AppPage><HelpPage /></AppPage>} />
+        <Route path="/terms" element={<AppPage><TermsPage /></AppPage>} />
+        <Route path="/privacy" element={<AppPage><PrivacyPage /></AppPage>} />
         <Route path="/add-item" element={<AppPage><AddItem /></AppPage>} />
         <Route path="/profile" element={<AppPage><Profile /></AppPage>} />
         <Route path="/user/:id" element={<AppPage><UserProfile /></AppPage>} />
@@ -106,8 +115,8 @@ export default function AppRoutes() {
         <Route path="/admin/settings" element={<AdminPage><AdminSettings /></AdminPage>} />
         <Route path="/admin/profile" element={<AdminPage><AdminProfile /></AdminPage>} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* 404 Fallback */}
+        <Route path="*" element={<AppPage><NotFoundPage /></AppPage>} />
       </Routes>
     </Suspense>
   )

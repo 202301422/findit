@@ -54,5 +54,9 @@ export interface ProfileStats {
   soldItems: number;
   lostItemsReturned: number;
   ticketsSold: number;
+  followersCount?: number;
+  followingCount?: number;
+  followers?: any[];
+  following?: any[];
 }
 
