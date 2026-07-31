@@ -96,6 +96,15 @@ The result is a platform that makes campus exchange:
 - Unread-message indicators
 - Mark-as-read, delete and report actions
 
+### GetIt AI Assistant (Rufus-Powered)
+
+GetIt is a Rufus-inspired campus shopping and discovery AI assistant built with GroqCloud:
+- **Multimodal & Semantic Search**: Understands natural queries, image context, anime/pop-culture terms, and handles typos.
+- **Page Sensing & Q&A**: Detects open item details to answer direct Q&A on negotiability, warranty, and condition.
+- **Dynamic Tab Themes**: Adapts visual themes to active categories (Buy & Sell, Lost & Found, Tickets, Passes).
+- **Quick Actions & Dictation**: Includes 1-click seller chat, side-by-side spec comparison, and Web Speech voice input.
+
+
 ### User experience
 
 - Responsive desktop and mobile interface
@@ -115,6 +124,7 @@ The result is a platform that makes campus exchange:
 | **Database** | MongoDB Atlas, Mongoose |
 | **Authentication** | JWT, Firebase Authentication, email OTP |
 | **Real-time** | Socket.IO |
+| **AI Assistant** | GroqCloud API, Zod |
 | **Media** | Cloudinary, Multer |
 | **Email** | Nodemailer |
 | **Security** | Helmet, CORS, bcrypt, validation and rate limiting |
