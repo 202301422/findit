@@ -49,3 +49,24 @@ export const uploadRateLimiter = createRateLimiter({
   windowMs: uploadWindowMs,
   max: Number(process.env.UPLOAD_RATE_LIMIT_MAX ?? 20),
 });
+
+export const getAssistantRateLimitKey = (req) => {
+  if (req.user?._id) return String(req.user._id);
+  if (req.user?.id) return String(req.user.id);
+  return req.ip || "127.0.0.1";
+};
+
+export const assistantRateLimiter = rateLimit({
+  windowMs: Number(process.env.ASSISTANT_RATE_LIMIT_WINDOW_MS ?? 60 * 1000),
+  limit: Number(process.env.ASSISTANT_RATE_LIMIT_MAX ?? 10),
+  keyGenerator: getAssistantRateLimitKey,
+  validate: { keyGeneratorIpFallback: false },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many assistant requests. Please wait a minute before asking again.",
+    });
+  },
+});

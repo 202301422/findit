@@ -211,6 +211,54 @@ export default function Home() {
     return () => window.removeEventListener('storage', handler)
   }, [selected])
 
+  // Listen for AI assistant filter application
+  useEffect(() => {
+    const applyFilterPayload = (filters: any, tabLabel?: string) => {
+      const primaryType = filters.types && filters.types.length > 0 ? filters.types[0] : 'sell'
+      const targetTab = tabLabel || (primaryType === 'found' ? 'Lost & Found' : primaryType === 'ticket' ? 'Travelling Tickets' : primaryType === 'pass' ? 'Event Passes' : 'Buy & Sell')
+      
+      setSelected(targetTab)
+      sessionStorage.setItem('home_tab', targetTab)
+      
+      setSearchQuery(filters.search || '')
+      setSelectedCategory(filters.category || '')
+      setMaxPrice(filters.maxPrice ? Number(filters.maxPrice) : 0)
+      setIsNegotiable(filters.isNegotiable !== undefined && filters.isNegotiable !== null ? String(filters.isNegotiable) : '')
+      setHasWarranty(filters.hasWarranty !== undefined && filters.hasWarranty !== null ? String(filters.hasWarranty) : '')
+      setSort(filters.sort || '')
+      setDateAfter(filters.dateAfter || '')
+      setDateBefore(filters.dateBefore || '')
+      setMinSeats(filters.minSeats ? String(filters.minSeats) : '')
+      setShowFilters(true)
+
+      isRestoredRef.current = false
+      setItems([])
+      setPage(1)
+
+      window.scrollTo({ top: 300, behavior: 'smooth' })
+    }
+
+    const customEventHandler = (e: any) => {
+      if (e.detail?.filters) {
+        applyFilterPayload(e.detail.filters, e.detail.tabLabel)
+      }
+    }
+
+    const storedPending = sessionStorage.getItem('findit_assistant_pending_filter')
+    if (storedPending) {
+      try {
+        const parsed = JSON.parse(storedPending)
+        sessionStorage.removeItem('findit_assistant_pending_filter')
+        applyFilterPayload(parsed)
+      } catch {
+        sessionStorage.removeItem('findit_assistant_pending_filter')
+      }
+    }
+
+    window.addEventListener('findit_apply_assistant_filter', customEventHandler)
+    return () => window.removeEventListener('findit_apply_assistant_filter', customEventHandler)
+  }, [])
+
   // Real-time: hide removed items
   useEffect(() => {
     const handleStatusUpdate = (e: any) => {

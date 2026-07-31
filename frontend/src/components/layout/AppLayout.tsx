@@ -2,6 +2,7 @@ import { type ReactNode, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Navbar from './Navbar'
 import MobileNav from './MobileNav'
+import AssistantLauncher from '../assistant/AssistantLauncher'
 import EmergencyBanner from '../notifications/EmergencyBanner'
 import EmergencyModal from '../notifications/EmergencyModal'
 import ErrorBoundary from '../ErrorBoundary'
@@ -71,6 +72,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </main>
 
       <MobileNav />
+      <AssistantLauncher />
     </div>
   )
 }
