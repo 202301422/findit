@@ -205,18 +205,6 @@ export default function Navbar() {
                 <UserSearchBar placeholder="Search users..." />
               </div>
 
-              {/* Admin Dashboard Button (if Admin) */}
-              {user?.role === 'admin' && (
-                <button
-                  onClick={() => navigate('/admin')}
-                  className="hidden xl:flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] bg-[var(--color-primary-500)]/10 text-[var(--color-primary-500)] border border-[var(--color-primary-500)]/30 text-xs font-semibold hover:bg-[var(--color-primary-500)]/20 transition-all cursor-pointer whitespace-nowrap"
-                  title="Open Admin Dashboard"
-                >
-                  <ShieldCheck size={16} />
-                  <span>Admin Dashboard</span>
-                </button>
-              )}
-
               {/* Add Item Button */}
               <button
                 onClick={() => navigate('/add-item')}
