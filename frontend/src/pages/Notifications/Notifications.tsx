@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import {
@@ -12,11 +13,13 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
 } from 'lucide-react';
 import Badge from '../../components/admin/ui/Badge';
 import { useNotifications } from '../../contexts/NotificationContext';
 
 export default function Notifications() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -80,6 +83,18 @@ export default function Notifications() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Back Navigation Bar */}
+      <div className="flex items-center justify-between border-b border-[var(--border-secondary)] pb-3">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] border border-[var(--border-primary)] bg-[var(--surface-card)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Home</span>
+        </button>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 rounded-[var(--radius-xl)] bg-[var(--surface-card)] border border-[var(--border-primary)] shadow-[var(--shadow-md)]">
         <div>

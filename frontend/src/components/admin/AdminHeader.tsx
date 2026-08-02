@@ -125,10 +125,10 @@ export default function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
         <button
           onClick={() => navigate('/home')}
           title="Return to Main Application"
-          className="p-2 rounded-[var(--radius-md)] bg-[var(--bg-tertiary)] hover:bg-[var(--surface-elevated)] text-[var(--text-secondary)] transition-colors border border-[var(--border-secondary)] flex items-center gap-1 text-xs font-medium cursor-pointer"
+          className="px-3 py-1.5 rounded-[var(--radius-md)] bg-[var(--color-primary-500)]/10 text-[var(--color-primary-500)] hover:bg-[var(--color-primary-500)]/20 transition-all border border-[var(--color-primary-500)]/30 flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
         >
           <ExternalLink className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Main App</span>
+          <span>Back to Main App</span>
         </button>
 
         {/* Theme Switcher */}

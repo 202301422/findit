@@ -12,6 +12,7 @@ import {
   CalendarDays,
   LogOut,
   HelpCircle,
+  Info,
   User,
   ShieldCheck,
   Bell,
@@ -159,7 +160,7 @@ export default function Navbar() {
 
               {/* Primary Navigation Tabs */}
               {isHomePage && (
-                <nav className="hidden lg:flex items-center gap-0.5 lg:gap-1 xl:gap-1.5 min-w-0">
+                <nav className="hidden lg:flex items-center gap-0.5 lg:gap-1 xl:gap-1.5 shrink-0">
                   {NAV_TABS.map((tab) => {
                     const Icon = tab.icon
                     const isActive = selectedTab === tab.id
@@ -200,9 +201,21 @@ export default function Navbar() {
             {/* ── Group B: Search, Primary Action & Utilities ── */}
             <div className="flex items-center gap-2 sm:gap-3 lg:gap-3 xl:gap-4 shrink-0 ml-4 lg:ml-6 xl:ml-8">
               {/* User Search Bar */}
-              <div className="hidden md:block w-24 sm:w-28 lg:w-32 xl:w-44 transition-all duration-200">
+              <div className="hidden md:block w-28 sm:w-32 lg:w-36 xl:w-44 transition-all duration-200 ml-2 lg:ml-4 pl-2 lg:pl-3 border-l border-[var(--border-secondary)]/50">
                 <UserSearchBar placeholder="Search users..." />
               </div>
+
+              {/* Admin Dashboard Button (if Admin) */}
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="hidden xl:flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] bg-[var(--color-primary-500)]/10 text-[var(--color-primary-500)] border border-[var(--color-primary-500)]/30 text-xs font-semibold hover:bg-[var(--color-primary-500)]/20 transition-all cursor-pointer whitespace-nowrap"
+                  title="Open Admin Dashboard"
+                >
+                  <ShieldCheck size={16} />
+                  <span>Admin Dashboard</span>
+                </button>
+              )}
 
               {/* Add Item Button */}
               <button
@@ -254,8 +267,6 @@ export default function Navbar() {
               <ThemeToggle size="sm" className="hidden sm:flex" />
 
               {/* Profile Dropdown */}
-
-              {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-[var(--border-primary)] transition-all cursor-pointer">
@@ -287,12 +298,18 @@ export default function Navbar() {
                   >
                     Saved Posts
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    icon={<Info size={16} />}
+                    onSelect={() => navigate('/about')}
+                  >
+                    About FindIt
+                  </DropdownMenuItem>
                   {user?.role === 'admin' && (
                     <DropdownMenuItem
                       icon={<ShieldCheck size={16} className="text-[var(--color-primary-500)]" />}
                       onSelect={() => navigate('/admin')}
                     >
-                      <span className="font-semibold text-[var(--color-primary-500)]">Switch to Admin Panel</span>
+                      <span className="font-semibold text-[var(--color-primary-500)]">Admin Dashboard</span>
                     </DropdownMenuItem>
                   )}
                   <div className="sm:hidden px-1 py-1">
@@ -372,6 +389,22 @@ export default function Navbar() {
                     </button>
                   )
                 })}
+                <button
+                  onClick={() => {
+                    navigate('/about')
+                    setMobileOpen(false)
+                  }}
+                  className={clsx(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium',
+                    'transition-all duration-200 cursor-pointer',
+                    location.pathname === '/about'
+                      ? 'text-[var(--color-primary-500)] bg-[var(--color-primary-500)]/8 font-semibold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]',
+                  )}
+                >
+                  <Info size={18} />
+                  About FindIt
+                </button>
               </div>
 
               {/* Admin Panel link (mobile) */}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Home as HomeIcon, ArrowLeft } from 'lucide-react'
+import { Search, Home as HomeIcon, ArrowLeft, ShoppingBag } from 'lucide-react'
 
 export default function NotFoundPage() {
   const [query, setQuery] = useState('')
@@ -51,21 +51,28 @@ export default function NotFoundPage() {
         </form>
 
         {/* Quick Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-[var(--radius-lg)] border border-[var(--border-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-3.5 py-2 text-xs font-semibold rounded-[var(--radius-lg)] border border-[var(--border-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft size={14} />
             <span>Go Back</span>
           </button>
           <Link
             to="/home"
-            className="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-[var(--radius-lg)] bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white transition-all flex items-center justify-center gap-2 shadow-xs"
+            className="w-full sm:w-auto px-3.5 py-2 text-xs font-semibold rounded-[var(--radius-lg)] bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white transition-all flex items-center justify-center gap-1.5 shadow-xs"
+          >
+            <ShoppingBag size={14} />
+            <span>Go to Marketplace</span>
+          </Link>
+          <Link
+            to="/home"
+            className="w-full sm:w-auto px-3.5 py-2 text-xs font-semibold rounded-[var(--radius-lg)] border border-[var(--border-primary)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-all flex items-center justify-center gap-1.5"
           >
             <HomeIcon size={14} />
-            <span>Return Home</span>
+            <span>Back to Home</span>
           </Link>
         </div>
       </div>

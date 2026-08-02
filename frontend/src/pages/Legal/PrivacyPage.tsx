@@ -1,8 +1,22 @@
-import { Lock, Eye, Server, CheckCircle2 } from 'lucide-react'
+import { Lock, Eye, Server, CheckCircle2, ArrowLeft } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export default function PrivacyPage() {
+  const navigate = useNavigate()
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Top Header Navigation */}
+      <div className="flex items-center justify-between border-b border-[var(--border-secondary)] pb-3">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] border border-[var(--border-primary)] bg-[var(--surface-card)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Home</span>
+        </button>
+      </div>
+
       <div className="bg-[var(--surface-card)] p-8 rounded-[var(--radius-2xl)] border border-[var(--border-primary)] shadow-sm space-y-6">
         <div className="border-b border-[var(--border-primary)] pb-4">
           <div className="flex items-center gap-3">

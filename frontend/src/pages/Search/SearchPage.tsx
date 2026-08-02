@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Search, X, Tag, Package, Ticket, MapPin, Sparkles, User as UserIcon } from 'lucide-react'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { Search, X, Tag, Package, Ticket, MapPin, Sparkles, User as UserIcon, ArrowLeft, ShoppingBag } from 'lucide-react'
 import api from '@/utils/api'
 import ProductCard from '@/components/product/ProductCard'
 import UserSearchBar from '@/components/ui/UserSearchBar'
@@ -11,6 +11,7 @@ import { useScrollRestoration } from '@/hooks/useScrollRestoration'
 type SearchTab = 'all' | 'marketplace' | 'lost-found' | 'tickets' | 'users'
 
 export default function SearchPage() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const initialQuery = searchParams.get('q') || ''
@@ -65,6 +66,18 @@ export default function SearchPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Top Header Navigation */}
+      <div className="flex items-center justify-between border-b border-[var(--border-secondary)] pb-3">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] border border-[var(--border-primary)] bg-[var(--surface-card)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Home</span>
+        </button>
+      </div>
+
       {/* Header & Main Search Bar */}
       <div className="bg-[var(--surface-card)] p-6 rounded-[var(--radius-xl)] border border-[var(--border-primary)] shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -184,13 +197,22 @@ export default function SearchPage() {
           title="No results found"
           description={`We couldn't find any items matching "${query}". Try adjusting your query or switching tabs.`}
           action={
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="px-4 py-2 text-xs font-semibold bg-[var(--color-primary-500)] text-white rounded-[var(--radius-lg)] hover:bg-[var(--color-primary-600)] transition-colors cursor-pointer"
-            >
-              Clear Filters
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="px-4 py-2 text-xs font-semibold bg-[var(--color-primary-500)] text-white rounded-[var(--radius-lg)] hover:bg-[var(--color-primary-600)] transition-colors cursor-pointer"
+              >
+                Clear Filters
+              </button>
+              <Link
+                to="/home"
+                className="px-4 py-2 text-xs font-semibold border border-[var(--border-primary)] bg-[var(--surface-card)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-[var(--radius-lg)] transition-colors flex items-center gap-1.5"
+              >
+                <ShoppingBag size={14} />
+                <span>Go to Marketplace</span>
+              </Link>
+            </div>
           }
         />
       ) : (
@@ -198,6 +220,15 @@ export default function SearchPage() {
           icon={<Tag className="w-8 h-8 text-[var(--color-primary-500)]" />}
           title="Start searching"
           description="Type keywords above to discover items, lost property, passes, or university peers."
+          action={
+            <Link
+              to="/home"
+              className="px-4 py-2 text-xs font-semibold bg-[var(--color-primary-500)] text-white rounded-[var(--radius-lg)] hover:bg-[var(--color-primary-600)] transition-colors inline-flex items-center gap-1.5 shadow-xs"
+            >
+              <ShoppingBag size={14} />
+              <span>Go to Marketplace</span>
+            </Link>
+          }
         />
       )}
     </div>

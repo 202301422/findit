@@ -19,9 +19,11 @@ const ChatDetail = lazy(() => import('../pages/Messages/ChatDetail'))
 const Notifications = lazy(() => import('../pages/Notifications/Notifications'))
 const SearchPage = lazy(() => import('../pages/Search/SearchPage'))
 const HelpPage = lazy(() => import('../pages/Help/HelpPage'))
+const AboutPage = lazy(() => import('../pages/About/AboutPage'))
 const TermsPage = lazy(() => import('../pages/Legal/TermsPage'))
 const PrivacyPage = lazy(() => import('../pages/Legal/PrivacyPage'))
 const NotFoundPage = lazy(() => import('../pages/NotFound/NotFoundPage'))
+const UnauthorizedPage = lazy(() => import('../pages/Unauthorized/UnauthorizedPage'))
 
 /* ── Lazy-loaded Admin pages ── */
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard'))
@@ -87,6 +89,7 @@ export default function AppRoutes() {
 
         {/* App routes — wrapped in AppLayout */}
         <Route path="/home" element={<AppPage><Home /></AppPage>} />
+        <Route path="/about" element={<AppPage><AboutPage /></AppPage>} />
         <Route path="/search" element={<AppPage><SearchPage /></AppPage>} />
         <Route path="/help" element={<AppPage><HelpPage /></AppPage>} />
         <Route path="/terms" element={<AppPage><TermsPage /></AppPage>} />
@@ -98,6 +101,8 @@ export default function AppRoutes() {
         <Route path="/messages" element={<AppPage><Messages /></AppPage>} />
         <Route path="/messages/:id" element={<AppPage><ChatDetail /></AppPage>} />
         <Route path="/notifications" element={<AppPage><Notifications /></AppPage>} />
+        <Route path="/unauthorized" element={<AppPage><UnauthorizedPage /></AppPage>} />
+        <Route path="/forbidden" element={<AppPage><UnauthorizedPage /></AppPage>} />
 
         {/* Admin Dashboard routes — Protected by AdminRoute & AdminLayout */}
         <Route path="/admin" element={<AdminPage><AdminDashboard /></AdminPage>} />

@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Navbar from './Navbar'
+import Footer from './Footer'
 import MobileNav from './MobileNav'
 import AssistantLauncher from '../assistant/AssistantLauncher'
 import EmergencyBanner from '../notifications/EmergencyBanner'
@@ -52,7 +53,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }, [location.pathname, location.search])
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[var(--bg-secondary)]">
+    <div className="min-h-screen min-h-[100dvh] bg-[var(--bg-secondary)] flex flex-col justify-between">
       {/* Accessible skip link */}
       <a href="#main-content" className="skip-link">
         Skip to main content
@@ -62,8 +63,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <EmergencyModal />
       <Navbar />
 
-      {/* Main content area — below navbar, above mobile nav */}
-      <main id="main-content" tabIndex={-1} className="pt-16 pb-20 lg:pb-0 focus:outline-none">
+      {/* Main content area — below navbar, above footer & mobile nav */}
+      <main id="main-content" tabIndex={-1} className="pt-16 pb-20 lg:pb-0 focus:outline-none flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <ErrorBoundary>
             {children}
@@ -71,6 +72,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
       </main>
 
+      <Footer />
       <MobileNav />
       <AssistantLauncher />
     </div>

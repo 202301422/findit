@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { HelpCircle, Shield, AlertTriangle, MessageCircle, ChevronDown, Mail, Search, FileText } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { HelpCircle, Shield, AlertTriangle, MessageCircle, ChevronDown, Mail, Search, FileText, ArrowLeft } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
 interface FAQItem {
   question: string
@@ -37,6 +37,7 @@ const FAQS: FAQItem[] = [
 ]
 
 export default function HelpPage() {
+  const navigate = useNavigate()
   const [openIndex, setOpenIndex] = useState<number | null>(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -50,7 +51,19 @@ export default function HelpPage() {
   })
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Top Header Navigation */}
+      <div className="flex items-center justify-between border-b border-[var(--border-secondary)] pb-3">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] border border-[var(--border-primary)] bg-[var(--surface-card)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Home</span>
+        </button>
+      </div>
+
       {/* Hero Section */}
       <div className="text-center space-y-3 bg-[var(--surface-card)] p-8 rounded-[var(--radius-2xl)] border border-[var(--border-primary)] shadow-sm">
         <div className="inline-flex items-center justify-center p-3 rounded-full bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)]/30 text-[var(--color-primary-500)] mb-2">
