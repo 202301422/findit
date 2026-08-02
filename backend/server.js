@@ -147,8 +147,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use(generalApiRateLimiter);
-app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: process.env.URLENCODED_BODY_LIMIT || "1mb" }));
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: process.env.URLENCODED_BODY_LIMIT || "10mb" }));
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);

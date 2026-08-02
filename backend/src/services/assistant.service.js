@@ -1,5 +1,5 @@
 import ApiError from "../utils/ApiError.js";
-import { getGroqClient, isGroqConfigured, GROQ_MODEL } from "../config/groqClient.js";
+import { getGroqClient, isGroqConfigured, GROQ_MODEL, GROQ_VISION_MODEL } from "../config/groqClient.js";
 import {
   getAssistantSystemPrompt,
   getCandidateEvaluationSystemPrompt,
@@ -22,37 +22,66 @@ const CandidateEvaluationZodSchema = z.object({
 
 const STATIC_HELP_MAP = [
   {
-    keywords: ["report", "flag", "suspicious", "scam", "inappropriate", "fake", "misconduct"],
-    reply: "To report a suspicious listing or inappropriate behavior, click the flag icon on any listing card or user profile. Our campus admin team reviews reports promptly.",
+    keywords: ["profile", "my profile", "profile page", "account", "my account", "my listings", "user profile", "open profile", "where is profile", "where can i open my profile", "view profile"],
+    reply: "To open your Profile page:\n\n1. Look at the top navigation bar at the top-right corner of your screen.\n2. Click on your **User Avatar / Profile Menu**.\n3. Select **Profile** to view your active listings, draft posts, saved listings, and edit account details.",
   },
   {
-    keywords: ["lost", "found", "report lost", "found item", "property"],
-    reply: "To report a lost item or post something you found, click '+ Add Listing' at the top of the screen and select 'Lost & Found'. Include clear photos and location details.",
+    keywords: ["faq", "faqs", "frequently asked", "help section", "where is faq", "where can i find faq", "support"],
+    reply: "You are right here! **GetIt Assistant** is FindIt's interactive AI support hub.\n\nYou can ask me anything about:\n• Discovering & searching marketplace items\n• Reporting lost or found property\n• Exchanging travel tickets & event passes\n• Navigating pages, profile, messages, and safety tips",
   },
   {
-    keywords: ["save", "bookmark", "saved posts", "favorite"],
-    reply: "You can save any listing by clicking the bookmark icon on its card. Access all your saved items anytime under Profile > Saved Posts.",
+    keywords: ["add listing", "create listing", "post item", "sell item", "how to sell", "how to add", "how to post", "new listing", "add item"],
+    reply: "To post a new item or report property:\n\n1. Click the **+ Add Listing** button in the top navigation header.\n2. Select your category: **Buy & Sell**, **Lost & Found**, **Travelling Tickets**, or **Event Passes**.\n3. Fill in the title, price, photos, and description.\n4. Click **Submit** to publish your post to the campus feed.",
   },
   {
-    keywords: ["follow", "peers", "following feed", "student"],
-    reply: "Follow fellow students by visiting their profile and clicking 'Follow'. Their newest listings will appear directly in your 'Following' feed tab on the Home page.",
+    keywords: ["saved", "bookmark", "favorite", "saved posts", "saved items", "where are my saved", "how to save"],
+    reply: "To view your saved listings:\n\n1. Open your **Profile** page (top-right avatar icon).\n2. Click the **Saved Posts** tab.\n\n*Tip:* You can save any listing while browsing by clicking the **Bookmark** icon on its card.",
   },
   {
-    keywords: ["pay", "payment", "buy", "safety", "safe", "meet", "cash", "upi"],
-    reply: "FindIt facilitates direct peer-to-peer exchanges. We strongly recommend meeting in public campus locations (Library, SAC, Security Desk) and inspecting items in person before completing payment via cash or UPI.",
+    keywords: ["chat", "message", "inbox", "talk to seller", "dm", "messages", "how to chat", "where is chat"],
+    reply: "To access your messages:\n\n1. Click the **Message / Chat** icon in the top header.\n2. Select any conversation to chat with buyers or sellers directly.\n\n*Tip:* To start a new conversation, click **Message Seller** on any listing page.",
   },
   {
-    keywords: ["ticket", "pass", "concert", "bus", "train", "flight", "event"],
-    reply: "You can discover or sell travel tickets and event passes under the 'Travelling Tickets' and 'Event Passes' tabs on the Home page or via '+ Add Listing'.",
+    keywords: ["lost", "found", "report lost", "found item", "lost property", "lost and found"],
+    reply: "To report lost or found items:\n\n1. Select the **Lost & Found** tab on the Home page to view current items.\n2. To post a new report, click **+ Add Listing** in the top header and choose **Lost & Found**.\n3. Choose status (**Lost** or **Found**), add location details, and upload photos.",
   },
   {
-    keywords: ["how does findit work", "what is findit", "help", "about findit"],
-    reply: "FindIt is your campus marketplace and lost-and-found hub. You can buy and sell items, report lost/found property, exchange travel tickets or event passes, and follow fellow campus peers safely.",
+    keywords: ["ticket", "pass", "concert", "bus", "train", "flight", "event", "event pass", "travel ticket"],
+    reply: "To exchange tickets or event passes:\n\n• Browse available listings under **Event Passes** or **Travelling Tickets** on the Home page.\n• To list your own ticket/pass, click **+ Add Listing** and choose **Travelling Tickets** or **Event Passes**.",
+  },
+  {
+    keywords: ["notification", "notifications", "alerts", "bell", "unread"],
+    reply: "To check notifications:\n\n1. Click the **Bell Icon** in the top header.\n2. Here you will find updates on chat messages, listing activity, followers, and admin broadcasts.",
+  },
+  {
+    keywords: ["theme", "dark mode", "light mode", "color theme", "change theme", "toggle dark mode"],
+    reply: "To change your app theme:\n\n1. Look at the top navigation header.\n2. Click the **Sun / Moon** icon to toggle between Light Mode and Dark Mode anytime.",
+  },
+  {
+    keywords: ["edit listing", "delete listing", "remove post", "mark sold", "manage listing"],
+    reply: "To edit or delete your listing:\n\n1. Go to your **Profile** page.\n2. Under **My Listings**, find your item.\n3. Click the menu options icon on the card to **Edit Details**, **Mark as Sold**, or **Delete**.",
+  },
+  {
+    keywords: ["report", "flag", "suspicious", "scam", "inappropriate", "fake", "misconduct", "report user"],
+    reply: "To report suspicious posts or behavior:\n\n1. Click the **Flag / Report** icon on any listing card or user profile.\n2. Select the reason and submit.\n3. Campus admins review all reports promptly to maintain campus safety.",
+  },
+  {
+    keywords: ["pay", "payment", "buy", "safety", "safe", "meet", "cash", "upi", "safety tips"],
+    reply: "Safety & Payment Guidelines:\n\n• **Public Campus Meets:** Meet in public, well-lit spots (Library, Student Activity Center, Canteen).\n• **Inspect In Person:** Check the condition of the item thoroughly before paying.\n• **Direct Peer Payment:** Pay via cash or UPI after inspecting the item.",
+  },
+  {
+    keywords: ["follow", "peers", "following feed", "student", "follow user"],
+    reply: "To follow campus peers:\n\n1. Open any student's profile page and click **Follow**.\n2. Their newly added listings will show up in your personalized **Following** tab on the Home page.",
+  },
+  {
+    keywords: ["how does findit work", "what is findit", "help", "about findit", "how to use findit"],
+    reply: "FindIt is your all-in-one university marketplace and lost-and-found hub:\n\n• **Buy & Sell:** Student marketplace for books, tech, dorm essentials.\n• **Lost & Found:** Report lost items or return found property.\n• **Tickets & Passes:** Exchange travel tickets and event passes.\n• **Peer Network:** Follow classmates and chat securely in-app.",
   },
 ];
 
 const findStaticHelp = (message) => {
-  const lowerMsg = message.toLowerCase();
+  if (!message) return null;
+  const lowerMsg = message.toLowerCase().trim();
   for (const item of STATIC_HELP_MAP) {
     if (item.keywords.some((kw) => lowerMsg.includes(kw))) {
       return item.reply;
@@ -81,6 +110,90 @@ const extractJsonFromText = (text) => {
 
 const GREETING_REGEX = /^(hi|hello|hey|greetings|good morning|good evening|good afternoon|howdy|sup)\b/i;
 
+const extractPriceFromText = (text) => {
+  if (!text) return null;
+  const match =
+    text.match(/(?:under|below|less than|within|max|<=?|₹|\brs\.?|\binr)\s*:?\s*₹?\s*(\d+(?:\,\d+)?)\s*(?:inr|rs\.?|rupees|₹)?/i) ||
+    text.match(/(\d+(?:\,\d+)?)\s*(?:inr|rs\.?|rupees|₹)\b/i);
+  if (match) {
+    const parsed = parseFloat(match[1].replace(/,/g, ""));
+    if (!isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+  return null;
+};
+
+const analyzeImageWithVision = async (groq, imageInput, userMessage) => {
+  const visionPrompt = `You are "GetIt", the FindIt AI Assistant visual recognition engine.
+Analyze this uploaded photo for a university campus marketplace and lost-and-found platform.
+
+Analyze the image:
+1. Is it a physical marketplace item, book, electronics, backpack, clothing, bottle, calculator, ticket, pass, lost property, or keys?
+2. Or is it a selfie, person, face, room, landscape, or non-marketplace photo?
+
+Identify:
+- itemTitle: primary item name (e.g. "Polo Shirt", "Black Water Bottle", "MacBook Air", "Person / Selfie")
+- primaryColor: dominant visual color
+- category: "sell" | "found" | "ticket" | "pass" | null
+- searchKeywords: 2-4 database search keywords (or empty "" if non-marketplace item/person)
+- isMarketplaceItem: true if physical product/item, false if selfie/person/non-item
+
+User's accompanying text: "${userMessage || ""}"
+
+Respond ONLY with a JSON object strictly matching this format:
+{
+  "itemTitle": "string",
+  "primaryColor": "string",
+  "category": "sell",
+  "searchKeywords": "string",
+  "isMarketplaceItem": true,
+  "description": "string"
+}`;
+
+  try {
+    const response = await groq.chat.completions.create({
+      model: GROQ_VISION_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: visionPrompt },
+            { type: "image_url", image_url: { url: imageInput } },
+          ],
+        },
+      ],
+      temperature: 0.1,
+    });
+
+    const raw = response.choices[0]?.message?.content;
+    const parsed = extractJsonFromText(raw);
+    if (parsed && (parsed.searchKeywords !== undefined || parsed.itemTitle)) {
+      const isMarketplace = parsed.isMarketplaceItem !== false && Boolean(parsed.searchKeywords && parsed.searchKeywords.trim().length > 0);
+      return {
+        itemTitle: parsed.itemTitle || "Uploaded Photo",
+        primaryColor: parsed.primaryColor || "",
+        category: parsed.category || null,
+        searchKeywords: isMarketplace ? parsed.searchKeywords.trim() : "",
+        isMarketplaceItem: isMarketplace,
+        description: parsed.description || "",
+      };
+    }
+  } catch (err) {
+    console.warn("[Assistant Vision Warning]: Groq vision model completion failed, falling back:", err.message);
+  }
+
+  const fallbackKeywords = userMessage && !/similar|item|product|exact/i.test(userMessage) ? userMessage : "";
+  return {
+    itemTitle: "Uploaded Photo",
+    primaryColor: "",
+    category: null,
+    searchKeywords: fallbackKeywords,
+    isMarketplaceItem: Boolean(fallbackKeywords),
+    description: "Uploaded image item search",
+  };
+};
+
 export const processAssistantChat = async (body) => {
   const validationResult = ChatRequestSchema.safeParse(body);
   if (!validationResult.success) {
@@ -88,22 +201,44 @@ export const processAssistantChat = async (body) => {
     throw new ApiError(400, `Invalid chat request: ${issueMsg}`);
   }
 
-  const { message, history, contextListings, activePageContext } = validationResult.data;
+  const { message, imageUrl, imageBase64, history, contextListings, activePageContext } = validationResult.data;
 
-  // Check static help first
-  const isHelpQuery = /how (do|to|can) i|where is|report|policy|terms|privacy|payment|safety/i.test(message);
-  if (isHelpQuery) {
-    const helpReply = findStaticHelp(message);
-    if (helpReply) {
-      return {
-        reply: helpReply,
-        intent: "app_help",
-        listings: [],
-        appliedFilters: {},
-        clarificationQuestion: null,
-        comparison: null,
-        suggestedPrompts: ["Find used laptops", "Search Lost & Found", "Find a travel ticket"],
-      };
+  // Extract multi-turn context from previous turns in conversation history (Gemini / ChatGPT style)
+  let carriedSearch = null;
+  let carriedMaxPrice = extractPriceFromText(message);
+
+  if (history && history.length > 0) {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const h = history[i];
+      if (h.role === "assistant" && h.content) {
+        const prevBoldMatch = h.content.match(/\*\*([^*]+)\*\*/);
+        if (prevBoldMatch && prevBoldMatch[1] && !carriedSearch) {
+          const term = prevBoldMatch[1].trim();
+          if (term && !/uploaded|item|photo|matching/i.test(term)) {
+            carriedSearch = term;
+          }
+        }
+      }
+    }
+  }
+
+  // Check static help first (only if message exists and no image attached)
+  const hasImage = Boolean(imageUrl || imageBase64);
+  if (!hasImage && message) {
+    const isHelpQuery = /how (do|to|can) i|where is|report|policy|terms|privacy|payment|safety/i.test(message);
+    if (isHelpQuery) {
+      const helpReply = findStaticHelp(message);
+      if (helpReply) {
+        return {
+          reply: helpReply,
+          intent: "app_help",
+          listings: [],
+          appliedFilters: {},
+          clarificationQuestion: null,
+          comparison: null,
+          suggestedPrompts: ["Where is my profile?", "How to add a listing?", "How to report lost item?"],
+        };
+      }
     }
   }
 
@@ -112,6 +247,102 @@ export const processAssistantChat = async (body) => {
   }
 
   const groq = getGroqClient();
+  const imageInput = imageBase64 || imageUrl;
+
+  // Handle Reverse Image Search Requests
+  if (hasImage) {
+    const visionResult = await analyzeImageWithVision(groq, imageInput, message);
+    const maxPrice = carriedMaxPrice || extractPriceFromText(message);
+
+    if (!visionResult.isMarketplaceItem || !visionResult.searchKeywords) {
+      const titleStr = visionResult.itemTitle || "Uploaded Photo";
+      const replyText = `I analyzed your uploaded photo (**${titleStr}**).\n\nNo matching marketplace products or lost property were found for this image on campus right now.\n\n*Tip:* You can upload photos of campus items (e.g. laptops, books, water bottles, calculators, lost keys) to find matching listings!`;
+
+      return {
+        reply: replyText,
+        intent: "search_listings",
+        listings: [],
+        appliedFilters: {},
+        clarificationQuestion: null,
+        comparison: null,
+        suggestedPrompts: ["Find laptops under ₹40,000", "Search Lost & Found", "Where is my profile?"],
+      };
+    }
+
+    const searchTerms = visionResult.searchKeywords;
+    const searchTypes = visionResult.category ? [visionResult.category] : ["sell", "found", "ticket", "pass"];
+    const searchFiltersObj = { search: searchTerms, maxPrice };
+
+    let candidateListings = await fetchCandidateListings(searchTypes, searchFiltersObj, 30);
+
+    if (maxPrice) {
+      candidateListings = candidateListings.filter(
+        (c) => (c.sellingPrice || c.price || 0) <= maxPrice
+      );
+    }
+
+    let matchingListings = candidateListings.slice(0, 6);
+
+    if (candidateListings.length > 0) {
+      try {
+        const evalPrompt = getCandidateEvaluationSystemPrompt();
+        const evalInput = `User uploaded image of item: "${visionResult.itemTitle} (${visionResult.primaryColor})". Keywords: "${searchTerms}". Max Price limit: ${maxPrice ? `₹${maxPrice}` : "None"}.
+Candidate listings:
+${JSON.stringify(
+  candidateListings.map((c) => ({
+    id: c._id,
+    title: c.name || c.ticketType,
+    category: c.category || c.type,
+    price: c.sellingPrice || c.price || 0,
+    description: c.description,
+  }))
+)}`;
+
+        const evalRes = await groq.chat.completions.create({
+          model: GROQ_MODEL,
+          messages: [
+            { role: "system", content: evalPrompt },
+            { role: "user", content: evalInput },
+          ],
+          temperature: 0.1,
+          response_format: { type: "json_object" },
+        });
+
+        const parsedEval = extractJsonFromText(evalRes.choices[0]?.message?.content);
+        const evalValidated = CandidateEvaluationZodSchema.safeParse(parsedEval);
+        if (evalValidated.success && evalValidated.data.matchingListingIds.length > 0) {
+          const matchedSet = new Set(evalValidated.data.matchingListingIds);
+          const filtered = candidateListings.filter((c) => matchedSet.has(c._id.toString()));
+          if (filtered.length > 0) {
+            matchingListings = filtered;
+          }
+        }
+      } catch {
+        // fallback to candidate slice
+      }
+    }
+
+    const titleStr = visionResult.itemTitle || "Uploaded Item";
+    const colorStr = visionResult.primaryColor ? ` (${visionResult.primaryColor})` : "";
+    const priceStr = maxPrice ? ` under ₹${maxPrice}` : "";
+
+    const replyText =
+      matchingListings.length > 0
+        ? `I analyzed your uploaded photo of **${titleStr}**${colorStr}${priceStr}.\n\nHere are the matching items found on campus:`
+        : `I analyzed your photo of **${titleStr}**${colorStr}${priceStr}, but no matching listings were found on campus right now.\n\n*Tip:* You can post a **Lost & Found** report or click **+ Add Listing** to post one!`;
+
+    return {
+      reply: replyText,
+      intent: "search_listings",
+      listings: matchingListings,
+      appliedFilters: { search: searchTerms, maxPrice: maxPrice || undefined },
+      clarificationQuestion: null,
+      comparison: null,
+      suggestedPrompts: maxPrice
+        ? ["Show cheaper items", "Compare results", "Search Lost & Found"]
+        : ["Show items under ₹500", "Only negotiable", "Search Lost & Found"],
+    };
+  }
 
   // Fetch focused page product context if user is on product details page
   let focusedProductDoc = null;
@@ -173,7 +404,15 @@ ${INTENT_JSON_STRUCTURE_PROMPT}`;
     groqResponseRaw = response.choices[0]?.message?.content;
   } catch (err) {
     console.error("[Groq Error] Chat completion failed:", err.message);
-    throw new ApiError(502, "Failed to communicate with AI service");
+    return {
+      reply: "Sorry, I ran into a temporary issue with the AI service. Please try asking again in a moment.",
+      intent: "app_help",
+      listings: [],
+      appliedFilters: {},
+      clarificationQuestion: null,
+      comparison: null,
+      suggestedPrompts: ["Where is my profile?", "How to add a listing?", "Search Lost & Found"],
+    };
   }
 
   const parsedJson = extractJsonFromText(groqResponseRaw);
@@ -203,6 +442,14 @@ ${INTENT_JSON_STRUCTURE_PROMPT}`;
         clarificationQuestion: null,
       };
 
+  // Multi-turn context merge (Gemini / ChatGPT style)
+  if (carriedMaxPrice && !extracted.maxPrice) {
+    extracted.maxPrice = carriedMaxPrice;
+  }
+  if (carriedSearch && (!extracted.search || /exact|similar|product|item/i.test(extracted.search))) {
+    extracted.search = carriedSearch;
+  }
+
   // Strictly enforce greeting regex
   const isExplicitGreeting = GREETING_REGEX.test(message.trim());
   if (extracted.intent === "greeting" && !isExplicitGreeting) {
@@ -210,7 +457,10 @@ ${INTENT_JSON_STRUCTURE_PROMPT}`;
   }
 
   if (extracted.intent === "app_help") {
-    const helpReply = findStaticHelp(message) || "You can create listings, search Lost & Found property, exchange passes/tickets, and message sellers directly on FindIt.";
+    const helpReply =
+      findStaticHelp(message) ||
+      extracted.clarificationQuestion ||
+      "You can navigate FindIt easily from the top bar: access your **Profile** (top-right avatar), view direct **Messages**, browse **Lost & Found** or **Event Passes**, and post new items using **+ Add Listing**.";
     return {
       reply: helpReply,
       intent: "app_help",
@@ -218,7 +468,7 @@ ${INTENT_JSON_STRUCTURE_PROMPT}`;
       appliedFilters: {},
       clarificationQuestion: null,
       comparison: null,
-      suggestedPrompts: ["Find used laptops", "Search Lost & Found", "Find a travel ticket"],
+      suggestedPrompts: ["Where is my profile?", "How to add a listing?", "How to report lost item?"],
     };
   }
 
@@ -240,7 +490,7 @@ ${INTENT_JSON_STRUCTURE_PROMPT}`;
 
   const searchFilters = {
     category: extracted.category,
-    maxPrice: extracted.maxPrice,
+    maxPrice: extracted.maxPrice || carriedMaxPrice,
     isNegotiable: extracted.isNegotiable,
     hasWarranty: extracted.hasWarranty,
     minSeats: extracted.minSeats,
@@ -254,7 +504,14 @@ ${INTENT_JSON_STRUCTURE_PROMPT}`;
   };
 
   // Fetch candidate active listings from MongoDB (with fuzzy token search)
-  const candidates = await fetchCandidateListings(requestedTypes, searchFilters, 30);
+  let candidates = await fetchCandidateListings(requestedTypes, searchFilters, 30);
+
+  // Enforce maxPrice strictly on candidate listings
+  if (searchFilters.maxPrice) {
+    candidates = candidates.filter(
+      (c) => (c.sellingPrice || c.price || 0) <= searchFilters.maxPrice
+    );
+  }
 
   let finalResults = [];
   let aiExplanation = null;

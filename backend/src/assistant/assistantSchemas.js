@@ -5,10 +5,13 @@ const isValidObjectId = (val) => typeof val === "string" && mongoose.Types.Objec
 
 export const ChatRequestSchema = z.object({
   message: z
-    .string({ required_error: "Message is required" })
+    .string()
     .trim()
-    .min(1, "Message cannot be empty")
-    .max(1000, "Message cannot exceed 1000 characters"),
+    .max(1000, "Message cannot exceed 1000 characters")
+    .optional()
+    .default(""),
+  imageUrl: z.string().nullable().optional().default(null),
+  imageBase64: z.string().nullable().optional().default(null),
   history: z
     .array(
       z.object({

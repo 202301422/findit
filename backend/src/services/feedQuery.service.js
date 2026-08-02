@@ -267,15 +267,19 @@ export const executeFeedQuery = async (type, filters = {}, pagination = {}) => {
   };
 };
 
-export const fetchCandidateListings = async (requestedTypes, searchFilters, limitPerType = 30) => {
+export const fetchCandidateListings = async (requestedTypes, searchFilters = {}, limitPerType = 30) => {
   const candidatesMap = new Map();
+  const typesArray = Array.isArray(requestedTypes)
+    ? requestedTypes
+    : (requestedTypes?.types || ["sell", "found", "ticket", "pass"]);
+  const filtersObj = (Array.isArray(requestedTypes) ? searchFilters : requestedTypes) || {};
 
-  for (const type of requestedTypes) {
+  for (const type of typesArray) {
     const config = getModelConfig(type);
     if (!config) continue;
 
     // 1. Primary filter query (strict or category filters)
-    const filterQuery = buildFilterQuery(type, searchFilters);
+    const filterQuery = buildFilterQuery(type, filtersObj);
     const primaryDocs = await config.model
       .find(filterQuery, PUBLIC_LISTING_PROJECTION)
       .sort({ createdAt: -1 })

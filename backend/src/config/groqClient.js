@@ -1,6 +1,7 @@
 import { Groq } from "groq-sdk";
 
 export const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+export const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || "llama-3.2-11b-vision-preview";
 
 export const isGroqConfigured = () => {
   return Boolean(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim().length > 0);

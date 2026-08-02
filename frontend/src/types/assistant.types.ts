@@ -92,6 +92,8 @@ export interface AssistantMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: number
+  imageUrl?: string
+  imageBase64?: string
   listings?: AssistantListing[]
   appliedFilters?: AssistantAppliedFilters
   comparison?: AssistantComparison | null

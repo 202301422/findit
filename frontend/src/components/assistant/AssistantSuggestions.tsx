@@ -6,11 +6,11 @@ interface AssistantSuggestionsProps {
 }
 
 const DEFAULT_SUGGESTIONS = [
-  { text: 'Find laptops under ₹40,000', icon: ShoppingBag },
+  { text: 'Where is my Profile page?', icon: HelpCircle },
+  { text: 'How do I add a new listing?', icon: HelpCircle },
+  { text: 'How do I view saved posts?', icon: HelpCircle },
   { text: 'Search Lost & Found near library', icon: MapPin },
-  { text: 'Find travel ticket for tomorrow', icon: Ticket },
-  { text: 'Find concert pass under ₹3,000', icon: CalendarDays },
-  { text: 'How does FindIt work?', icon: HelpCircle },
+  { text: 'Find laptops under ₹40,000', icon: ShoppingBag },
 ]
 
 export default function AssistantSuggestions({

@@ -4,6 +4,7 @@ import { clsx } from 'clsx'
 import type { AssistantMessage as AssistantMessageType, AssistantListing } from '@/types/assistant.types'
 import AssistantListingCard from './AssistantListingCard'
 import AssistantSuggestions from './AssistantSuggestions'
+import FormattedMessageText from './FormattedMessageText'
 import { applyFiltersToHome, navigateToProduct } from '@/utils/assistantNavigation'
 
 interface AssistantMessageProps {
@@ -66,7 +67,7 @@ export default function AssistantMessage({
       >
         <div
           className={clsx(
-            'px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs whitespace-pre-wrap word-break-words',
+            'px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs word-break-words space-y-2',
             isUser
               ? 'bg-[var(--color-primary-500)] text-white rounded-tr-xs font-medium'
               : message.isError
@@ -74,7 +75,16 @@ export default function AssistantMessage({
               : 'bg-[var(--surface-card)] text-[var(--text-primary)] border border-[var(--border-primary)] rounded-tl-xs',
           )}
         >
-          {message.content}
+          {(message.imageBase64 || message.imageUrl) && (
+            <div className="rounded-[var(--radius-md)] overflow-hidden border border-white/20 max-w-[200px] shadow-xs">
+              <img
+                src={message.imageBase64 || message.imageUrl}
+                alt="Uploaded search query"
+                className="w-full h-auto object-cover max-h-48 rounded-[var(--radius-md)]"
+              />
+            </div>
+          )}
+          {message.content ? <FormattedMessageText content={message.content} isUser={isUser} /> : null}
         </div>
 
         {/* Applied Filters Button */}

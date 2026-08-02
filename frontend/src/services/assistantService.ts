@@ -7,7 +7,9 @@ import type {
 } from '@/types/assistant.types'
 
 export interface SendAssistantMessageParams {
-  message: string
+  message?: string
+  imageUrl?: string
+  imageBase64?: string
   history?: ChatHistoryItem[]
   contextListings?: ContextListingRef[]
   activePageContext?: ActivePageContext
@@ -16,7 +18,9 @@ export interface SendAssistantMessageParams {
 
 export const assistantService = {
   async sendMessage({
-    message,
+    message = '',
+    imageUrl,
+    imageBase64,
     history = [],
     contextListings = [],
     activePageContext = {},
@@ -24,6 +28,8 @@ export const assistantService = {
   }: SendAssistantMessageParams): Promise<AssistantChatResponse> {
     const payload = {
       message: message.trim(),
+      imageUrl: imageUrl || null,
+      imageBase64: imageBase64 || null,
       history: history.slice(-6).map((h) => ({
         role: h.role,
         content: h.content.trim(),
