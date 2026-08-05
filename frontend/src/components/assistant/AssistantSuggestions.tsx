@@ -1,4 +1,4 @@
-import { ShoppingBag, MapPin, Ticket, CalendarDays, HelpCircle } from 'lucide-react'
+import { ShoppingBag, MapPin, HelpCircle } from 'lucide-react'
 
 interface AssistantSuggestionsProps {
   onSelectSuggestion: (prompt: string) => void
